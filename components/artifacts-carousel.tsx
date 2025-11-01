@@ -71,7 +71,7 @@ export function ArtifactsCarousel({ artifacts, canEdit }: ArtifactsCarouselProps
   }
 
   return (
-    <div className="relative overflow-hidden">
+    <div className="relative w-full overflow-hidden">
       {/* Left Navigation Button */}
       {canScrollLeft && (
         <Button
