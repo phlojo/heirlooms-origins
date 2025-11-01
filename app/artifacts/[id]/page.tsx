@@ -25,12 +25,16 @@ export default async function ArtifactDetailPage({ params }: { params: Promise<{
     notFound()
   }
 
+  const collectionHref = artifact.collection?.slug
+    ? `/collections/${artifact.collection.slug}`
+    : `/collections/${artifact.collection_id}`
+
   return (
     <AppLayout user={user}>
       <div className="space-y-8">
         <div>
           <Button variant="ghost" size="sm" asChild className="mb-4">
-            <Link href={`/collections/${artifact.collection_id}`}>
+            <Link href={collectionHref}>
               <ArrowLeft className="mr-2 h-4 w-4" />
               Back to Collection
             </Link>
@@ -42,6 +46,7 @@ export default async function ArtifactDetailPage({ params }: { params: Promise<{
                 <div className="mb-2">
                   <CollectionLabel
                     collectionId={artifact.collection.id}
+                    collectionSlug={artifact.collection.slug}
                     collectionName={artifact.collection.title}
                     size="md"
                   />
@@ -89,7 +94,7 @@ export default async function ArtifactDetailPage({ params }: { params: Promise<{
                 <div className="flex justify-between">
                   <dt className="text-muted-foreground">Collection</dt>
                   <dd className="font-medium">
-                    <Link href={`/collections/${artifact.collection_id}`} className="text-primary hover:underline">
+                    <Link href={collectionHref} className="text-primary hover:underline">
                       {artifact.collection?.title || "Unknown"}
                     </Link>
                   </dd>

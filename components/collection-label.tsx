@@ -3,6 +3,7 @@ import { cn } from "@/lib/utils"
 
 interface CollectionLabelProps {
   collectionId: string
+  collectionSlug?: string // Added slug prop
   collectionName: string
   size?: "sm" | "md" | "lg"
   className?: string
@@ -11,6 +12,7 @@ interface CollectionLabelProps {
 
 export function CollectionLabel({
   collectionId,
+  collectionSlug, // Added slug parameter
   collectionName,
   size = "md",
   className,
@@ -39,5 +41,6 @@ export function CollectionLabel({
     return labelContent
   }
 
-  return <Link href={`/collections/${collectionId}`}>{labelContent}</Link>
+  const href = collectionSlug ? `/collections/${collectionSlug}` : `/collections/${collectionId}`
+  return <Link href={href}>{labelContent}</Link>
 }

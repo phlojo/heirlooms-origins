@@ -5,6 +5,7 @@ import { collectionSchema, type CollectionInput } from "@/lib/schemas"
 import { revalidatePath } from "next/cache"
 import { getArtifactsByCollection } from "./artifacts"
 import { deleteCloudinaryMedia, extractPublicIdFromUrl } from "./cloudinary"
+import { generateSlug, generateUniqueSlug } from "@/lib/utils/slug"
 
 /**
  * Server action to create a new collection
@@ -32,6 +33,12 @@ export async function createCollection(input: CollectionInput) {
     return { success: false, error: "Unauthorized" }
   }
 
+  const baseSlug = generateSlug(validatedFields.data.title)
+  const slug = await generateUniqueSlug(baseSlug, async (testSlug) => {
+    const { data } = await supabase.from("collections").select("id").eq("slug", testSlug).single()
+    return !!data
+  })
+
   // Insert collection into database
   const { data, error } = await supabase
     .from("collections")
@@ -39,6 +46,7 @@ export async function createCollection(input: CollectionInput) {
       title: validatedFields.data.title,
       description: validatedFields.data.description,
       is_public: validatedFields.data.is_public,
+      slug, // Add slug to insert
       user_id: user.id,
     })
     .select()
@@ -60,6 +68,22 @@ export async function getCollection(id: string) {
   const supabase = await createClient()
 
   const { data, error } = await supabase.from("collections").select("*").eq("id", id).single()
+
+  if (error) {
+    console.error("[v0] Collection fetch error:", error)
+    return null
+  }
+
+  return data
+}
+
+/**
+ * Server action to get a collection by slug
+ */
+export async function getCollectionBySlug(slug: string) {
+  const supabase = await createClient()
+
+  const { data, error } = await supabase.from("collections").select("*").eq("slug", slug).single()
 
   if (error) {
     console.error("[v0] Collection fetch error:", error)
@@ -124,7 +148,7 @@ export async function deleteCollection(collectionId: string) {
 
   // Revalidate paths
   revalidatePath("/collections")
-  revalidatePath(`/collections/${collectionId}`)
+  revalidatePath(`/collections/${collection.slug}`)
 
   return { success: true }
 }

@@ -41,6 +41,7 @@ async function getMyCollections(userId: string) {
           ...collection,
           thumbnailImages,
           itemCount: collection.artifacts?.[0]?.count || 0,
+          slug: collection.slug, // Ensure slug is included
         }
       }),
     )
@@ -85,6 +86,7 @@ async function getAllPublicCollections() {
           ...collection,
           thumbnailImages,
           itemCount: collection.artifacts?.[0]?.count || 0,
+          slug: collection.slug, // Ensure slug is included
         }
       }),
     )

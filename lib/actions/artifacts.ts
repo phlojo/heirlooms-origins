@@ -97,7 +97,7 @@ export async function getArtifactById(artifactId: string) {
     .from("artifacts")
     .select(`
       *,
-      collection:collections(id, title, is_public)
+      collection:collections(id, title, is_public, slug)
     `)
     .eq("id", artifactId)
     .single()
@@ -170,7 +170,7 @@ export async function updateArtifact(input: UpdateArtifactInput, oldMediaUrls: s
   // Verify ownership
   const { data: existingArtifact } = await supabase
     .from("artifacts")
-    .select("user_id, collection_id")
+    .select("user_id, collection_id, collection:collections(slug)")
     .eq("id", validatedFields.data.id)
     .single()
 
@@ -211,7 +211,11 @@ export async function updateArtifact(input: UpdateArtifactInput, oldMediaUrls: s
 
   revalidatePath(`/artifacts/${data.id}`)
   revalidatePath("/collections")
-  revalidatePath(`/collections/${existingArtifact.collection_id}`)
+  if (existingArtifact.collection?.slug) {
+    revalidatePath(`/collections/${existingArtifact.collection.slug}`)
+  } else {
+    revalidatePath(`/collections/${existingArtifact.collection_id}`)
+  }
 
   return { success: true, data }
 }

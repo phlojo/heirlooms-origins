@@ -6,6 +6,7 @@ import { CollectionThumbnailGrid } from "@/components/collection-thumbnail-grid"
 interface CollectionCardProps {
   collection: {
     id: string
+    slug?: string // Added slug field
     title: string
     description?: string
     cover_image?: string
@@ -17,8 +18,10 @@ interface CollectionCardProps {
 }
 
 export function CollectionCard({ collection }: CollectionCardProps) {
+  const href = collection.slug ? `/collections/${collection.slug}` : `/collections/${collection.id}`
+
   return (
-    <Link href={`/collections/${collection.id}`}>
+    <Link href={href}>
       <Card className="group overflow-hidden border transition-all hover:shadow-lg p-0">
         <div className="relative aspect-[4/3] overflow-hidden bg-muted">
           <div className="transition-transform group-hover:scale-105">

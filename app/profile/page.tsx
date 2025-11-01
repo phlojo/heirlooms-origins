@@ -3,7 +3,8 @@ import { getCurrentUser, createClient } from "@/lib/supabase/server"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { redirect } from "next/navigation"
-import { Package, ImageIcon, Calendar, Mail, User } from "lucide-react"
+import { Package, ImageIcon, Calendar, Mail, User, Settings } from "lucide-react"
+import { ThemePreferenceToggle } from "@/components/theme-preference-toggle"
 
 async function getUserProfile(userId: string) {
   const supabase = await createClient()
@@ -138,6 +139,19 @@ export default async function ProfilePage() {
             </CardContent>
           </Card>
         </div>
+
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Settings className="h-5 w-5" />
+              <CardTitle>App Preferences</CardTitle>
+            </div>
+            <CardDescription>Customize your app experience</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ThemePreferenceToggle initialTheme={profile?.theme_preference || "light"} />
+          </CardContent>
+        </Card>
       </div>
     </AppLayout>
   )

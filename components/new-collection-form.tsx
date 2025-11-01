@@ -37,7 +37,7 @@ export function NewCollectionForm() {
     const result = await createCollection(data)
 
     if (result.success) {
-      setSuccessData({ id: result.data.id, title: data.title })
+      setSuccessData({ id: result.data.slug || result.data.id, title: data.title })
       setIsSubmitting(false)
     } else {
       setIsSubmitting(false)
