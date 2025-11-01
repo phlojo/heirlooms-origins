@@ -63,7 +63,7 @@ export default async function CollectionDetailPage({ params }: { params: Promise
           </div>
         </div>
 
-        <div className="relative lg:-mx-8 lg:px-8">
+        <div className="relative -mx-6 lg:-mx-8">
           <ArtifactsCarousel artifacts={artifacts} canEdit={canEdit} />
         </div>
       </div>

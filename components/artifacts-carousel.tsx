@@ -49,8 +49,8 @@ export function ArtifactsCarousel({ artifacts, canEdit }: ArtifactsCarouselProps
   const scroll = (direction: "left" | "right") => {
     if (!scrollContainerRef.current) return
 
-    const isMobile = window.innerWidth < 768
-    const scrollAmount = isMobile ? scrollContainerRef.current.clientWidth * 0.7 : 340
+    const isMobile = window.innerWidth < 1024
+    const scrollAmount = isMobile ? scrollContainerRef.current.clientWidth * 0.75 : 340
     const newScrollLeft = scrollContainerRef.current.scrollLeft + (direction === "left" ? -scrollAmount : scrollAmount)
 
     scrollContainerRef.current.scrollTo({
@@ -61,7 +61,7 @@ export function ArtifactsCarousel({ artifacts, canEdit }: ArtifactsCarouselProps
 
   if (artifacts.length === 0) {
     return (
-      <div className="rounded-lg border border-dashed p-12 text-center">
+      <div className="mx-6 rounded-lg border border-dashed p-12 text-center lg:mx-8">
         <p className="text-sm text-muted-foreground">No artifacts in this collection yet.</p>
         {canEdit && (
           <p className="mt-2 text-xs text-muted-foreground">Click "Add Artifact" above to add your first item.</p>
@@ -71,13 +71,13 @@ export function ArtifactsCarousel({ artifacts, canEdit }: ArtifactsCarouselProps
   }
 
   return (
-    <div className="relative overflow-hidden">
+    <div className="relative overflow-hidden px-6 lg:px-8">
       {/* Left Navigation Button */}
       {canScrollLeft && (
         <Button
           variant="outline"
           size="icon"
-          className="absolute left-2 top-1/2 z-10 h-10 w-10 -translate-y-1/2 rounded-full bg-background shadow-lg hover:bg-accent md:left-4"
+          className="absolute left-2 top-1/2 z-10 h-10 w-10 -translate-y-1/2 rounded-full bg-background shadow-lg hover:bg-accent lg:left-4"
           onClick={() => scroll("left")}
         >
           <ChevronLeft className="h-5 w-5" />
@@ -90,7 +90,7 @@ export function ArtifactsCarousel({ artifacts, canEdit }: ArtifactsCarouselProps
         <Button
           variant="outline"
           size="icon"
-          className="absolute right-2 top-1/2 z-10 h-10 w-10 -translate-y-1/2 rounded-full bg-background shadow-lg hover:bg-accent md:right-4"
+          className="absolute right-2 top-1/2 z-10 h-10 w-10 -translate-y-1/2 rounded-full bg-background shadow-lg hover:bg-accent lg:right-4"
           onClick={() => scroll("right")}
         >
           <ChevronRight className="h-5 w-5" />
@@ -100,11 +100,11 @@ export function ArtifactsCarousel({ artifacts, canEdit }: ArtifactsCarouselProps
 
       <div
         ref={scrollContainerRef}
-        className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-thin md:gap-6"
+        className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-thin lg:gap-6"
         style={{ scrollbarWidth: "thin" }}
       >
         {artifacts.map((artifact) => (
-          <div key={artifact.id} className="flex-none w-[70vw] max-w-[320px] snap-start md:w-80">
+          <div key={artifact.id} className="flex-none w-[calc(75vw-2rem)] snap-start lg:w-80">
             <ArtifactCard artifact={artifact} />
           </div>
         ))}
