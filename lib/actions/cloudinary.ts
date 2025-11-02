@@ -1,7 +1,5 @@
 "use server"
 
-import crypto from "crypto"
-
 /**
  * Generate a signature for direct client-side upload to Cloudinary
  * This allows large files to be uploaded directly from the browser to Cloudinary
@@ -33,11 +31,12 @@ export async function generateCloudinarySignature(userId: string, fileName: stri
 
     const publicId = `${folder}/${userId}_${timestamp}_${sanitizedFileName}`
 
-    // This prevents duplicate folder paths in Cloudinary URLs
-    const signature = crypto
-      .createHash("sha1")
-      .update(`public_id=${publicId}&timestamp=${timestamp}${apiSecret}`)
-      .digest("hex")
+    const stringToSign = `public_id=${publicId}&timestamp=${timestamp}${apiSecret}`
+    const encoder = new TextEncoder()
+    const data = encoder.encode(stringToSign)
+    const hashBuffer = await crypto.subtle.digest("SHA-1", data)
+    const hashArray = Array.from(new Uint8Array(hashBuffer))
+    const signature = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("")
 
     return {
       signature,
@@ -67,10 +66,13 @@ export async function deleteCloudinaryMedia(publicId: string) {
 
   try {
     const timestamp = Math.round(new Date().getTime() / 1000)
-    const signature = crypto
-      .createHash("sha1")
-      .update(`public_id=${publicId}&timestamp=${timestamp}${apiSecret}`)
-      .digest("hex")
+
+    const stringToSign = `public_id=${publicId}&timestamp=${timestamp}${apiSecret}`
+    const encoder = new TextEncoder()
+    const data = encoder.encode(stringToSign)
+    const hashBuffer = await crypto.subtle.digest("SHA-1", data)
+    const hashArray = Array.from(new Uint8Array(hashBuffer))
+    const signature = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("")
 
     const formData = new FormData()
     formData.append("public_id", publicId)
