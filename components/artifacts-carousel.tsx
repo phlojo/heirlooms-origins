@@ -1,6 +1,6 @@
 "use client"
 
-import { useRef, useState, useEffect, useCallback } from "react"
+import { useRef, useState, useEffect } from "react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ArtifactCard } from "@/components/artifact-card"
@@ -25,65 +25,51 @@ export function ArtifactsCarousel({ artifacts, canEdit }: ArtifactsCarouselProps
   const [canScrollLeft, setCanScrollLeft] = useState(false)
   const [canScrollRight, setCanScrollRight] = useState(false)
 
-  const updateArrows = useCallback(() => {
-    const el = scrollContainerRef.current
-    if (!el) return
-    const { scrollLeft, scrollWidth, clientWidth } = el
+  const checkScrollability = () => {
+    if (!scrollContainerRef.current) return
+
+    const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current
     setCanScrollLeft(scrollLeft > 0)
-    // small threshold to avoid flicker
-    setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 2)
-  }, [])
+    setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 10) // 10px threshold
+  }
 
-  // Compute one-step amount = card width + gap
-  const getScrollStep = useCallback(() => {
-    const el = scrollContainerRef.current
-    if (!el) return 0
+  useEffect(() => {
+    checkScrollability()
+    const container = scrollContainerRef.current
+    if (container) {
+      container.addEventListener("scroll", checkScrollability)
+      window.addEventListener("resize", checkScrollability)
+      return () => {
+        container.removeEventListener("scroll", checkScrollability)
+        window.removeEventListener("resize", checkScrollability)
+      }
+    }
+  }, [artifacts])
 
-    const firstSlide = el.querySelector<HTMLElement>("[data-slide]")
-    const cs = getComputedStyle(el)
-    // Tailwind gap applies to both row/column; use 'gap' or fallbacks
-    const gap =
-      parseFloat((cs as any).gap || (cs as any).columnGap || (cs as any).rowGap || "0") || 0
+  const scroll = (direction: "left" | "right") => {
+    if (!scrollContainerRef.current) return
 
-    const cardWidth =
-      firstSlide?.getBoundingClientRect().width ?? Math.round(el.clientWidth * 0.66)
+    const isMobile = window.innerWidth < 1024
+    const scrollAmount = isMobile ? scrollContainerRef.current.clientWidth * 0.75 : 340
+    const newScrollLeft =
+      scrollContainerRef.current.scrollLeft +
+      (direction === "left" ? -scrollAmount : scrollAmount)
 
-    return cardWidth + gap
-  }, [])
-
-  const scroll = (dir: "left" | "right") => {
-    const el = scrollContainerRef.current
-    if (!el) return
-    const step = getScrollStep()
-    el.scrollBy({
-      left: dir === "right" ? step : -step,
+    scrollContainerRef.current.scrollTo({
+      left: newScrollLeft,
       behavior: "smooth",
     })
   }
 
-  useEffect(() => {
-    updateArrows()
-    const el = scrollContainerRef.current
-    if (!el) return
-
-    const onScroll = () => updateArrows()
-    const onResize = () => updateArrows()
-
-    el.addEventListener("scroll", onScroll, { passive: true })
-    window.addEventListener("resize", onResize)
-    return () => {
-      el.removeEventListener("scroll", onScroll)
-      window.removeEventListener("resize", onResize)
-    }
-  }, [artifacts, updateArrows])
-
   if (artifacts.length === 0) {
     return (
       <div className="mx-6 rounded-lg border border-dashed p-12 text-center lg:mx-8">
-        <p className="text-sm text-muted-foreground">No artifacts in this collection yet.</p>
+        <p className="text-sm text-muted-foreground">
+          No artifacts in this collection yet.
+        </p>
         {canEdit && (
           <p className="mt-2 text-xs text-muted-foreground">
-            Click &quot;Add Artifact&quot; above to add your first item.
+            Click "Add Artifact" above to add your first item.
           </p>
         )}
       </div>
@@ -91,8 +77,7 @@ export function ArtifactsCarousel({ artifacts, canEdit }: ArtifactsCarouselProps
   }
 
   return (
-    // Clamp any children painting to the viewport to avoid body-level horizontal scroll
-    <section className="relative w-full max-w-screen overflow-x-clip">
+    <div className="relative w-full overflow-hidden">
       {/* Left Navigation Button */}
       {canScrollLeft && (
         <Button
@@ -117,35 +102,3 @@ export function ArtifactsCarousel({ artifacts, canEdit }: ArtifactsCarouselProps
           <ChevronRight className="h-5 w-5" />
           <span className="sr-only">Scroll right</span>
         </Button>
-      )}
-
-      {/* Scroller */}
-      <div
-        ref={scrollContainerRef}
-        className="
-          flex snap-x snap-mandatory gap-4
-          overflow-x-auto overscroll-x-contain touch-pan-x
-          px-4 pb-4 lg:gap-6 lg:px-8
-          max-w-screen
-          [scrollbar-width:thin]
-        "
-      >
-        {artifacts.map((artifact) => (
-          <div
-            key={artifact.id}
-            data-slide
-            className="
-              shrink-0 snap-start
-              basis-[66%]   /* ~1.5 cards visible on small screens */
-              sm:basis-[60%]
-              md:basis-[50%]
-              lg:basis-80   /* fixed width cards on desktop */
-            "
-          >
-            <ArtifactCard artifact={artifact} />
-          </div>
-        ))}
-      </div>
-    </section>
-  )
-}
