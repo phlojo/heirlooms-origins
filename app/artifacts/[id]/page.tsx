@@ -5,7 +5,6 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 import { getCurrentUser } from "@/lib/supabase/server"
 import { getArtifactById, getAdjacentArtifacts } from "@/lib/actions/artifacts"
-import { CollectionLabel } from "@/components/collection-label"
 import { getDetailUrl } from "@/lib/cloudinary"
 
 export default async function ArtifactDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -39,22 +38,20 @@ export default async function ArtifactDetailPage({ params }: { params: Promise<{
             <Button variant="ghost" size="sm" asChild>
               <Link href={collectionHref}>
                 <ArrowLeft className="mr-2 h-4 w-4" />
-                Back
+                Back to {artifact.collection?.title || "Uncategorized"} Collection
               </Link>
             </Button>
-            {artifact.collection && (
-              <CollectionLabel
-                collectionId={artifact.collection.id}
-                collectionSlug={artifact.collection.slug}
-                collectionName={artifact.collection.title}
-                size="md"
-              />
-            )}
           </div>
 
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-2 min-w-0 flex-1">
-              <Button variant="ghost" size="icon" asChild disabled={!previous} className="shrink-0">
+              <Button
+                variant="ghost"
+                size="icon"
+                asChild={!!previous}
+                disabled={!previous}
+                className={`shrink-0 ${!previous ? "opacity-50 pointer-events-none hover:bg-transparent" : ""}`}
+              >
                 {previous ? (
                   <Link href={`/artifacts/${previous.id}`} title={previous.title}>
                     <ChevronLeft className="h-5 w-5" />
@@ -66,7 +63,13 @@ export default async function ArtifactDetailPage({ params }: { params: Promise<{
                 )}
               </Button>
               <h1 className="text-balance text-3xl font-bold tracking-tight min-w-0">{artifact.title}</h1>
-              <Button variant="ghost" size="icon" asChild disabled={!next} className="shrink-0">
+              <Button
+                variant="ghost"
+                size="icon"
+                asChild={!!next}
+                disabled={!next}
+                className={`shrink-0 ${!next ? "opacity-50 pointer-events-none hover:bg-transparent" : ""}`}
+              >
                 {next ? (
                   <Link href={`/artifacts/${next.id}`} title={next.title}>
                     <ChevronRight className="h-5 w-5" />
