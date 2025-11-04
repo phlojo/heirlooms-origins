@@ -149,15 +149,19 @@ export function NewArtifactForm({
 
       const formData = new FormData()
       formData.append("file", audioBlob, fileName)
-      formData.append("api_key", signatureResult.apiKey!)
-      formData.append("timestamp", signatureResult.timestamp!.toString())
-      formData.append("signature", signatureResult.signature)
       formData.append("public_id", signatureResult.publicId!)
-      formData.append("resource_type", "video")
+      formData.append("timestamp", signatureResult.timestamp!.toString())
+      formData.append("api_key", signatureResult.apiKey!)
+      formData.append("signature", signatureResult.signature)
 
       const uploadUrl = `https://api.cloudinary.com/v1_1/${signatureResult.cloudName}/video/upload`
 
       console.log("[v0] Uploading audio to Cloudinary:", uploadUrl)
+      console.log("[v0] Upload params:", {
+        publicId: signatureResult.publicId,
+        timestamp: signatureResult.timestamp,
+        signature: signatureResult.signature,
+      })
 
       const response = await fetch(uploadUrl, {
         method: "POST",
