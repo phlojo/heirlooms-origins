@@ -54,7 +54,13 @@ export default async function ArtifactDetailPage({ params }: { params: Promise<{
 
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-2 min-w-0 flex-1">
-              <Button variant="ghost" size="icon" asChild disabled={!previous} className="shrink-0">
+              <Button
+                variant="ghost"
+                size="icon"
+                asChild={!!previous}
+                disabled={!previous}
+                className={`shrink-0 ${!previous ? "opacity-50 pointer-events-none hover:bg-transparent" : ""}`}
+              >
                 {previous ? (
                   <Link href={`/artifacts/${previous.id}`} title={previous.title}>
                     <ChevronLeft className="h-5 w-5" />
@@ -66,7 +72,13 @@ export default async function ArtifactDetailPage({ params }: { params: Promise<{
                 )}
               </Button>
               <h1 className="text-balance text-3xl font-bold tracking-tight min-w-0">{artifact.title}</h1>
-              <Button variant="ghost" size="icon" asChild disabled={!next} className="shrink-0">
+              <Button
+                variant="ghost"
+                size="icon"
+                asChild={!!next}
+                disabled={!next}
+                className={`shrink-0 ${!next ? "opacity-50 pointer-events-none hover:bg-transparent" : ""}`}
+              >
                 {next ? (
                   <Link href={`/artifacts/${next.id}`} title={next.title}>
                     <ChevronRight className="h-5 w-5" />
