@@ -5,7 +5,6 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 import { getCurrentUser } from "@/lib/supabase/server"
 import { getArtifactById, getAdjacentArtifacts } from "@/lib/actions/artifacts"
-import { CollectionLabel } from "@/components/collection-label"
 import { getDetailUrl } from "@/lib/cloudinary"
 
 export default async function ArtifactDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -42,14 +41,6 @@ export default async function ArtifactDetailPage({ params }: { params: Promise<{
                 Back to {artifact.collection?.title || "Uncategorized"} Collection
               </Link>
             </Button>
-            {artifact.collection && (
-              <CollectionLabel
-                collectionId={artifact.collection.id}
-                collectionSlug={artifact.collection.slug}
-                collectionName={artifact.collection.title}
-                size="md"
-              />
-            )}
           </div>
 
           <div className="flex items-center justify-between gap-4">
