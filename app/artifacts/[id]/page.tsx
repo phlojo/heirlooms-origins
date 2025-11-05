@@ -40,6 +40,12 @@ export default async function ArtifactDetailPage({ params }: { params: Promise<{
     ? `/collections/${artifact.collection.slug}`
     : `/collections/${artifact.collection_id}`
 
+  const fullDescription = artifact.transcript
+    ? `${artifact.description || "No description provided"}\n\n${artifact.transcript}`
+    : artifact.description || "No description provided"
+
+  const imageCaptions = artifact.image_captions || {}
+
   return (
     <AppLayout user={user}>
       <div className="space-y-8">
@@ -103,14 +109,10 @@ export default async function ArtifactDetailPage({ params }: { params: Promise<{
         </div>
 
         <div className="space-y-6">
-          <p className="text-pretty text-muted-foreground">{artifact.description || "No description provided"}</p>
+          <p className="text-pretty text-muted-foreground whitespace-pre-wrap">{fullDescription}</p>
         </div>
 
-        <ArtifactAiContent
-          transcript={artifact.transcript}
-          ai_description={artifact.ai_description}
-          image_captions={artifact.image_captions}
-        />
+        <ArtifactAiContent ai_description={artifact.ai_description} />
 
         <div className="grid gap-6 lg:grid-cols-2">
           <div className="space-y-4">
@@ -119,12 +121,17 @@ export default async function ArtifactDetailPage({ params }: { params: Promise<{
                 isAudioFile(url) ? (
                   <AudioPlayer key={index} src={url} title="Audio Recording" />
                 ) : (
-                  <div key={index} className="aspect-square overflow-hidden border bg-muted">
-                    <img
-                      src={getDetailUrl(url) || "/placeholder.svg"}
-                      alt={`${artifact.title} - Image ${index + 1}`}
-                      className="h-full w-full object-cover"
-                    />
+                  <div key={index} className="space-y-2">
+                    <div className="aspect-square overflow-hidden border bg-muted">
+                      <img
+                        src={getDetailUrl(url) || "/placeholder.svg"}
+                        alt={`${artifact.title} - Image ${index + 1}`}
+                        className="h-full w-full object-cover"
+                      />
+                    </div>
+                    {imageCaptions[url] && (
+                      <p className="text-sm text-muted-foreground italic leading-relaxed">{imageCaptions[url]}</p>
+                    )}
                   </div>
                 ),
               )
