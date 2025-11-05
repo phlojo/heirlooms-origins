@@ -1,7 +1,8 @@
 import { createClient } from "@/lib/supabase/server"
-import { getTranscribeModel, getTextModel, validateOpenAIKey } from "@/lib/ai"
+import { openai, getTranscribeModel, getTextModel, validateOpenAIKey } from "@/lib/ai"
 import { generateText } from "ai"
 import { NextResponse } from "next/server"
+import { revalidatePath } from "next/cache"
 
 const MAX_TRANSCRIPT_LENGTH = 10000
 
@@ -84,7 +85,7 @@ export async function POST(request: Request) {
     if (transcript && transcript.length > 50) {
       try {
         const cleanupResult = await generateText({
-          model: getTextModel(),
+          model: openai(getTextModel()),
           prompt: `Reformat this transcript for readability. Fix obvious typos and add punctuation, but do not add any new information or facts. Keep the original meaning intact.\n\nTranscript:\n${transcript.slice(0, MAX_TRANSCRIPT_LENGTH)}`,
           maxOutputTokens: 2000,
         })
@@ -101,12 +102,18 @@ export async function POST(request: Request) {
         transcript,
         analysis_status: "done",
         analysis_error: null,
+        updated_at: new Date().toISOString(),
       })
       .eq("id", artifactId)
 
     if (updateError) {
       throw new Error(`Failed to save transcript: ${updateError.message}`)
     }
+
+    console.log("[v0] Successfully saved transcript for artifact:", artifactId)
+
+    revalidatePath(`/artifacts/${artifactId}`)
+    revalidatePath(`/artifacts/${artifactId}/edit`)
 
     return NextResponse.json({ ok: true })
   } catch (error) {

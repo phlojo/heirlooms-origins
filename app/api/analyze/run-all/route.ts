@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
+import { revalidatePath } from "next/cache"
 
 const STEP_TIMEOUT_MS = 45000 // 45 seconds per step
 const RETRY_DELAY_MIN_MS = 500
@@ -171,10 +172,19 @@ export async function POST(request: Request) {
       console.log(`[v0] Completed ${step} analysis for artifact ${artifactId}`)
     }
 
-    // All steps succeeded - set final status to done
-    await supabase.from("artifacts").update({ analysis_status: "done", analysis_error: null }).eq("id", artifactId)
+    await supabase
+      .from("artifacts")
+      .update({
+        analysis_status: "done",
+        analysis_error: null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", artifactId)
 
     console.log(`[v0] All analysis steps completed successfully for artifact ${artifactId}`)
+
+    revalidatePath(`/artifacts/${artifactId}`)
+    revalidatePath(`/artifacts/${artifactId}/edit`)
 
     return NextResponse.json({ ok: true })
   } catch (error) {

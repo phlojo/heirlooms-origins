@@ -1,7 +1,8 @@
 import { createClient } from "@/lib/supabase/server"
-import { getVisionModel } from "@/lib/ai"
+import { openai, getVisionModel } from "@/lib/ai"
 import { generateText } from "ai"
 import { NextResponse } from "next/server"
+import { revalidatePath } from "next/cache"
 
 const MAX_IMAGES = 5
 
@@ -77,13 +78,17 @@ export async function POST(request: Request) {
       .update({ analysis_status: "processing", analysis_error: null })
       .eq("id", artifactId)
 
+    console.log("[v0] Starting image analysis for artifact:", artifactId)
+    console.log("[v0] Using model:", getVisionModel())
+    console.log("[v0] Processing", imageUrls.length, "images")
+
     // Generate captions for each image
     const captions: Record<string, string> = {}
 
     for (const imageUrl of imageUrls) {
       try {
         const result = await generateText({
-          model: getVisionModel(),
+          model: openai(getVisionModel()),
           messages: [
             {
               role: "user",
@@ -103,25 +108,31 @@ export async function POST(request: Request) {
         })
 
         captions[imageUrl] = result.text.trim()
+        console.log("[v0] Generated caption for image:", imageUrl.substring(0, 50) + "...")
       } catch (error) {
         console.error(`[v0] Failed to caption image ${imageUrl}:`, error)
         continue
       }
     }
 
-    // Save captions to database
     const { error: updateError } = await supabase
       .from("artifacts")
       .update({
         image_captions: captions,
         analysis_status: "done",
         analysis_error: null,
+        updated_at: new Date().toISOString(),
       })
       .eq("id", artifactId)
 
     if (updateError) {
       throw new Error(`Failed to save captions: ${updateError.message}`)
     }
+
+    console.log("[v0] Successfully saved image captions for artifact:", artifactId)
+
+    revalidatePath(`/artifacts/${artifactId}`)
+    revalidatePath(`/artifacts/${artifactId}/edit`)
 
     return NextResponse.json({ ok: true, captions })
   } catch (error) {

@@ -7,15 +7,15 @@ export { openai }
 
 /**
  * Get the AI model to use for general text generation
- * @returns Model identifier (default: gpt-4o-mini)
+ * @returns Model identifier (e.g., "gpt-4o")
  */
 export function getTextModel(): string {
-  return process.env.AI_MODEL_TEXT || "gpt-4o-mini"
+  return process.env.AI_MODEL_TEXT || "gpt-4o"
 }
 
 /**
  * Get the AI model to use for vision/image analysis
- * @returns Model identifier (default: gpt-4o)
+ * @returns Model identifier (e.g., "gpt-4o")
  */
 export function getVisionModel(): string {
   return process.env.AI_MODEL_VISION || "gpt-4o"
@@ -23,10 +23,10 @@ export function getVisionModel(): string {
 
 /**
  * Get the AI model to use for summarization tasks
- * @returns Model identifier (default: gpt-4o-mini)
+ * @returns Model identifier (e.g., "gpt-4o")
  */
 export function getSummaryModel(): string {
-  return process.env.AI_MODEL_SUMMARY || "gpt-4o-mini"
+  return process.env.AI_MODEL_SUMMARY || "gpt-4o"
 }
 
 /**
