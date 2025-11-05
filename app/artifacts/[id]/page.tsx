@@ -45,10 +45,6 @@ export default async function ArtifactDetailPage({ params }: { params: Promise<{
 
   let fullDescription = artifact.description || "No description provided"
 
-  if (artifact.transcript) {
-    fullDescription += `\n\n${artifact.transcript}`
-  }
-
   if (artifact.ai_description) {
     fullDescription += `\n\n${artifact.ai_description}`
   }
@@ -133,9 +129,23 @@ export default async function ArtifactDetailPage({ params }: { params: Promise<{
             {artifact.media_urls && artifact.media_urls.length > 0 ? (
               artifact.media_urls.map((url, index) =>
                 isAudioFile(url) ? (
-                  <div key={index} className="space-y-2">
+                  <div key={index} className="space-y-3">
                     <AudioPlayer src={url} title="Audio Recording" />
                     {canEdit && <TranscribeAudioButton artifactId={artifact.id} audioUrl={url} />}
+
+                    <div className="rounded-lg border bg-muted/30 p-4">
+                      <h3 className="text-sm font-semibold mb-2">Transcript</h3>
+                      {artifact.transcript ? (
+                        <div className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
+                          {artifact.transcript}
+                        </div>
+                      ) : (
+                        <p className="text-sm text-muted-foreground italic">
+                          No transcript available yet. Click the "AI Transcribe Audio" button above to generate a
+                          transcript of this audio recording.
+                        </p>
+                      )}
+                    </div>
                   </div>
                 ) : (
                   <div key={index} className="space-y-2">
