@@ -133,33 +133,36 @@ export function ArtifactAiPanel({
         </Button>
       </div>
 
-      {/* AI Description */}
-      {ai_description && (
-        <Collapsible open={descriptionOpen} onOpenChange={setDescriptionOpen}>
-          <div className="flex items-center justify-between">
-            <CollapsibleTrigger asChild>
-              <Button variant="ghost" className="flex-1 justify-between p-0">
-                <h3 className="font-medium">AI Description</h3>
-                {descriptionOpen ? <ChevronUp /> : <ChevronDown />}
-              </Button>
-            </CollapsibleTrigger>
-            <Button
-              onClick={() => handleAnalysis("/api/analyze/summary", "summary", "Description regenerated")}
-              disabled={loading !== null}
-              variant="ghost"
-              size="sm"
-              className="ml-2"
-            >
-              {loading === "summary" ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+      <Collapsible open={descriptionOpen} onOpenChange={setDescriptionOpen}>
+        <div className="flex items-center justify-between">
+          <CollapsibleTrigger asChild>
+            <Button variant="ghost" className="flex-1 justify-between p-0">
+              <h3 className="font-medium">AI Description</h3>
+              {descriptionOpen ? <ChevronUp /> : <ChevronDown />}
             </Button>
-          </div>
-          <CollapsibleContent className="mt-2">
+          </CollapsibleTrigger>
+          <Button
+            onClick={() => handleAnalysis("/api/analyze/summary", "summary", "Description regenerated")}
+            disabled={loading !== null}
+            variant="ghost"
+            size="sm"
+            className="ml-2"
+          >
+            {loading === "summary" ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+          </Button>
+        </div>
+        <CollapsibleContent className="mt-2">
+          {ai_description ? (
             <div className="prose prose-sm max-w-none rounded-lg bg-muted/50 p-4 dark:prose-invert">
               <ReactMarkdown>{ai_description}</ReactMarkdown>
             </div>
-          </CollapsibleContent>
-        </Collapsible>
-      )}
+          ) : (
+            <div className="rounded-lg bg-muted/50 p-4 text-sm text-muted-foreground">
+              No description generated yet. Click "Generate Description" to create one.
+            </div>
+          )}
+        </CollapsibleContent>
+      </Collapsible>
 
       {/* Transcript (Collapsible) */}
       {transcript && (
