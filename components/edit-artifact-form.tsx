@@ -178,37 +178,23 @@ export function EditArtifactForm({ artifact, userId }: EditArtifactFormProps) {
         body: { artifactId: artifact.id },
       })
 
-      toast({
-        title: "Success",
-        description: "Description generated successfully",
-      })
+      if (result.object?.description_markdown) {
+        form.setValue("description", result.object.description_markdown)
 
-      // Refresh to get the updated artifact data
-      router.refresh()
-
-      // Fetch the updated artifact to get the AI description
-      // We'll need to wait a moment for the database to update
-      setTimeout(async () => {
-        try {
-          const response = await fetch(`/api/artifacts/${artifact.id}`)
-          if (response.ok) {
-            const updatedArtifact = await response.json()
-            if (updatedArtifact.ai_description) {
-              form.setValue("description", updatedArtifact.ai_description)
-            }
-          }
-        } catch (err) {
-          console.error("[v0] Failed to fetch updated artifact:", err)
-        }
-      }, 1000)
+        toast({
+          title: "Success",
+          description: "AI description generated successfully",
+        })
+      }
     } catch (err) {
       console.error("[v0] Generate description error:", err)
+      const errorMessage = err instanceof Error ? err.message : "Failed to generate description"
       toast({
         title: "Error",
-        description: err instanceof Error ? err.message : "Failed to generate description",
+        description: errorMessage,
         variant: "destructive",
       })
-      setError(err instanceof Error ? err.message : "Failed to generate description")
+      setError(errorMessage)
     } finally {
       setIsGeneratingDescription(false)
     }
@@ -259,15 +245,16 @@ export function EditArtifactForm({ artifact, userId }: EditArtifactFormProps) {
                   size="sm"
                   onClick={handleGenerateDescription}
                   disabled={isGeneratingDescription || isUploading}
+                  className="gap-2 bg-transparent"
                 >
                   {isGeneratingDescription ? (
                     <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      <Loader2 className="h-4 w-4 animate-spin" />
                       Generating...
                     </>
                   ) : (
                     <>
-                      <Sparkles className="mr-2 h-4 w-4" />
+                      <Sparkles className="h-4 w-4" />
                       Generate AI Description
                     </>
                   )}
