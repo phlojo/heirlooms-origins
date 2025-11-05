@@ -8,6 +8,7 @@ import { getArtifactById, getAdjacentArtifacts } from "@/lib/actions/artifacts"
 import { getDetailUrl } from "@/lib/cloudinary"
 import { AudioPlayer } from "@/components/audio-player"
 import { ArtifactAiPanelWrapper } from "@/components/artifact/ArtifactAiPanelWrapper"
+import { ArtifactAiContent } from "@/components/artifact/ArtifactAiContent"
 
 function isAudioFile(url: string): boolean {
   return (
@@ -104,6 +105,12 @@ export default async function ArtifactDetailPage({ params }: { params: Promise<{
         <div className="space-y-6">
           <p className="text-pretty text-muted-foreground">{artifact.description || "No description provided"}</p>
         </div>
+
+        <ArtifactAiContent
+          transcript={artifact.transcript}
+          ai_description={artifact.ai_description}
+          image_captions={artifact.image_captions}
+        />
 
         <div className="grid gap-6 lg:grid-cols-2">
           <div className="space-y-4">
