@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Sparkles, Loader2 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useToast } from "@/hooks/use-toast"
+import { fetchJson } from "@/lib/fetchJson"
 
 interface GenerateImageCaptionButtonProps {
   artifactId: string
@@ -16,19 +17,12 @@ export function GenerateImageCaptionButton({ artifactId, imageUrl }: GenerateIma
   const router = useRouter()
   const { toast } = useToast()
 
-  const handleGenerate = async () => {
+  async function handleGenerate() {
     setIsGenerating(true)
     try {
-      const response = await fetch("/api/analyze/image-single", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ artifactId, imageUrl }),
+      await fetchJson("/api/analyze/image-single", {
+        body: { artifactId, imageUrl },
       })
-
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || "Failed to generate caption")
-      }
 
       toast({
         title: "Success",
@@ -36,11 +30,12 @@ export function GenerateImageCaptionButton({ artifactId, imageUrl }: GenerateIma
       })
 
       router.refresh()
-    } catch (error) {
-      console.error("Error generating caption:", error)
+    } catch (err) {
+      console.error("[v0] Generate caption error:", err)
+      const errorMessage = err instanceof Error ? err.message : "Failed to generate caption"
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to generate caption",
+        description: errorMessage,
         variant: "destructive",
       })
     } finally {
@@ -49,13 +44,25 @@ export function GenerateImageCaptionButton({ artifactId, imageUrl }: GenerateIma
   }
 
   return (
-    <Button onClick={handleGenerate} disabled={isGenerating} variant="ghost" size="sm" className="h-8 text-xs">
+    <Button
+      type="button"
+      variant="outline"
+      size="sm"
+      onClick={handleGenerate}
+      disabled={isGenerating}
+      className="gap-2 bg-transparent"
+    >
       {isGenerating ? (
-        <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+        <>
+          <Loader2 className="h-4 w-4 animate-spin" />
+          Generating...
+        </>
       ) : (
-        <Sparkles className="mr-1.5 h-3.5 w-3.5" />
+        <>
+          <Sparkles className="h-4 w-4" />
+          Generate AI Caption
+        </>
       )}
-      Generate AI Caption
     </Button>
   )
 }
