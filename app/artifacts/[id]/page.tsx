@@ -11,6 +11,7 @@ import ReactMarkdown from "react-markdown"
 import { ArtifactAiPanelWrapper } from "@/components/artifact/ArtifactAiPanelWrapper"
 import { GenerateDescriptionButton } from "@/components/artifact/GenerateDescriptionButton"
 import { GenerateImageCaptionButton } from "@/components/artifact/GenerateImageCaptionButton"
+import { TranscribeAudioButton } from "@/components/artifact/TranscribeAudioButton"
 
 function isAudioFile(url: string): boolean {
   return (
@@ -132,7 +133,10 @@ export default async function ArtifactDetailPage({ params }: { params: Promise<{
             {artifact.media_urls && artifact.media_urls.length > 0 ? (
               artifact.media_urls.map((url, index) =>
                 isAudioFile(url) ? (
-                  <AudioPlayer key={index} src={url} title="Audio Recording" />
+                  <div key={index} className="space-y-2">
+                    <AudioPlayer src={url} title="Audio Recording" />
+                    {canEdit && <TranscribeAudioButton artifactId={artifact.id} audioUrl={url} />}
+                  </div>
                 ) : (
                   <div key={index} className="space-y-2">
                     <div className="aspect-square overflow-hidden border bg-muted">
