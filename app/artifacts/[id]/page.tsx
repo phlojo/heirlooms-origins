@@ -6,6 +6,7 @@ import { notFound } from "next/navigation"
 import { getCurrentUser } from "@/lib/supabase/server"
 import { getArtifactById, getAdjacentArtifacts } from "@/lib/actions/artifacts"
 import { getDetailUrl } from "@/lib/cloudinary"
+import { AudioPlayer } from "@/components/audio-player"
 
 function isAudioFile(url: string): boolean {
   return (
@@ -108,10 +109,7 @@ export default async function ArtifactDetailPage({ params }: { params: Promise<{
             {artifact.media_urls && artifact.media_urls.length > 0 ? (
               artifact.media_urls.map((url, index) =>
                 isAudioFile(url) ? (
-                  <div key={index} className="rounded-lg border bg-muted p-4">
-                    <p className="mb-2 text-sm font-medium">Audio Recording</p>
-                    <audio src={url} controls className="w-full" />
-                  </div>
+                  <AudioPlayer key={index} src={url} title="Audio Recording" />
                 ) : (
                   <div key={index} className="aspect-square overflow-hidden border bg-muted">
                     <img
