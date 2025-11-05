@@ -14,11 +14,10 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
-import { X, Upload, ImageIcon, Loader2, Sparkles } from "lucide-react"
+import { X, Upload, ImageIcon, Loader2 } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { CheckCircle2 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
-import { fetchJson } from "@/lib/fetchJson"
 
 type FormData = z.infer<typeof updateArtifactSchema>
 
@@ -40,7 +39,6 @@ export function EditArtifactForm({ artifact, userId }: EditArtifactFormProps) {
   const [uploadedImages, setUploadedImages] = useState<string[]>(artifact.media_urls || [])
   const [isUploading, setIsUploading] = useState(false)
   const [success, setSuccess] = useState(false)
-  const [isGeneratingDescription, setIsGeneratingDescription] = useState(false)
   const { toast } = useToast()
 
   const form = useForm<FormData>({
@@ -169,37 +167,6 @@ export function EditArtifactForm({ artifact, userId }: EditArtifactFormProps) {
     }
   }
 
-  async function handleGenerateDescription() {
-    setIsGeneratingDescription(true)
-    setError(null)
-
-    try {
-      const result = await fetchJson("/api/analyze/summary", {
-        body: { artifactId: artifact.id },
-      })
-
-      if (result.object?.description_markdown) {
-        form.setValue("description", result.object.description_markdown)
-
-        toast({
-          title: "Success",
-          description: "AI description generated successfully",
-        })
-      }
-    } catch (err) {
-      console.error("[v0] Generate description error:", err)
-      const errorMessage = err instanceof Error ? err.message : "Failed to generate description"
-      toast({
-        title: "Error",
-        description: errorMessage,
-        variant: "destructive",
-      })
-      setError(errorMessage)
-    } finally {
-      setIsGeneratingDescription(false)
-    }
-  }
-
   if (success) {
     return (
       <Alert className="border-green-200 bg-green-50 dark:border-green-900 dark:bg-green-950">
@@ -238,28 +205,6 @@ export function EditArtifactForm({ artifact, userId }: EditArtifactFormProps) {
               <FormControl>
                 <Textarea placeholder="Tell the story of this heirloom" rows={4} {...field} />
               </FormControl>
-              <div className="mt-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={handleGenerateDescription}
-                  disabled={isGeneratingDescription || isUploading}
-                  className="gap-2 bg-transparent"
-                >
-                  {isGeneratingDescription ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      Generating...
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="h-4 w-4" />
-                      Generate AI Description
-                    </>
-                  )}
-                </Button>
-              </div>
               <FormMessage />
             </FormItem>
           )}

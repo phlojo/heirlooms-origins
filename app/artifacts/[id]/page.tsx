@@ -9,6 +9,7 @@ import { getDetailUrl } from "@/lib/cloudinary"
 import { AudioPlayer } from "@/components/audio-player"
 import ReactMarkdown from "react-markdown"
 import { ArtifactAiPanelWrapper } from "@/components/artifact/ArtifactAiPanelWrapper"
+import { GenerateDescriptionButton } from "@/components/artifact/GenerateDescriptionButton"
 
 function isAudioFile(url: string): boolean {
   return (
@@ -118,6 +119,11 @@ export default async function ArtifactDetailPage({ params }: { params: Promise<{
           <div className="text-pretty text-muted-foreground prose prose-sm max-w-none dark:prose-invert">
             <ReactMarkdown>{fullDescription}</ReactMarkdown>
           </div>
+          {canEdit && (
+            <div>
+              <GenerateDescriptionButton artifactId={artifact.id} />
+            </div>
+          )}
         </div>
 
         <div className="grid gap-6 lg:grid-cols-2">
