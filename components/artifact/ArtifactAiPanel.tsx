@@ -37,17 +37,23 @@ export function ArtifactAiPanel({
   const { toast } = useToast()
 
   const handleAnalysis = async (endpoint: string, loadingKey: LoadingState, successMessage: string) => {
+    console.log("[v0] Button clicked - Starting analysis", { endpoint, artifactId, loadingKey })
     setLoading(loadingKey)
     try {
-      await fetchJson(endpoint, {
+      console.log("[v0] Calling fetchJson with:", { endpoint, artifactId })
+      const result = await fetchJson(endpoint, {
         body: { artifactId },
       })
+      console.log("[v0] fetchJson response:", result)
       toast({
         title: "Success",
         description: successMessage,
       })
+      console.log("[v0] Calling onRefresh to update UI")
       await onRefresh()
+      console.log("[v0] onRefresh complete")
     } catch (error) {
+      console.error("[v0] Analysis error:", error)
       toast({
         title: "Error",
         description: error instanceof Error ? error.message : "Analysis failed",
@@ -55,6 +61,7 @@ export function ArtifactAiPanel({
       })
     } finally {
       setLoading(null)
+      console.log("[v0] Analysis complete, loading state cleared")
     }
   }
 
