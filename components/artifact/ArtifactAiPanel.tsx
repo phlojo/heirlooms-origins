@@ -31,7 +31,9 @@ export function ArtifactAiPanel({
   onRefresh,
 }: ArtifactAiPanelProps) {
   const [loading, setLoading] = useState<LoadingState>(null)
-  const [transcriptOpen, setTranscriptOpen] = useState(false)
+  const [transcriptOpen, setTranscriptOpen] = useState(true)
+  const [descriptionOpen, setDescriptionOpen] = useState(true)
+  const [captionsOpen, setCaptionsOpen] = useState(true)
   const { toast } = useToast()
 
   const handleAnalysis = async (endpoint: string, loadingKey: LoadingState, successMessage: string) => {
@@ -133,23 +135,30 @@ export function ArtifactAiPanel({
 
       {/* AI Description */}
       {ai_description && (
-        <div className="space-y-2">
+        <Collapsible open={descriptionOpen} onOpenChange={setDescriptionOpen}>
           <div className="flex items-center justify-between">
-            <h3 className="font-medium">AI Description</h3>
+            <CollapsibleTrigger asChild>
+              <Button variant="ghost" className="flex-1 justify-between p-0">
+                <h3 className="font-medium">AI Description</h3>
+                {descriptionOpen ? <ChevronUp /> : <ChevronDown />}
+              </Button>
+            </CollapsibleTrigger>
             <Button
               onClick={() => handleAnalysis("/api/analyze/summary", "summary", "Description regenerated")}
               disabled={loading !== null}
               variant="ghost"
               size="sm"
+              className="ml-2"
             >
-              {loading === "summary" ? <Loader2 className="animate-spin" /> : <RefreshCw />}
-              Regenerate
+              {loading === "summary" ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
             </Button>
           </div>
-          <div className="prose prose-sm max-w-none rounded-lg bg-muted/50 p-4 dark:prose-invert">
-            <ReactMarkdown>{ai_description}</ReactMarkdown>
-          </div>
-        </div>
+          <CollapsibleContent className="mt-2">
+            <div className="prose prose-sm max-w-none rounded-lg bg-muted/50 p-4 dark:prose-invert">
+              <ReactMarkdown>{ai_description}</ReactMarkdown>
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
       )}
 
       {/* Transcript (Collapsible) */}
@@ -171,19 +180,26 @@ export function ArtifactAiPanel({
 
       {/* Image Captions */}
       {captionEntries.length > 0 && (
-        <div className="space-y-2">
-          <h3 className="font-medium">Image Captions</h3>
-          <ul className="space-y-2">
-            {captionEntries.map(([url, caption], index) => (
-              <li key={url} className="flex items-start gap-3 rounded-lg bg-muted/50 p-3 text-sm">
-                <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-medium text-primary">
-                  {index + 1}
-                </span>
-                <p className="flex-1">{caption}</p>
-              </li>
-            ))}
-          </ul>
-        </div>
+        <Collapsible open={captionsOpen} onOpenChange={setCaptionsOpen}>
+          <CollapsibleTrigger asChild>
+            <Button variant="ghost" className="w-full justify-between p-0">
+              <h3 className="font-medium">Image Captions</h3>
+              {captionsOpen ? <ChevronUp /> : <ChevronDown />}
+            </Button>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="mt-2">
+            <ul className="space-y-2">
+              {captionEntries.map(([url, caption], index) => (
+                <li key={url} className="flex items-start gap-3 rounded-lg bg-muted/50 p-3 text-sm">
+                  <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-medium text-primary">
+                    {index + 1}
+                  </span>
+                  <p className="flex-1">{caption}</p>
+                </li>
+              ))}
+            </ul>
+          </CollapsibleContent>
+        </Collapsible>
       )}
     </div>
   )
