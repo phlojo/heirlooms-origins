@@ -11,7 +11,7 @@ interface HomeCardProps {
 
 export function HomeCard({ title, description, href, backgroundImage }: HomeCardProps) {
   const content = (
-    <div className="relative grid grid-cols-3 gap-4 items-center p-6">
+    <div className="relative grid grid-cols-3 gap-4 items-center p-6 bg-black">
       {backgroundImage && (
         <>
           <Image
