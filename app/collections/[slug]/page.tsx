@@ -4,7 +4,7 @@ import { Plus } from "lucide-react"
 import Link from "next/link"
 import { notFound, redirect } from "next/navigation"
 import { getCurrentUser } from "@/lib/supabase/server"
-import { getCollectionBySlug } from "@/lib/actions/collections"
+import { getCollectionBySlug, getAdjacentCollections } from "@/lib/actions/collections"
 import { getArtifactsByCollection } from "@/lib/actions/artifacts"
 import { ArtifactCard } from "@/components/artifact-card"
 import { DeleteCollectionButton } from "@/components/delete-collection-button"
@@ -34,6 +34,8 @@ export default async function CollectionDetailPage({ params }: { params: Promise
 
   const artifacts = await getArtifactsByCollection(collection.id)
 
+  const { previous, next } = await getAdjacentCollections(collection.id, user?.id || null)
+
   return (
     <AppLayout user={user}>
       <div className="space-y-8">
@@ -41,6 +43,8 @@ export default async function CollectionDetailPage({ params }: { params: Promise
           title={collection.title}
           backHref="/collections"
           backLabel="Back to Collections"
+          previousItem={previous ? { id: previous.slug, title: previous.title } : null}
+          nextItem={next ? { id: next.slug, title: next.title } : null}
           editHref={`/collections/${collection.id}/edit`}
           canEdit={canEdit}
           itemType="collection"

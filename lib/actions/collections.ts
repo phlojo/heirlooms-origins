@@ -94,6 +94,48 @@ export async function getCollectionBySlug(slug: string) {
 }
 
 /**
+ * Server action to get previous and next collections based on user ownership
+ * Returns collections in the same order as displayed on the collections page
+ */
+export async function getAdjacentCollections(collectionId: string, userId: string | null) {
+  const supabase = await createClient()
+
+  // Determine which collections to fetch based on user
+  let query = supabase
+    .from("collections")
+    .select("id, title, slug, created_at, user_id, is_public")
+    .order("created_at", { ascending: false })
+
+  if (userId) {
+    // For authenticated users, get their collections
+    query = query.eq("user_id", userId)
+  } else {
+    // For unauthenticated users, get public collections
+    query = query.eq("is_public", true)
+  }
+
+  const { data: collections, error } = await query
+
+  if (error || !collections) {
+    console.error("[v0] Error fetching adjacent collections:", error)
+    return { previous: null, next: null }
+  }
+
+  // Find the current collection's index
+  const currentIndex = collections.findIndex((c) => c.id === collectionId)
+
+  if (currentIndex === -1) {
+    return { previous: null, next: null }
+  }
+
+  // Previous is the one before in the array (newer), next is the one after (older)
+  const previous = currentIndex > 0 ? collections[currentIndex - 1] : null
+  const next = currentIndex < collections.length - 1 ? collections[currentIndex + 1] : null
+
+  return { previous, next }
+}
+
+/**
  * Server action to delete a collection and all its artifacts
  * Also deletes associated media from Cloudinary
  */
