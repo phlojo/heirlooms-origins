@@ -11,7 +11,7 @@ interface HomeCardProps {
 
 export function HomeCard({ title, description, href, backgroundImage }: HomeCardProps) {
   const content = (
-    <div className="relative grid grid-cols-3 gap-4 items-center overflow-hidden">
+    <div className="relative grid grid-cols-3 gap-4 items-center p-6">
       {backgroundImage && (
         <>
           <Image
@@ -44,16 +44,12 @@ export function HomeCard({ title, description, href, backgroundImage }: HomeCard
     return (
       <Link
         href={href}
-        className="block rounded-lg border bg-card overflow-hidden transition-all hover:shadow-lg hover:scale-[1.02] py-4"
+        className="block rounded-lg border bg-card overflow-hidden transition-all hover:shadow-lg hover:scale-[1.02]"
       >
-        <div className="p-6">{content}</div>
+        {content}
       </Link>
     )
   }
 
-  return (
-    <div className="rounded-lg border bg-card overflow-hidden">
-      <div className="p-6">{content}</div>
-    </div>
-  )
+  return <div className="rounded-lg border bg-card overflow-hidden">{content}</div>
 }
