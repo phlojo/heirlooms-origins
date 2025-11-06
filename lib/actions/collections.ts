@@ -94,23 +94,36 @@ export async function getCollectionBySlug(slug: string) {
 }
 
 /**
- * Server action to get previous and next collections based on user ownership
+ * Server action to get previous and next collections based on collection ownership context
  * Returns collections in the same order as displayed on the collections page
+ * If viewing own collection, navigates through own collections
+ * If viewing public collection, navigates through public collections
  */
 export async function getAdjacentCollections(collectionId: string, userId: string | null) {
   const supabase = await createClient()
 
-  // Determine which collections to fetch based on user
+  const { data: currentCollection } = await supabase
+    .from("collections")
+    .select("user_id, is_public")
+    .eq("id", collectionId)
+    .single()
+
+  if (!currentCollection) {
+    return { previous: null, next: null }
+  }
+
+  // Determine navigation context: own collection vs public collections
+  const isOwnCollection = userId && currentCollection.user_id === userId
+
+  // Determine which collections to fetch based on context
   let query = supabase
     .from("collections")
     .select("id, title, slug, created_at, user_id, is_public")
     .order("created_at", { ascending: false })
 
-  if (userId) {
-    // For authenticated users, get their collections
+  if (isOwnCollection) {
     query = query.eq("user_id", userId)
   } else {
-    // For unauthenticated users, get public collections
     query = query.eq("is_public", true)
   }
 
