@@ -60,7 +60,41 @@ export function TopNav({ onMenuClick, user }: TopNavProps) {
         </Button>
 
         <Link href="/" className="flex items-center gap-2 font-semibold">
-          <div className="flex h-8 w-8 items-center justify-center rounded bg-primary text-primary-foreground">H</div>
+          <div className="flex h-8 w-8 items-center justify-center rounded bg-primary text-primary-foreground">
+            <svg
+              width="20"
+              height="22"
+              viewBox="0 0 80 90"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              className="shrink-0"
+            >
+              <path d="M39.6001 90L52.1001 82.7L39.6001 75.5L27.1001 82.7L39.6001 90Z" fill="currentColor" />
+              <path d="M2.0001 68.3L14.6001 75.5L27.1001 68.3L14.6001 61L2.0001 68.3Z" fill="currentColor" />
+              <path d="M77.2002 68.3L64.6002 61L52.1002 68.3L64.6002 75.5L77.2002 68.3Z" fill="currentColor" />
+              <path d="M39.6001 61L52.1001 53.8L39.6001 46.6L27.1001 53.8L39.6001 61Z" fill="currentColor" />
+              <path d="M39.6001 75.5L52.1001 68.3L39.6001 61L27.1001 68.3L39.6001 75.5Z" fill="currentColor" />
+              <path d="M37.6001 43.3L37.6001 28.9L25.1001 36.1L25.1001 50.5L37.6001 43.3Z" fill="currentColor" />
+              <path d="M12.6001 43.3L0.00010045 50.5L9.91821e-05 65L12.6001 57.8L12.6001 43.3Z" fill="currentColor" />
+              <path
+                d="M37.6001 -2.28882e-05L25.1001 7.19998L25.1001 21.6L37.6001 14.4L37.6001 -2.28882e-05Z"
+                fill="currentColor"
+              />
+              <path
+                d="M0.00010045 21.6L9.91821e-05 36.1L12.6001 28.9L12.6001 14.4L0.00010045 21.6Z"
+                fill="currentColor"
+              />
+              <path d="M25.1001 21.6L12.6001 28.9L12.6001 43.3L25.1001 36.1L25.1001 21.6Z" fill="currentColor" />
+              <path d="M41.6001 43.3L54.1001 50.5L54.1001 36.1L41.6001 28.9L41.6001 43.3Z" fill="currentColor" />
+              <path d="M79.2002 65L79.2002 50.5L66.6002 43.3L66.6002 57.8L79.2002 65Z" fill="currentColor" />
+              <path
+                d="M54.1001 7.19998L41.6001 -2.3981e-05L41.6001 14.4L54.1001 21.6L54.1001 7.19998Z"
+                fill="currentColor"
+              />
+              <path d="M79.2002 21.6L66.6002 14.4L66.6002 28.9L79.2002 36.1L79.2002 21.6Z" fill="currentColor" />
+              <path d="M66.6001 43.3L66.6001 28.9L54.1001 21.6L54.1001 36.1L66.6001 43.3Z" fill="currentColor" />
+            </svg>
+          </div>
           <span className="text-lg">Heirlooms</span>
         </Link>
 
