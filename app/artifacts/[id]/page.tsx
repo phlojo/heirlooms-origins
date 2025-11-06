@@ -51,6 +51,11 @@ export default async function ArtifactDetailPage({ params }: { params: Promise<{
 
   const imageCaptions = artifact.image_captions || {}
 
+  const mediaUrls = artifact.media_urls || []
+  const totalMedia = mediaUrls.length
+  const audioFiles = mediaUrls.filter((url) => isAudioFile(url)).length
+  const imageFiles = totalMedia - audioFiles
+
   return (
     <AppLayout user={user}>
       <div className="space-y-8">
@@ -128,6 +133,36 @@ export default async function ArtifactDetailPage({ params }: { params: Promise<{
               <dt className="text-muted-foreground">Added</dt>
               <dd className="font-medium">{new Date(artifact.created_at).toLocaleDateString()}</dd>
             </div>
+            <div className="flex justify-between">
+              <dt className="text-muted-foreground">Total Media</dt>
+              <dd className="font-medium">
+                {totalMedia} {totalMedia === 1 ? "file" : "files"}
+              </dd>
+            </div>
+            {imageFiles > 0 && (
+              <div className="flex justify-between">
+                <dt className="text-muted-foreground">Photos/Videos</dt>
+                <dd className="font-medium">{imageFiles}</dd>
+              </div>
+            )}
+            {audioFiles > 0 && (
+              <div className="flex justify-between">
+                <dt className="text-muted-foreground">Audio Recordings</dt>
+                <dd className="font-medium">{audioFiles}</dd>
+              </div>
+            )}
+            {artifact.transcript && (
+              <div className="flex justify-between">
+                <dt className="text-muted-foreground">Transcription</dt>
+                <dd className="font-medium text-green-600">Available</dd>
+              </div>
+            )}
+            {artifact.ai_description && (
+              <div className="flex justify-between">
+                <dt className="text-muted-foreground">AI Description</dt>
+                <dd className="font-medium text-green-600">Generated</dd>
+              </div>
+            )}
           </dl>
         </div>
 

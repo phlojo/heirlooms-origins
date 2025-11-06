@@ -85,7 +85,7 @@ export function ArtifactAiPanel({
     <div className="space-y-6 rounded-2xl border bg-card p-6 shadow-md">
       {/* Header with Status Badge */}
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold">AI Analysis</h2>
+        <h2 className="text-xl font-semibold">Heirlooms AI Assistant</h2>
         {analysis_status && <Badge variant={getStatusVariant(analysis_status)}>{analysis_status}</Badge>}
       </div>
 
@@ -135,7 +135,7 @@ export function ArtifactAiPanel({
           variant="default"
           size="sm"
         >
-          {loading === "run-all" ? <Loader2 className="animate-spin" /> : <PlayCircle />}
+          {loading === "run-all" ? <Loader2 className="h-4 w-4 animate-spin" /> : <PlayCircle />}
           Run All
         </Button>
       </div>
