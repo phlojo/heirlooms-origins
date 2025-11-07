@@ -48,12 +48,16 @@ export function CollectionsTabs({ user, myCollections, allCollections }: Collect
           <TabsTrigger value="all">Community</TabsTrigger>
           <TabsTrigger value="mine">My Collections</TabsTrigger>
         </TabsList>
-        {user && (
+        {user ? (
           <Button asChild>
             <Link href="/collections/new">
               <Plus className="mr-2 h-4 w-4" />
               New
             </Link>
+          </Button>
+        ) : (
+          <Button asChild variant="default">
+            <Link href="/login">Sign In</Link>
           </Button>
         )}
       </div>
