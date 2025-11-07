@@ -74,69 +74,13 @@ export default async function ArtifactDetailPage({ params }: { params: Promise<{
               canEdit={canEdit}
               itemType="artifact"
             />
-          </div>
-
-          <div className="px-6 lg:px-8">
-            <div className="rounded-2xl border bg-card p-6 shadow-md">
-              <h2 className="text-xl font-semibold">Details</h2>
-              <dl className="mt-4 space-y-3 text-sm">
-                <div className="flex justify-between">
-                  <dt className="text-muted-foreground">Collection</dt>
-                  <dd className="font-medium">
-                    <Link href={collectionHref} className="text-primary hover:underline">
-                      {artifact.collection?.title || "Unknown"}
-                    </Link>
-                  </dd>
-                </div>
-                <div className="flex justify-between">
-                  <dt className="text-muted-foreground">Added</dt>
-                  <dd className="font-medium">{new Date(artifact.created_at).toLocaleDateString()}</dd>
-                </div>
-                <div className="flex justify-between">
-                  <dt className="text-muted-foreground">Total Media</dt>
-                  <dd className="font-medium">
-                    {totalMedia} {totalMedia === 1 ? "file" : "files"}
-                  </dd>
-                </div>
-                {imageFiles > 0 && (
-                  <div className="flex justify-between">
-                    <dt className="text-muted-foreground">Photos/Videos</dt>
-                    <dd className="font-medium">{imageFiles}</dd>
-                  </div>
-                )}
-                {audioFiles > 0 && (
-                  <div className="flex justify-between">
-                    <dt className="text-muted-foreground">Audio Recordings</dt>
-                    <dd className="font-medium">{audioFiles}</dd>
-                  </div>
-                )}
-                {artifact.transcript && (
-                  <div className="flex justify-between">
-                    <dt className="text-muted-foreground">Transcription</dt>
-                    <dd className="font-medium text-green-600">Available</dd>
-                  </div>
-                )}
-                {artifact.ai_description && (
-                  <div className="flex justify-between">
-                    <dt className="text-muted-foreground">AI Description</dt>
-                    <dd className="font-medium text-green-600">Generated</dd>
-                  </div>
-                )}
-              </dl>
-            </div>
-          </div>
-
-          <div className="px-6 lg:px-8">
-            <div className="space-y-6">
-              <div className="text-pretty text-muted-foreground prose prose-sm max-w-none dark:prose-invert">
-                <ReactMarkdown>{fullDescription}</ReactMarkdown>
+            {artifact.author_name && (
+              <div className="mt-3">
+                <span className="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+                  by {artifact.author_name}
+                </span>
               </div>
-              {canEdit && (
-                <div>
-                  <GenerateDescriptionButton artifactId={artifact.id} />
-                </div>
-              )}
-            </div>
+            )}
           </div>
 
           <div className="grid gap-6 lg:grid-cols-2">
@@ -200,6 +144,69 @@ export default async function ArtifactDetailPage({ params }: { params: Promise<{
                   image_captions={artifact.image_captions}
                 />
               )}
+            </div>
+          </div>
+
+          <div className="px-6 lg:px-8">
+            <div className="space-y-6">
+              <div className="text-pretty text-muted-foreground prose prose-sm max-w-none dark:prose-invert">
+                <ReactMarkdown>{fullDescription}</ReactMarkdown>
+              </div>
+              {canEdit && (
+                <div>
+                  <GenerateDescriptionButton artifactId={artifact.id} />
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="px-6 lg:px-8">
+            <div className="rounded-2xl border bg-card p-6 shadow-md">
+              <h2 className="text-xl font-semibold">Details</h2>
+              <dl className="mt-4 space-y-3 text-sm">
+                <div className="flex justify-between">
+                  <dt className="text-muted-foreground">Collection</dt>
+                  <dd className="font-medium">
+                    <Link href={collectionHref} className="text-primary hover:underline">
+                      {artifact.collection?.title || "Unknown"}
+                    </Link>
+                  </dd>
+                </div>
+                <div className="flex justify-between">
+                  <dt className="text-muted-foreground">Added</dt>
+                  <dd className="font-medium">{new Date(artifact.created_at).toLocaleDateString()}</dd>
+                </div>
+                <div className="flex justify-between">
+                  <dt className="text-muted-foreground">Total Media</dt>
+                  <dd className="font-medium">
+                    {totalMedia} {totalMedia === 1 ? "file" : "files"}
+                  </dd>
+                </div>
+                {imageFiles > 0 && (
+                  <div className="flex justify-between">
+                    <dt className="text-muted-foreground">Photos/Videos</dt>
+                    <dd className="font-medium">{imageFiles}</dd>
+                  </div>
+                )}
+                {audioFiles > 0 && (
+                  <div className="flex justify-between">
+                    <dt className="text-muted-foreground">Audio Recordings</dt>
+                    <dd className="font-medium">{audioFiles}</dd>
+                  </div>
+                )}
+                {artifact.transcript && (
+                  <div className="flex justify-between">
+                    <dt className="text-muted-foreground">Transcription</dt>
+                    <dd className="font-medium text-green-600">Available</dd>
+                  </div>
+                )}
+                {artifact.ai_description && (
+                  <div className="flex justify-between">
+                    <dt className="text-muted-foreground">AI Description</dt>
+                    <dd className="font-medium text-green-600">Generated</dd>
+                  </div>
+                )}
+              </dl>
             </div>
           </div>
         </div>

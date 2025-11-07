@@ -107,6 +107,15 @@ export async function getArtifactById(artifactId: string) {
     return null
   }
 
+  if (data) {
+    const { data: profile } = await supabase.from("profiles").select("display_name").eq("id", data.user_id).single()
+
+    return {
+      ...data,
+      author_name: profile?.display_name || null,
+    }
+  }
+
   return data
 }
 
