@@ -72,6 +72,9 @@ export default async function ArtifactDetailPage({ params }: { params: Promise<{
           canEdit={canEdit}
           authorUserId={artifact.user_id}
           authorName={artifact.author_name}
+          collectionId={artifact.collection_id}
+          collectionSlug={artifact.collection?.slug}
+          collectionName={artifact.collection?.title}
         />
 
         <div className="space-y-8">

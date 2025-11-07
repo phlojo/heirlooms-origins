@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Edit, ChevronRight, ChevronLeftIcon } from "lucide-react"
 import Link from "next/link"
 import { Author } from "@/components/author"
+import { CollectionLabel } from "@/components/collection-label"
 
 interface ArtifactStickyNavProps {
   title: string
@@ -21,6 +22,9 @@ interface ArtifactStickyNavProps {
   canEdit?: boolean
   authorUserId?: string
   authorName?: string
+  collectionId?: string
+  collectionSlug?: string
+  collectionName?: string
 }
 
 export function ArtifactStickyNav({
@@ -33,6 +37,9 @@ export function ArtifactStickyNav({
   canEdit = false,
   authorUserId,
   authorName,
+  collectionId,
+  collectionSlug,
+  collectionName,
 }: ArtifactStickyNavProps) {
   const getNavUrl = (id: string) => `/artifacts/${id}`
 
@@ -72,7 +79,28 @@ export function ArtifactStickyNav({
           {/* Center: Title and Author */}
           <div className="flex flex-col items-center gap-1 flex-1 min-w-0">
             <h1 className="text-balance font-bold tracking-tight text-center text-base truncate w-full">{title}</h1>
-            {authorUserId && <Author userId={authorUserId} authorName={authorName} size="sm" />}
+            {(collectionId || authorUserId) && (
+              <div className="flex items-center gap-1.5 text-xs flex-wrap justify-center">
+                {collectionId && collectionName && (
+                  <>
+                    <span className="text-muted-foreground">in</span>
+                    <CollectionLabel
+                      collectionId={collectionId}
+                      collectionSlug={collectionSlug}
+                      collectionName={collectionName}
+                      size="sm"
+                      clickable={true}
+                    />
+                  </>
+                )}
+                {authorUserId && (
+                  <>
+                    {collectionId && <span className="text-muted-foreground">by</span>}
+                    <Author userId={authorUserId} authorName={authorName} size="sm" />
+                  </>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Right: Edit and Next buttons */}
