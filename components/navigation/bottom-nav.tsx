@@ -21,6 +21,24 @@ const navItems: NavItem[] = [
 ]
 
 /**
+ * track - Lightweight analytics helper
+ * Safely fires analytics events without blocking if analytics library is absent
+ */
+function track(event: string, data: Record<string, unknown>) {
+  try {
+    // Check if analytics/tracking library is available (e.g., window.analytics, gtag, etc.)
+    if (typeof window !== "undefined" && (window as any).analytics?.track) {
+      ;(window as any).analytics.track(event, data)
+    }
+    // Add other analytics providers here as needed
+    // else if (typeof gtag !== 'undefined') { gtag('event', event, data) }
+  } catch (error) {
+    // Silent fail - don't block user interaction
+    console.debug("[v0] Analytics tracking failed:", error)
+  }
+}
+
+/**
  * BottomNav - Mobile-only bottom navigation bar
  *
  * Safe-area handling:
@@ -59,6 +77,13 @@ export default function BottomNav() {
                 "hover:bg-accent",
                 isActive ? "font-medium text-foreground" : "text-muted-foreground hover:text-foreground",
               )}
+              onClick={() => {
+                track("nav_bottom_click", {
+                  item: item.label,
+                  path: item.href,
+                  source: "bottom-nav",
+                })
+              }}
             >
               <Icon className="h-5 w-5" />
               <span className="text-[10px] leading-none">{item.label}</span>
