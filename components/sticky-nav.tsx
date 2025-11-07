@@ -19,7 +19,7 @@ interface StickyNavProps {
   editHref?: string
   canEdit?: boolean
   itemType?: "artifact" | "collection"
-  mode?: "all" | "mine" // Add mode to preserve filter context
+  mode?: "all" | "mine"
 }
 
 export function StickyNav({
@@ -31,7 +31,7 @@ export function StickyNav({
   editHref,
   canEdit = false,
   itemType = "artifact",
-  mode, // Accept mode prop
+  mode,
 }: StickyNavProps) {
   const getNavUrl = (id: string) => {
     const baseUrl = `/${itemType}s/${id}`
@@ -41,12 +41,12 @@ export function StickyNav({
   return (
     <div className="sticky top-16 z-30 -mx-6 bg-background px-6 pb-4 lg:-mx-8 lg:px-8">
       <div className="mb-4 flex items-center gap-2 mt-2">
-        <Button variant="ghost" size="icon" asChild>
-          <Link href={backHref} title={backLabel}>
+        <Button variant="ghost" size="sm" asChild className="gap-2">
+          <Link href={backHref}>
             <ArrowLeft className="h-4 w-4" />
+            <span className="text-sm font-medium">{backLabel}</span>
           </Link>
         </Button>
-        <span className="text-sm font-medium">{backLabel}</span>
       </div>
 
       <div className="flex items-center justify-between gap-4">
