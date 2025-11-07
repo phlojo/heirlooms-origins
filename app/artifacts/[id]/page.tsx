@@ -61,7 +61,7 @@ export default async function ArtifactDetailPage({ params }: { params: Promise<{
         <StickyNav
           title={artifact.title}
           backHref={collectionHref}
-          backLabel={`Back to ${artifact.collection?.title || "Uncategorized"} Collection`}
+          backLabel={`${artifact.collection?.title || "Uncategorized"} Collection`}
           previousItem={previous}
           nextItem={next}
           editHref={`/artifacts/${id}/edit`}
