@@ -101,7 +101,7 @@ export default async function ArtifactDetailPage({ params }: { params: Promise<{
                     </div>
                   ) : (
                     <div key={index} className="space-y-2">
-                      <div className="aspect-square overflow-hidden bg-muted">
+                      <div className="aspect-square overflow-hidden bg-muted -mx-6 lg:-mx-8">
                         <img
                           src={getDetailUrl(url) || "/placeholder.svg"}
                           alt={`${artifact.title} - Image ${index + 1}`}
