@@ -1,6 +1,6 @@
 export default function StoriesPage() {
   return (
-    <div className="flex min-h-screen items-center justify-center">
+    <div className="flex min-h-[calc(100vh-12rem)] items-center justify-center lg:min-h-[calc(100vh-8rem)]">
       <div className="flex flex-col items-center gap-4">
         <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-chart-2 text-primary-foreground shadow-md">
           <svg
