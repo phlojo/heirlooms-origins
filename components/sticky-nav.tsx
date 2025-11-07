@@ -23,6 +23,7 @@ interface StickyNavProps {
   mode?: "all" | "mine"
   authorUserId?: string
   authorName?: string
+  showBackButton?: boolean
 }
 
 export function StickyNav({
@@ -37,6 +38,7 @@ export function StickyNav({
   mode,
   authorUserId,
   authorName,
+  showBackButton = true,
 }: StickyNavProps) {
   const getNavUrl = (id: string) => {
     const baseUrl = `/${itemType}s/${id}`
@@ -58,14 +60,16 @@ export function StickyNav({
   return (
     <div className="sticky top-3 lg:top-16 z-50 bg-background/90 border-b rounded-lg">
       <div className="container max-w-7xl mx-auto lg:px-8 py-3 px-0 rounded-lg">
-        <div className="flex items-center gap-2 mb-3">
-          <Button variant="ghost" size="sm" asChild className="gap-2">
-            <Link href={backHref}>
-              <ArrowLeft className="h-4 w-4" />
-              <span className="text-sm font-medium">{displayLabel}</span>
-            </Link>
-          </Button>
-        </div>
+        {showBackButton && (
+          <div className="flex items-center gap-2 mb-3">
+            <Button variant="ghost" size="sm" asChild className="gap-2">
+              <Link href={backHref}>
+                <ArrowLeft className="h-4 w-4" />
+                <span className="text-sm font-medium">{displayLabel}</span>
+              </Link>
+            </Button>
+          </div>
+        )}
 
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-2 min-w-0 flex-1">

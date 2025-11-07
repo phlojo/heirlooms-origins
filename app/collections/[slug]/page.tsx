@@ -69,6 +69,7 @@ export default async function CollectionDetailPage({
             itemType="collection"
             mode={mode === "both" ? undefined : mode}
             authorUserId={collection.user_id}
+            showBackButton={false}
           />
 
           <div className="space-y-4">
