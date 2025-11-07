@@ -10,7 +10,7 @@ import { ArtifactAiPanelWrapper } from "@/components/artifact/ArtifactAiPanelWra
 import { GenerateDescriptionButton } from "@/components/artifact/GenerateDescriptionButton"
 import { GenerateImageCaptionButton } from "@/components/artifact/GenerateImageCaptionButton"
 import { TranscribeAudioButton } from "@/components/artifact/TranscribeAudioButton"
-import { StickyNav } from "@/components/sticky-nav"
+import { ArtifactStickyNav } from "@/components/artifact-sticky-nav"
 import { ArtifactSwipeWrapper } from "@/components/artifact-swipe-wrapper"
 
 function isAudioFile(url: string): boolean {
@@ -62,7 +62,7 @@ export default async function ArtifactDetailPage({ params }: { params: Promise<{
   return (
     <AppLayout user={user}>
       <ArtifactSwipeWrapper previousUrl={previousUrl} nextUrl={nextUrl}>
-        <StickyNav
+        <ArtifactStickyNav
           title={artifact.title}
           backHref={collectionHref}
           backLabel={`${artifact.collection?.title || "Uncategorized"} Collection`}
@@ -70,7 +70,6 @@ export default async function ArtifactDetailPage({ params }: { params: Promise<{
           nextItem={next}
           editHref={`/artifacts/${id}/edit`}
           canEdit={canEdit}
-          itemType="artifact"
           authorUserId={artifact.user_id}
           authorName={artifact.author_name}
         />
