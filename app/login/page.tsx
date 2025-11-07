@@ -8,6 +8,8 @@ import { Label } from "@/components/ui/label"
 import { useState } from "react"
 import Link from "next/link"
 import { signInWithPassword, signInWithMagicLink, signInWithGoogle } from "@/lib/actions/auth"
+import BottomNav from "@/components/navigation/bottom-nav"
+import { useIsMobile } from "@/hooks/use-mobile"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
@@ -17,6 +19,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
+  const isMobile = useIsMobile()
 
   const handleGoogleSignIn = async () => {
     setIsGoogleLoading(true)
@@ -77,7 +80,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-svh w-full items-center justify-center p-6">
+    <div className="relative flex min-h-svh w-full items-center justify-center p-6 pb-[var(--bottom-nav-height,80px)]">
       <div className="w-full max-w-sm">
         <Card>
           <CardHeader>
@@ -185,6 +188,8 @@ export default function LoginPage() {
           </CardContent>
         </Card>
       </div>
+
+      {isMobile && <BottomNav user={null} />}
     </div>
   )
 }

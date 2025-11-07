@@ -83,14 +83,23 @@ export async function getCollection(id: string) {
 export async function getCollectionBySlug(slug: string) {
   const supabase = await createClient()
 
-  const { data, error } = await supabase.from("collections").select("*").eq("slug", slug).single()
+  try {
+    const { data, error } = await supabase.from("collections").select("*").eq("slug", slug).single()
 
-  if (error) {
-    console.error("[v0] Collection fetch error:", error)
+    if (error) {
+      console.error("[v0] Collection fetch error:", error)
+      return null
+    }
+
+    return data
+  } catch (err) {
+    // Handle rate limiting or network errors
+    console.error("[v0] Collection fetch error:", err)
+    if (err instanceof Error && err.message.includes("Too Many")) {
+      console.error("[v0] Rate limit exceeded when fetching collection")
+    }
     return null
   }
-
-  return data
 }
 
 /**

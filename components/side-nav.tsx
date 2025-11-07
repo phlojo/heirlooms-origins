@@ -26,14 +26,14 @@ export function SideNav({ isOpen, onClose, isMobile }: SideNavProps) {
     <>
       {/* Mobile/tablet overlay */}
       {isMobile && isOpen && (
-        <div className="fixed inset-0 z-40 bg-background/80 backdrop-blur-sm lg:hidden" onClick={onClose} />
+        <div className="fixed inset-0 z-60 bg-background/80 backdrop-blur-sm lg:hidden" onClick={onClose} />
       )}
 
       {/* Sidebar */}
       <aside
         className={cn(
           "h-[calc(100vh-4rem)] w-64 border-r bg-background transition-transform duration-200",
-          "fixed left-0 top-16 z-40 lg:sticky lg:top-16",
+          "fixed left-0 top-16 z-60 lg:sticky lg:top-16",
           !isOpen && "-translate-x-full",
         )}
       >

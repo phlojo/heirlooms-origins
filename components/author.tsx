@@ -61,29 +61,35 @@ export function Author({ userId, authorName, size = "md", showAvatar = true, cla
 
   if (isLoading) {
     return (
-      <div
-        className={cn(
-          "inline-flex w-fit items-center rounded-full bg-primary/10 font-medium text-primary/50",
-          sizeClasses[size],
-          className,
-        )}
-      >
-        {showAvatar && <User className={`${iconSizes[size]}`} />}
-        <span>by ...</span>
+      <div className="inline-flex items-center gap-1.5">
+        <span className="text-xs text-muted-foreground">by</span>
+        <div
+          className={cn(
+            "inline-flex w-fit items-center rounded-full bg-primary/10 font-medium text-primary/50",
+            sizeClasses[size],
+            className,
+          )}
+        >
+          {showAvatar && <User className={`${iconSizes[size]}`} />}
+          <span>...</span>
+        </div>
       </div>
     )
   }
 
   return (
-    <div
-      className={cn(
-        "inline-flex w-fit items-center rounded-full bg-primary/10 font-medium text-primary transition-colors",
-        sizeClasses[size],
-        className,
-      )}
-    >
-      {showAvatar && <User className={`${iconSizes[size]}`} />}
-      <span>by {displayName}</span>
+    <div className="inline-flex items-center gap-1.5">
+      <span className="text-xs text-muted-foreground">by</span>
+      <div
+        className={cn(
+          "inline-flex w-fit items-center rounded-full bg-primary/10 font-medium text-primary transition-colors text-center",
+          sizeClasses[size],
+          className,
+        )}
+      >
+        {showAvatar && <User className={`${iconSizes[size]}`} />}
+        <span>{displayName}</span>
+      </div>
     </div>
   )
 }

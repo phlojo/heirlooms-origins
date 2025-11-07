@@ -29,7 +29,13 @@ export default async function CollectionDetailPage({
     redirect("/collections/new")
   }
 
-  const collection = await getCollectionBySlug(slug)
+  let collection
+  try {
+    collection = await getCollectionBySlug(slug)
+  } catch (error) {
+    console.error("[v0] Error loading collection:", error)
+    notFound()
+  }
 
   if (!collection) {
     notFound()
@@ -42,9 +48,24 @@ export default async function CollectionDetailPage({
     notFound()
   }
 
-  const artifacts = await getArtifactsByCollection(collection.id)
+  let artifacts = []
+  try {
+    artifacts = await getArtifactsByCollection(collection.id)
+  } catch (error) {
+    console.error("[v0] Error loading artifacts:", error)
+    // Continue with empty artifacts array
+  }
 
-  const { previous, next } = await getAdjacentCollections(collection.id, user?.id || null, mode)
+  let previous = null
+  let next = null
+  try {
+    const adjacent = await getAdjacentCollections(collection.id, user?.id || null, mode)
+    previous = adjacent.previous
+    next = adjacent.next
+  } catch (error) {
+    console.error("[v0] Error loading adjacent collections:", error)
+    // Continue without navigation
+  }
 
   const getNavUrl = (slug: string) => {
     const baseUrl = `/collections/${slug}`
@@ -69,6 +90,7 @@ export default async function CollectionDetailPage({
             itemType="collection"
             mode={mode === "both" ? undefined : mode}
             authorUserId={collection.user_id}
+            showBackButton={false}
           />
 
           <div className="space-y-4">

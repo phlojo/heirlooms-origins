@@ -23,6 +23,7 @@ interface StickyNavProps {
   mode?: "all" | "mine"
   authorUserId?: string
   authorName?: string
+  showBackButton?: boolean
 }
 
 export function StickyNav({
@@ -37,6 +38,7 @@ export function StickyNav({
   mode,
   authorUserId,
   authorName,
+  showBackButton = true,
 }: StickyNavProps) {
   const getNavUrl = (id: string) => {
     const baseUrl = `/${itemType}s/${id}`
@@ -56,71 +58,74 @@ export function StickyNav({
   const displayLabel = truncateBackLabel(backLabel)
 
   return (
-    <div className="sticky top-16 z-50 bg-background/90 border-b rounded-b-lg">
-      <div className="container max-w-7xl mx-auto lg:px-8 py-3 px-0 rounded-b-lg">
-        <div className="flex items-center gap-2 mb-3">
-          <Button variant="ghost" size="sm" asChild className="gap-2">
-            <Link href={backHref}>
-              <ArrowLeft className="h-4 w-4" />
-              <span className="text-sm font-medium">{displayLabel}</span>
-            </Link>
-          </Button>
-        </div>
-
+    <div className="sticky top-3 lg:top-16 z-50 bg-background/90 border-b rounded-lg">
+      <div className="container max-w-7xl mx-auto lg:px-8 py-3 px-0 rounded-lg">
         <div className="flex items-center justify-between gap-4">
-          <div className="flex items-center gap-2 min-w-0 flex-1">
-            {/* Previous button */}
-            <Button
-              variant="outline"
-              size="icon"
-              asChild={!!previousItem}
-              disabled={!previousItem}
-              className={`shrink-0 bg-transparent ${!previousItem ? "opacity-50 pointer-events-none" : ""}`}
-            >
-              {previousItem ? (
-                <Link href={getNavUrl(previousItem.id)} title={previousItem.title}>
-                  <ChevronLeft className="h-5 w-5" />
+          {/* Left: Back button */}
+          <div className="flex items-center gap-2 min-w-0">
+            {showBackButton ? (
+              <Button variant="ghost" size="sm" asChild className="gap-2 shrink-0">
+                <Link href={backHref}>
+                  <ArrowLeft className="h-4 w-4" />
+                  <span className="text-sm font-medium hidden sm:inline">{displayLabel}</span>
                 </Link>
-              ) : (
-                <span>
-                  <ChevronLeft className="h-5 w-5" />
-                </span>
-              )}
-            </Button>
+              </Button>
+            ) : (
+              <Button
+                variant="ghost"
+                size="icon"
+                asChild={!!previousItem}
+                disabled={!previousItem}
+                className={`shrink-0 ${!previousItem ? "opacity-50 pointer-events-none" : ""}`}
+              >
+                {previousItem ? (
+                  <Link href={getNavUrl(previousItem.id)} title={previousItem.title}>
+                    <ChevronLeft className="h-5 w-5" />
+                  </Link>
+                ) : (
+                  <span>
+                    <ChevronLeft className="h-5 w-5" />
+                  </span>
+                )}
+              </Button>
+            )}
+          </div>
 
-            <div className="flex flex-col min-w-0 gap-1">
-              <h1 className="text-balance font-bold tracking-tight min-w-0 text-xl">{title}</h1>
-              {authorUserId && <Author userId={authorUserId} authorName={authorName} size="sm" />}
-            </div>
+          {/* Center: Title and Author */}
+          <div className="flex flex-col items-center gap-1 flex-1 min-w-0">
+            <h1 className="text-balance font-bold tracking-tight text-center text-base truncate w-full">{title}</h1>
+            {authorUserId && <Author userId={authorUserId} authorName={authorName} size="sm" />}
+          </div>
 
-            {/* Edit button */}
+          {/* Right: Forward/Edit button */}
+          <div className="flex items-center gap-2 shrink-0">
             {canEdit && editHref && (
-              <Button variant="outline" size="sm" asChild className="shrink-0 bg-transparent ml-2">
+              <Button variant="ghost" size="sm" asChild>
                 <Link href={editHref}>
                   <Edit className="h-4 w-4" />
                 </Link>
               </Button>
             )}
-          </div>
-
-          {/* Next button */}
-          <Button
-            variant="outline"
-            size="icon"
-            asChild={!!nextItem}
-            disabled={!nextItem}
-            className={`shrink-0 bg-transparent ${!nextItem ? "opacity-50 pointer-events-none" : ""}`}
-          >
-            {nextItem ? (
-              <Link href={getNavUrl(nextItem.id)} title={nextItem.title}>
-                <ChevronRight className="h-5 w-5" />
-              </Link>
-            ) : (
-              <span>
-                <ChevronRight className="h-5 w-5" />
-              </span>
+            {!showBackButton && (
+              <Button
+                variant="ghost"
+                size="icon"
+                asChild={!!nextItem}
+                disabled={!nextItem}
+                className={`${!nextItem ? "opacity-50 pointer-events-none" : ""}`}
+              >
+                {nextItem ? (
+                  <Link href={getNavUrl(nextItem.id)} title={nextItem.title}>
+                    <ChevronRight className="h-5 w-5" />
+                  </Link>
+                ) : (
+                  <span>
+                    <ChevronRight className="h-5 w-5" />
+                  </span>
+                )}
+              </Button>
             )}
-          </Button>
+          </div>
         </div>
       </div>
     </div>

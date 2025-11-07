@@ -43,17 +43,21 @@ export function CollectionsTabs({ user, myCollections, allCollections }: Collect
 
   return (
     <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-      <div className="sticky top-16 z-10 -mx-6 bg-background px-6 py-4 flex items-center justify-between border-b lg:-mx-8 lg:px-8">
+      <div className="sticky top-0 lg:top-16 z-10 -mx-6 bg-background px-6 py-4 flex items-center justify-between border-b lg:-mx-8 lg:px-8 opacity-95">
         <TabsList>
           <TabsTrigger value="all">Community</TabsTrigger>
           <TabsTrigger value="mine">My Collections</TabsTrigger>
         </TabsList>
-        {user && (
+        {user ? (
           <Button asChild>
             <Link href="/collections/new">
               <Plus className="mr-2 h-4 w-4" />
               New
             </Link>
+          </Button>
+        ) : (
+          <Button asChild variant="default">
+            <Link href="/login">Sign In</Link>
           </Button>
         )}
       </div>
