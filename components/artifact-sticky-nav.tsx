@@ -94,8 +94,7 @@ export function ArtifactStickyNav({
                   </>
                 )}
                 {authorUserId && (
-                  <div className="flex items-center gap-1.5">
-                    {collectionId && <span className="text-muted-foreground">by</span>}
+                  <div className="flex items-center whitespace-nowrap">
                     <Author userId={authorUserId} authorName={authorName} size="sm" />
                   </div>
                 )}
