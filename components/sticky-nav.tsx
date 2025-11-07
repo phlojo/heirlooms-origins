@@ -93,7 +93,7 @@ export function StickyNav({
             </Button>
 
             <div className="flex flex-col min-w-0 gap-1 text-center items-center">
-              <h1 className="text-balance font-bold tracking-tight min-w-0 text-center text-lg">{title}</h1>
+              <h1 className="text-balance font-bold tracking-tight min-w-0 text-center text-base">{title}</h1>
               {authorUserId && <Author userId={authorUserId} authorName={authorName} size="sm" />}
             </div>
 
