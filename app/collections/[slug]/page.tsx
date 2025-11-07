@@ -58,6 +58,7 @@ export default async function CollectionDetailPage({
           canEdit={canEdit}
           itemType="collection"
           mode={mode === "both" ? undefined : mode}
+          authorUserId={collection.user_id}
         />
 
         <div className="space-y-4">

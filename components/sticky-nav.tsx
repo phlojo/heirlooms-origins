@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button"
 import { ArrowLeft, Edit, ChevronLeft, ChevronRight } from "lucide-react"
 import Link from "next/link"
+import { Author } from "@/components/author"
 
 interface StickyNavProps {
   title: string
@@ -20,6 +21,8 @@ interface StickyNavProps {
   canEdit?: boolean
   itemType?: "artifact" | "collection"
   mode?: "all" | "mine"
+  authorUserId?: string
+  authorName?: string
 }
 
 export function StickyNav({
@@ -32,6 +35,8 @@ export function StickyNav({
   canEdit = false,
   itemType = "artifact",
   mode,
+  authorUserId,
+  authorName,
 }: StickyNavProps) {
   const getNavUrl = (id: string) => {
     const baseUrl = `/${itemType}s/${id}`
@@ -69,7 +74,14 @@ export function StickyNav({
               </span>
             )}
           </Button>
-          <h1 className="text-balance text-3xl font-bold tracking-tight min-w-0">{title}</h1>
+          <div className="flex flex-col min-w-0">
+            <h1 className="text-balance text-3xl font-bold tracking-tight min-w-0">{title}</h1>
+            {authorUserId && (
+              <div className="mt-1">
+                <Author userId={authorUserId} authorName={authorName} size="sm" />
+              </div>
+            )}
+          </div>
           {canEdit && editHref && (
             <Button variant="outline" size="sm" asChild className="shrink-0 bg-transparent ml-2">
               <Link href={editHref}>
