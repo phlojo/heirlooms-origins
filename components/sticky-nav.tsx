@@ -43,13 +43,26 @@ export function StickyNav({
     return mode ? `${baseUrl}?mode=${mode}` : baseUrl
   }
 
+  const parseBackLabel = (label: string) => {
+    if (label.endsWith(" Collection")) {
+      const collectionName = label.slice(0, -11) // Remove " Collection"
+      return { collectionName, suffix: " Collection" }
+    }
+    return { collectionName: label, suffix: "" }
+  }
+
+  const { collectionName, suffix } = parseBackLabel(backLabel)
+
   return (
     <div className="sticky top-16 z-30 -mx-6 bg-background px-6 lg:-mx-8 lg:px-8 pt-1 pb-2">
       <div className="flex items-center gap-2 mt-2 mb-2">
-        <Button variant="ghost" size="sm" asChild className="gap-2">
-          <Link href={backHref}>
-            <ArrowLeft className="h-4 w-4" />
-            <span className="text-sm font-medium">{backLabel}</span>
+        <Button variant="ghost" size="sm" asChild className="gap-2 max-w-full">
+          <Link href={backHref} className="flex items-center gap-2 min-w-0">
+            <ArrowLeft className="h-4 w-4 shrink-0" />
+            <span className="text-sm font-medium flex items-center min-w-0">
+              <span className="truncate">{collectionName}</span>
+              {suffix && <span className="shrink-0">{suffix}</span>}
+            </span>
           </Link>
         </Button>
       </div>
