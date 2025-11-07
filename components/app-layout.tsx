@@ -12,9 +12,10 @@ import { PageTransition } from "./page-transition"
 interface AppLayoutProps {
   children: React.ReactNode
   user?: SupabaseUser | null
+  noBottomPadding?: boolean
 }
 
-export function AppLayout({ children, user }: AppLayoutProps) {
+export function AppLayout({ children, user, noBottomPadding = false }: AppLayoutProps) {
   const isMobile = useIsMobile()
   const [sidebarOpen, setSidebarOpen] = useState(() => {
     if (typeof window === "undefined") return false
@@ -41,7 +42,12 @@ export function AppLayout({ children, user }: AppLayoutProps) {
       <div className="flex">
         <SideNav isOpen={sidebarOpen} onClose={() => handleSidebarToggle(false)} isMobile={isMobile} />
 
-        <main className="flex-1 p-6 pb-24 transition-all duration-200 lg:p-8 lg:pb-8">
+        <main
+          className={`flex-1 p-6 transition-all duration-200 lg:p-8 ${
+            noBottomPadding ? "" : "pb-[var(--bottom-nav-height,80px)]"
+          }`}
+          data-bottom-padding={!noBottomPadding}
+        >
           <div className="mx-auto max-w-7xl">
             <PageTransition>{children}</PageTransition>
           </div>
