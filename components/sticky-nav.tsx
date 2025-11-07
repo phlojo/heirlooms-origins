@@ -56,8 +56,8 @@ export function StickyNav({
   const displayLabel = truncateBackLabel(backLabel)
 
   return (
-    <div className="sticky top-16 z-50 bg-background border-b rounded-lg">
-      <div className="container max-w-7xl mx-auto lg:px-8 py-3 px-0 rounded-lg">
+    <div className="sticky top-16 z-50 bg-background border-b rounded-b-lg">
+      <div className="container max-w-7xl mx-auto lg:px-8 py-3 px-0 rounded-b-lg">
         <div className="flex items-center gap-2 mb-3">
           <Button variant="ghost" size="sm" asChild className="gap-2">
             <Link href={backHref}>
