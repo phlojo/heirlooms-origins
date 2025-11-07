@@ -102,7 +102,7 @@ export default async function CollectionsPage() {
     <AppLayout user={user}>
       <div className="space-y-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Collections</h1>
+          <h1 className="text-3xl font-bold tracking-tight">All Collections</h1>
           <p className="mt-1 text-muted-foreground">Browse your collections and those shared by the community.</p>
         </div>
 
