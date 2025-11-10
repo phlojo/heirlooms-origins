@@ -11,7 +11,7 @@ interface HomeCardProps {
 
 export function HomeCard({ title, description, href, backgroundImage }: HomeCardProps) {
   const content = (
-    <div className="relative h-full overflow-hidden p-5 bg-black">
+    <div className="relative h-full overflow-hidden p-6 bg-black">
       {backgroundImage && (
         <>
           <Image
@@ -32,7 +32,7 @@ export function HomeCard({ title, description, href, backgroundImage }: HomeCard
       </div>
 
       <div
-        className={`absolute bottom-5 right-5 z-10 flex h-16 w-16 items-center justify-center rounded-sm ${
+        className={`absolute bottom-6 right-6 z-10 flex h-16 w-16 items-center justify-center rounded-sm ${
           backgroundImage ? "bg-white/20 text-white backdrop-blur-sm" : "text-primary-foreground bg-primary"
         }`}
       >
