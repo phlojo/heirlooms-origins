@@ -21,10 +21,15 @@ export function ArtifactSwipeWrapper({ previousUrl, nextUrl, children }: Artifac
   })
 
   const handleDismiss = () => {
-    console.log("[v0] Dismissing artifact guidance")
     setShowGuidance(false)
     if (typeof window !== "undefined") {
       localStorage.setItem(STORAGE_KEY, "true")
+    }
+  }
+
+  const handleSwipeStart = () => {
+    if (showGuidance) {
+      handleDismiss()
     }
   }
 
@@ -32,14 +37,13 @@ export function ArtifactSwipeWrapper({ previousUrl, nextUrl, children }: Artifac
     previousUrl,
     nextUrl,
     onNavigate: handleDismiss,
+    onSwipeStart: handleSwipeStart,
   })
-
-  console.log("[v0] ArtifactSwipeWrapper", { showGuidance, previousUrl, nextUrl })
 
   return (
     <>
       {children}
-      {showGuidance && <SwipeGuidance onDismiss={handleDismiss} />}
+      {showGuidance && <SwipeGuidance onDismiss={handleDismiss} previousUrl={previousUrl} nextUrl={nextUrl} />}
     </>
   )
 }

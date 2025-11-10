@@ -8,6 +8,7 @@ interface SwipeNavigationOptions {
   nextUrl?: string | null
   disabled?: boolean
   onNavigate?: () => void
+  onSwipeStart?: () => void
 }
 
 /**
@@ -15,10 +16,17 @@ interface SwipeNavigationOptions {
  * Swipe left → navigate to next item
  * Swipe right → navigate to previous item
  */
-export function useSwipeNavigation({ previousUrl, nextUrl, disabled = false, onNavigate }: SwipeNavigationOptions) {
+export function useSwipeNavigation({
+  previousUrl,
+  nextUrl,
+  disabled = false,
+  onNavigate,
+  onSwipeStart,
+}: SwipeNavigationOptions) {
   const router = useRouter()
   const touchStartX = useRef<number | null>(null)
   const touchStartY = useRef<number | null>(null)
+  const swipeStarted = useRef(false)
 
   useEffect(() => {
     if (disabled) return
@@ -26,6 +34,22 @@ export function useSwipeNavigation({ previousUrl, nextUrl, disabled = false, onN
     const handleTouchStart = (e: TouchEvent) => {
       touchStartX.current = e.touches[0].clientX
       touchStartY.current = e.touches[0].clientY
+      swipeStarted.current = false
+    }
+
+    const handleTouchMove = (e: TouchEvent) => {
+      if (!swipeStarted.current && touchStartX.current !== null && touchStartY.current !== null) {
+        const touchCurrentX = e.touches[0].clientX
+        const touchCurrentY = e.touches[0].clientY
+        const deltaX = Math.abs(touchCurrentX - touchStartX.current)
+        const deltaY = Math.abs(touchCurrentY - touchStartY.current)
+
+        // If user moves more than 10px horizontally, consider it a swipe start
+        if (deltaX > 10 && deltaX > deltaY) {
+          swipeStarted.current = true
+          onSwipeStart?.()
+        }
+      }
     }
 
     const handleTouchEnd = (e: TouchEvent) => {
@@ -44,12 +68,10 @@ export function useSwipeNavigation({ previousUrl, nextUrl, disabled = false, onN
       if (isHorizontalSwipe && meetsThreshold) {
         if (deltaX > 0 && previousUrl) {
           // Swipe right → go to previous
-          console.log("[v0] Swiped right, navigating to previous")
           onNavigate?.()
           router.push(previousUrl)
         } else if (deltaX < 0 && nextUrl) {
           // Swipe left → go to next
-          console.log("[v0] Swiped left, navigating to next")
           onNavigate?.()
           router.push(nextUrl)
         }
@@ -58,14 +80,17 @@ export function useSwipeNavigation({ previousUrl, nextUrl, disabled = false, onN
       // Reset
       touchStartX.current = null
       touchStartY.current = null
+      swipeStarted.current = false
     }
 
     document.addEventListener("touchstart", handleTouchStart, { passive: true })
+    document.addEventListener("touchmove", handleTouchMove, { passive: true })
     document.addEventListener("touchend", handleTouchEnd, { passive: true })
 
     return () => {
       document.removeEventListener("touchstart", handleTouchStart)
+      document.removeEventListener("touchmove", handleTouchMove)
       document.removeEventListener("touchend", handleTouchEnd)
     }
-  }, [previousUrl, nextUrl, disabled, router, onNavigate])
+  }, [previousUrl, nextUrl, disabled, router, onNavigate, onSwipeStart])
 }
