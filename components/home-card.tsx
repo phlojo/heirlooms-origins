@@ -11,7 +11,7 @@ interface HomeCardProps {
 
 export function HomeCard({ title, description, href, backgroundImage }: HomeCardProps) {
   const content = (
-    <div className="relative grid grid-cols-3 gap-4 items-center p-6 bg-black">
+    <div className="relative flex flex-col justify-between items-stretch p-6 bg-black min-h-[200px] md:min-h-[250px]">
       {backgroundImage && (
         <>
           <Image
@@ -24,11 +24,11 @@ export function HomeCard({ title, description, href, backgroundImage }: HomeCard
           <div className="absolute inset-0 bg-black/60" />
         </>
       )}
-      <div className="col-span-2 relative z-10">
+      <div className="relative z-10">
         <h2 className={`text-xl font-semibold ${backgroundImage ? "text-white" : ""}`}>{title}</h2>
         <p className={`mt-2 text-sm ${backgroundImage ? "text-white/90" : "text-muted-foreground"}`}>{description}</p>
       </div>
-      <div className="flex items-center justify-center relative z-10">
+      <div className="flex justify-end relative z-10 self-end">
         <div
           className={`flex h-16 w-16 items-center justify-center rounded-2xl ${
             backgroundImage ? "bg-white/20 text-white backdrop-blur-sm" : "text-primary-foreground bg-primary"

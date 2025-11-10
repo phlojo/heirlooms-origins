@@ -14,8 +14,8 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { href: "/", label: "Home", icon: Home },
-  { href: "/collections", label: "Collections", icon: FolderOpen },
   { href: "/artifacts", label: "Artifacts", icon: Package },
+  { href: "/collections", label: "Collections", icon: FolderOpen },
   { href: "/stories", label: "Stories", icon: BookOpen },
   { href: "/profile", label: "Profile", icon: User },
 ]
@@ -88,7 +88,7 @@ export default function BottomNav() {
               href={item.href}
               aria-current={isActive ? "page" : undefined}
               className={cn(
-                "flex min-w-[56px] flex-col items-center justify-center gap-1.5 rounded-lg px-4 py-3 transition-colors",
+                "relative flex min-w-[56px] flex-col items-center justify-center gap-1.5 rounded-lg px-4 py-3 transition-colors",
                 /* iOS tap optimizations */
                 "touch-manipulation", // Removes 300ms tap delay
                 "active:scale-95 active:bg-accent/50", // Visual feedback on tap
@@ -106,6 +106,9 @@ export default function BottomNav() {
             >
               <Icon className="h-6 w-6" />
               <span className="text-[11px] leading-none">{item.label}</span>
+              {isActive && (
+                <div className="absolute bottom-0 left-1/2 h-1 w-12 -translate-x-1/2 rounded-t-full bg-primary" />
+              )}
             </Link>
           )
         })}

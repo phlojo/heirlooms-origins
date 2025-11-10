@@ -66,18 +66,18 @@ export default async function HomePage() {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
-          <HomeCard
-            title="Collections"
-            description="Organize your heirlooms into meaningful collections"
-            href="/collections"
-            backgroundImage={backgroundImages[0]}
-          />
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3 md:grid-rows-1 grid-rows-[2fr_2fr_1fr] md:auto-rows-auto">
           <HomeCard
             title="Artifacts"
             description="Document and preserve individual items with rich media"
             href="/artifacts"
             backgroundImage={backgroundImages[1]}
+          />
+          <HomeCard
+            title="Collections"
+            description="Organize your heirlooms into meaningful collections"
+            href="/collections"
+            backgroundImage={backgroundImages[0]}
           />
           <HomeCard
             title="Stories"
