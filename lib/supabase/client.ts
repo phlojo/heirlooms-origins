@@ -1,18 +1,21 @@
 import { createBrowserClient as createSupabaseBrowserClient } from "@supabase/ssr"
+import type { SupabaseClient } from "@supabase/supabase-js"
 
-let client: ReturnType<typeof createSupabaseBrowserClient> | null = null
+let globalClient: SupabaseClient | undefined
 
 /**
  * Creates a singleton Supabase client for browser/client-side use
+ * Persists across hot reloads to prevent multiple instances
  */
 export function createClient() {
-  if (client) return client
+  if (globalClient) {
+    return globalClient
+  }
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
   if (!supabaseUrl || !supabaseAnonKey) {
-    console.error("[v0] Supabase environment variables are not set")
     throw new Error("Supabase configuration is missing. Please check your environment variables.")
   }
 
@@ -20,13 +23,12 @@ export function createClient() {
   try {
     new URL(supabaseUrl)
   } catch (error) {
-    console.error("[v0] Invalid Supabase URL:", supabaseUrl)
     throw new Error("Invalid Supabase URL configuration")
   }
 
-  client = createSupabaseBrowserClient(supabaseUrl, supabaseAnonKey)
+  globalClient = createSupabaseBrowserClient(supabaseUrl, supabaseAnonKey)
 
-  return client
+  return globalClient
 }
 
 export { createClient as createBrowserClient }

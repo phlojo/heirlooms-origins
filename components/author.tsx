@@ -2,7 +2,7 @@
 
 import { User } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { useEffect, useState } from "react"
+import { useEffect, useState, useMemo } from "react"
 import { createBrowserClient } from "@/lib/supabase/client"
 
 interface AuthorProps {
@@ -17,6 +17,8 @@ export function Author({ userId, authorName, size = "md", showAvatar = true, cla
   const [displayName, setDisplayName] = useState(authorName || "Author")
   const [isLoading, setIsLoading] = useState(!authorName)
 
+  const supabase = useMemo(() => createBrowserClient(), [])
+
   useEffect(() => {
     if (authorName || !userId) {
       setIsLoading(false)
@@ -25,7 +27,6 @@ export function Author({ userId, authorName, size = "md", showAvatar = true, cla
 
     const fetchProfile = async () => {
       try {
-        const supabase = createBrowserClient()
         const { data, error } = await supabase.from("profiles").select("display_name").eq("id", userId).single()
 
         if (error) {
@@ -45,7 +46,7 @@ export function Author({ userId, authorName, size = "md", showAvatar = true, cla
     }
 
     fetchProfile()
-  }, [userId, authorName])
+  }, [userId, authorName, supabase])
 
   const sizeClasses = {
     sm: "text-xs px-2.5 py-1 gap-1",

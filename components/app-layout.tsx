@@ -36,7 +36,7 @@ export function AppLayout({ children, user, noBottomPadding = false }: AppLayout
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-[100dvh] bg-background">
       <TopNav onMenuClick={() => handleSidebarToggle(!sidebarOpen)} user={user} />
 
       <div className="flex">
@@ -44,7 +44,7 @@ export function AppLayout({ children, user, noBottomPadding = false }: AppLayout
 
         <main
           className={`flex-1 p-6 transition-all duration-200 lg:p-8 ${
-            noBottomPadding ? "" : "pb-[var(--bottom-nav-height,80px)]"
+            noBottomPadding ? "" : "pb-[var(--bottom-nav-height,80px)] lg:pb-8"
           }`}
           data-bottom-padding={!noBottomPadding}
         >
@@ -54,7 +54,7 @@ export function AppLayout({ children, user, noBottomPadding = false }: AppLayout
         </main>
       </div>
 
-      {isMobile && <BottomNav user={user} />}
+      {isMobile && <BottomNav />}
     </div>
   )
 }

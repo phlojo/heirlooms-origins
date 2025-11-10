@@ -15,7 +15,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { createBrowserClient } from "@/lib/supabase/client"
 
 interface TopNavProps {
@@ -27,6 +27,8 @@ export function TopNav({ onMenuClick, user }: TopNavProps) {
   const router = useRouter()
   const [displayName, setDisplayName] = useState<string | null>(null)
 
+  const supabase = useMemo(() => createBrowserClient(), [])
+
   useEffect(() => {
     if (!user?.id) {
       setDisplayName(null)
@@ -34,7 +36,6 @@ export function TopNav({ onMenuClick, user }: TopNavProps) {
     }
 
     const fetchDisplayName = async () => {
-      const supabase = createBrowserClient()
       const { data, error } = await supabase.from("profiles").select("display_name").eq("id", user.id).single()
 
       if (!error && data) {
@@ -43,7 +44,7 @@ export function TopNav({ onMenuClick, user }: TopNavProps) {
     }
 
     fetchDisplayName()
-  }, [user?.id])
+  }, [user?.id, supabase])
 
   const handleSignOut = async () => {
     await fetch("/api/auth/signout", { method: "POST" })

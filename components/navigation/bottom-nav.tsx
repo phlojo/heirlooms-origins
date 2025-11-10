@@ -51,6 +51,13 @@ function track(event: string, data: Record<string, unknown>) {
  * - Increased height from 64px to 80px for better touch targets
  * - Larger padding on links (px-4 py-3) for easier tapping
  * - Active class prevents iOS double-tap issue with touch-action
+ *
+ * iOS Safari optimizations:
+ * - Uses pointer events instead of touch events for reliable tap detection
+ * - touch-action: manipulation removes 300ms tap delay
+ * - Dynamic height with safe-area-inset-bottom for iOS notch/home indicator
+ * - Positioned with bottom: 0 for stable placement during toolbar transitions
+ * - Active scaling feedback confirms tap registration
  */
 export default function BottomNav() {
   const pathname = usePathname()
@@ -59,12 +66,15 @@ export default function BottomNav() {
     <nav
       className={cn(
         "fixed inset-x-0 bottom-0 z-50",
-        "h-20 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80",
+        "border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80",
         "lg:hidden",
       )}
       style={{
+        /* iOS-safe bottom padding with safe-area support */
         paddingBottom: "max(env(safe-area-inset-bottom, 0px), 12px)",
-        height: "calc(80px + env(safe-area-inset-bottom, 0px))",
+        height: "calc(80px + max(env(safe-area-inset-bottom, 0px), 12px))",
+        /* Prevent momentum scroll from affecting nav */
+        touchAction: "manipulation",
       }}
     >
       <div className="flex h-20 items-center justify-around px-2">
@@ -79,11 +89,14 @@ export default function BottomNav() {
               aria-current={isActive ? "page" : undefined}
               className={cn(
                 "flex min-w-[56px] flex-col items-center justify-center gap-1.5 rounded-lg px-4 py-3 transition-colors",
-                "touch-manipulation active:scale-95",
+                /* iOS tap optimizations */
+                "touch-manipulation", // Removes 300ms tap delay
+                "active:scale-95 active:bg-accent/50", // Visual feedback on tap
                 "hover:bg-accent",
                 isActive ? "font-medium text-foreground" : "text-muted-foreground hover:text-foreground",
               )}
-              onClick={() => {
+              /* Use onPointerDown for reliable iOS tap detection */
+              onPointerDown={() => {
                 track("nav_bottom_click", {
                   item: item.label,
                   path: item.href,

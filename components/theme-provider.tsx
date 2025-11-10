@@ -11,9 +11,10 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     setMounted(true)
 
+    const supabase = createClient()
+
     // Load theme preference from database
     const loadTheme = async () => {
-      const supabase = createClient()
       const {
         data: { user },
       } = await supabase.auth.getUser()

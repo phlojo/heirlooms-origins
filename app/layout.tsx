@@ -19,7 +19,7 @@ const _sourceSerif_4 = Source_Serif_4({
 
 export const metadata: Metadata = {
   title: "Heirlooms - Preserve the things that matter to you",
-  description: "Document your life’s artifacts and stories with structure, context, and connection",
+  description: "Document your life's artifacts and stories with structure, context, and connection",
   generator: "v0.app",
 }
 
@@ -30,6 +30,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes, viewport-fit=cover"
+        />
+      </head>
       <body className={`font-sans antialiased`}>
         <ThemeProvider>{children}</ThemeProvider>
       </body>
