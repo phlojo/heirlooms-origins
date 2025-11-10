@@ -1,7 +1,7 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { Edit, ChevronRight, ChevronLeftIcon } from "lucide-react"
+import { Edit, ArrowRight, ArrowLeft } from "lucide-react"
 import Link from "next/link"
 import { Author } from "@/components/author"
 import { CollectionLabel } from "@/components/collection-label"
@@ -52,8 +52,8 @@ export function ArtifactStickyNav({
   const displayLabel = truncateBackLabel(backLabel)
 
   return (
-    <div className="sticky top-3 lg:top-16 z-50 bg-background/90 border-b rounded-lg">
-      <div className="container max-w-7xl mx-auto lg:px-8 py-3 px-0 rounded-lg">
+    <div className="sticky top-3 lg:top-16 z-50 bg-background/90 border rounded-lg">
+      <div className="container max-w-7xl mx-auto lg:px-8 py-3 px-0 rounded-lg border-none">
         <div className="flex items-center justify-between gap-4">
           {/* Left: Previous button */}
           <div className="flex items-center gap-2 min-w-0">
@@ -62,15 +62,15 @@ export function ArtifactStickyNav({
               size="icon"
               asChild={!!previousItem}
               disabled={!previousItem}
-              className={`shrink-0 ${!previousItem ? "opacity-50 pointer-events-none" : ""}`}
+              className={`shrink-0 ${!previousItem ? "opacity-30 pointer-events-none" : ""}`}
             >
               {previousItem ? (
                 <Link href={getNavUrl(previousItem.id)} title={previousItem.title}>
-                  <ChevronLeftIcon className="h-5 w-5" />
+                  <ArrowLeft className="h-5 w-5" />
                 </Link>
               ) : (
                 <span>
-                  <ChevronLeftIcon className="h-5 w-5" />
+                  <ArrowLeft className="h-5 w-5" />
                 </span>
               )}
             </Button>
@@ -78,7 +78,7 @@ export function ArtifactStickyNav({
 
           {/* Center: Title and Author */}
           <div className="flex flex-col items-center gap-1 flex-1 min-w-0">
-            <h1 className="text-balance font-bold tracking-tight text-center text-base truncate w-full">{title}</h1>
+            <h1 className="text-balance font-bold tracking-tight text-center truncate w-full text-lg">{title}</h1>
             {(collectionId || authorUserId) && (
               <div className="flex items-center gap-1.5 text-xs flex-wrap justify-center">
                 {collectionId && collectionName && (
@@ -116,15 +116,15 @@ export function ArtifactStickyNav({
               size="icon"
               asChild={!!nextItem}
               disabled={!nextItem}
-              className={`${!nextItem ? "opacity-50 pointer-events-none" : ""}`}
+              className={`${!nextItem ? "opacity-30 pointer-events-none" : ""}`}
             >
               {nextItem ? (
                 <Link href={getNavUrl(nextItem.id)} title={nextItem.title}>
-                  <ChevronRight className="h-5 w-5" />
+                  <ArrowRight className="h-5 w-5" />
                 </Link>
               ) : (
                 <span>
-                  <ChevronRight className="h-5 w-5" />
+                  <ArrowRight className="h-5 w-5" />
                 </span>
               )}
             </Button>

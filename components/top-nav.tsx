@@ -15,7 +15,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { useState, useEffect, useMemo } from "react"
+import { useState, useEffect } from "react"
 import { createBrowserClient } from "@/lib/supabase/client"
 
 interface TopNavProps {
@@ -27,7 +27,7 @@ export function TopNav({ onMenuClick, user }: TopNavProps) {
   const router = useRouter()
   const [displayName, setDisplayName] = useState<string | null>(null)
 
-  const supabase = useMemo(() => createBrowserClient(), [])
+  const supabase = createBrowserClient()
 
   useEffect(() => {
     if (!user?.id) {

@@ -1,11 +1,11 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { ArrowLeft, Edit, ChevronLeft, ChevronRight } from "lucide-react"
+import { ArrowLeft, Edit, ArrowRight } from "lucide-react"
 import Link from "next/link"
 import { Author } from "@/components/author"
 
-interface StickyNavProps {
+interface CollectionsStickyNavProps {
   title: string
   backHref: string
   backLabel: string
@@ -26,7 +26,7 @@ interface StickyNavProps {
   showBackButton?: boolean
 }
 
-export function StickyNav({
+export function CollectionsStickyNav({
   title,
   backHref,
   backLabel,
@@ -39,7 +39,7 @@ export function StickyNav({
   authorUserId,
   authorName,
   showBackButton = true,
-}: StickyNavProps) {
+}: CollectionsStickyNavProps) {
   const getNavUrl = (id: string) => {
     const baseUrl = `/${itemType}s/${id}`
     return mode ? `${baseUrl}?mode=${mode}` : baseUrl
@@ -58,7 +58,7 @@ export function StickyNav({
   const displayLabel = truncateBackLabel(backLabel)
 
   return (
-    <div className="sticky top-3 lg:top-16 z-50 bg-background/90 border-b rounded-lg">
+    <div className="sticky top-3 lg:top-16 z-50 bg-background/90 border-b border rounded-lg">
       <div className="container max-w-7xl mx-auto lg:px-8 py-3 px-0 rounded-lg">
         <div className="flex items-center justify-between gap-4">
           {/* Left: Back button */}
@@ -76,15 +76,15 @@ export function StickyNav({
                 size="icon"
                 asChild={!!previousItem}
                 disabled={!previousItem}
-                className={`shrink-0 ${!previousItem ? "opacity-50 pointer-events-none" : ""}`}
+                className={`shrink-0 ${!previousItem ? "opacity-30 pointer-events-none" : ""}`}
               >
                 {previousItem ? (
                   <Link href={getNavUrl(previousItem.id)} title={previousItem.title}>
-                    <ChevronLeft className="h-5 w-5" />
+                    <ArrowLeft className="h-5 w-5" />
                   </Link>
                 ) : (
                   <span>
-                    <ChevronLeft className="h-5 w-5" />
+                    <ArrowLeft className="h-5 w-5" />
                   </span>
                 )}
               </Button>
@@ -112,15 +112,15 @@ export function StickyNav({
                 size="icon"
                 asChild={!!nextItem}
                 disabled={!nextItem}
-                className={`${!nextItem ? "opacity-50 pointer-events-none" : ""}`}
+                className={`${!nextItem ? "opacity-30 pointer-events-none" : ""}`}
               >
                 {nextItem ? (
                   <Link href={getNavUrl(nextItem.id)} title={nextItem.title}>
-                    <ChevronRight className="h-5 w-5" />
+                    <ArrowRight className="h-5 w-5" />
                   </Link>
                 ) : (
                   <span>
-                    <ChevronRight className="h-5 w-5" />
+                    <ArrowRight className="h-5 w-5" />
                   </span>
                 )}
               </Button>

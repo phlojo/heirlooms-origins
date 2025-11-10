@@ -8,7 +8,7 @@ import { getCollectionBySlug, getAdjacentCollections } from "@/lib/actions/colle
 import { getArtifactsByCollection } from "@/lib/actions/artifacts"
 import { ArtifactCard } from "@/components/artifact-card"
 import { DeleteCollectionButton } from "@/components/delete-collection-button"
-import { StickyNav } from "@/components/sticky-nav"
+import { CollectionsStickyNav } from "@/components/collections-sticky-nav"
 import { CollectionSwipeWrapper } from "@/components/collection-swipe-wrapper"
 
 export default async function CollectionDetailPage({
@@ -79,7 +79,7 @@ export default async function CollectionDetailPage({
     <AppLayout user={user}>
       <CollectionSwipeWrapper previousUrl={previousUrl} nextUrl={nextUrl}>
         <div className="space-y-8">
-          <StickyNav
+          <CollectionsStickyNav
             title={collection.title}
             backHref="/collections"
             backLabel="All Collections"

@@ -30,8 +30,8 @@ export default async function HomePage() {
 
   return (
     <AppLayout user={user}>
-      <div className="space-y-8">
-        <div>
+      <div className="flex flex-col max-h-[calc(100dvh-4rem)] md:h-auto space-y-0 md:space-y-8 md:overflow-auto">
+        <div className="shrink-0 pt-2 md:pt-0">
           <h1 className="flex items-center gap-3 font-bold tracking-tight text-3xl">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center bg-gradient-to-br from-primary to-chart-2 text-primary-foreground shadow-sm rounded-sm">
               <svg
@@ -61,23 +61,23 @@ export default async function HomePage() {
             </div>
             Welcome to Heirlooms
           </h1>
-          <p className="mt-2 text-lg text-muted-foreground">
+          <p className="mt-2 text-lg text-muted-foreground mb-6">
             Preserve and share the objects and stories that matter to you.
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
-          <HomeCard
-            title="Collections"
-            description="Organize your heirlooms into meaningful collections"
-            href="/collections"
-            backgroundImage={backgroundImages[0]}
-          />
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3 md:grid-rows-1 grid-rows-3 flex-1 md:flex-none pb-3 md:pb-0 min-h-0 p-1 -m-1">
           <HomeCard
             title="Artifacts"
             description="Document and preserve individual items with rich media"
             href="/artifacts"
             backgroundImage={backgroundImages[1]}
+          />
+          <HomeCard
+            title="Collections"
+            description="Organize your heirlooms into meaningful collections"
+            href="/collections"
+            backgroundImage={backgroundImages[0]}
           />
           <HomeCard
             title="Stories"

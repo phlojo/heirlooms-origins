@@ -4,29 +4,32 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
 import Link from "next/link"
-import { CollectionCard } from "@/components/collection-card"
-import { EmptyCollections } from "@/components/empty-collections"
+import { ArtifactCard } from "@/components/artifact-card"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { useEffect, useState } from "react"
 
-interface Collection {
+interface Artifact {
   id: string
-  name: string
+  title: string
   description: string | null
-  slug: string
-  thumbnailImages: string[]
-  itemCount: number
+  media_urls: string[]
+  author_name: string | null
+  collection: {
+    id: string
+    title: string
+    is_public: boolean
+  }
 }
 
-interface CollectionsTabsProps {
+interface ArtifactsTabsProps {
   user: any
-  myCollections: Collection[]
-  allCollections: Collection[]
+  myArtifacts: Artifact[]
+  allArtifacts: Artifact[]
 }
 
-const STORAGE_KEY = "heirloom-collections-tab"
+const STORAGE_KEY = "heirloom-artifacts-tab"
 
-export function CollectionsTabs({ user, myCollections, allCollections }: CollectionsTabsProps) {
+export function ArtifactsTabs({ user, myArtifacts, allArtifacts }: ArtifactsTabsProps) {
   const [activeTab, setActiveTab] = useState<string>("all")
 
   useEffect(() => {
@@ -46,11 +49,11 @@ export function CollectionsTabs({ user, myCollections, allCollections }: Collect
       <div className="sticky top-0 lg:top-16 z-10 -mx-6 bg-background px-6 py-4 flex items-center justify-between border-b lg:-mx-8 lg:px-8 opacity-95">
         <TabsList>
           <TabsTrigger value="all">Community</TabsTrigger>
-          <TabsTrigger value="mine">My Collections</TabsTrigger>
+          <TabsTrigger value="mine">My Artifacts</TabsTrigger>
         </TabsList>
         {user ? (
           <Button asChild>
-            <Link href="/collections/new">
+            <Link href="/artifacts/new">
               <Plus className="mr-2 h-4 w-4" />
               New
             </Link>
@@ -63,15 +66,15 @@ export function CollectionsTabs({ user, myCollections, allCollections }: Collect
       </div>
 
       <TabsContent value="all" className="mt-6">
-        {allCollections.length > 0 ? (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {allCollections.map((collection) => (
-              <CollectionCard key={collection.id} collection={collection} mode="all" />
+        {allArtifacts.length > 0 ? (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {allArtifacts.map((artifact) => (
+              <ArtifactCard key={artifact.id} artifact={artifact} showAuthor={true} authorName={artifact.author_name} />
             ))}
           </div>
         ) : (
           <div className="rounded-lg border border-dashed p-12 text-center">
-            <p className="text-sm text-muted-foreground">No public collections available yet.</p>
+            <p className="text-sm text-muted-foreground">No public artifacts available yet.</p>
           </div>
         )}
       </TabsContent>
@@ -91,14 +94,22 @@ export function CollectionsTabs({ user, myCollections, allCollections }: Collect
               </Button>
             </CardContent>
           </Card>
-        ) : myCollections.length > 0 ? (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {myCollections.map((collection) => (
-              <CollectionCard key={collection.id} collection={collection} mode="mine" />
+        ) : myArtifacts.length > 0 ? (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {myArtifacts.map((artifact) => (
+              <ArtifactCard key={artifact.id} artifact={artifact} showAuthor={false} />
             ))}
           </div>
         ) : (
-          <EmptyCollections />
+          <div className="rounded-lg border border-dashed p-12 text-center">
+            <p className="text-sm text-muted-foreground">You haven't created any artifacts yet.</p>
+            <Button asChild className="mt-4">
+              <Link href="/artifacts/new">
+                <Plus className="mr-2 h-4 w-4" />
+                Create Your First Artifact
+              </Link>
+            </Button>
+          </div>
         )}
       </TabsContent>
     </Tabs>

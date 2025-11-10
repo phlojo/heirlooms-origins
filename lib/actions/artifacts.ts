@@ -183,6 +183,32 @@ export async function getAllPublicArtifacts() {
 }
 
 /**
+ * Server action to get artifacts created by the current user
+ */
+export async function getMyArtifacts(userId: string) {
+  const supabase = await createClient()
+
+  const { data, error } = await supabase
+    .from("artifacts")
+    .select(`
+      *,
+      collection:collections(id, title, is_public)
+    `)
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false })
+
+  if (error) {
+    console.error("[v0] Error fetching my artifacts:", error)
+    return []
+  }
+
+  return data.map((artifact) => ({
+    ...artifact,
+    author_name: null, // User's own artifacts don't need author name
+  }))
+}
+
+/**
  * Server action to update an existing artifact
  */
 export async function updateArtifact(input: UpdateArtifactInput, oldMediaUrls: string[] = []) {
