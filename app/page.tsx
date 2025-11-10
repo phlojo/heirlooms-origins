@@ -69,7 +69,7 @@ export default async function HomePage() {
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3 md:grid-rows-1 grid-rows-3 flex-1 md:flex-none pb-3 md:pb-0 min-h-0 p-1 -m-1">
           <HomeCard
             title="Artifacts"
-            description="Document and preserve individual items with rich media"
+            description="Capture your artifacts and browse those shared by the community."
             href="/artifacts"
             backgroundImage={backgroundImages[1]}
           />
