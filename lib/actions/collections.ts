@@ -330,11 +330,20 @@ export async function deleteCollection(collectionId: string, deleteArtifacts = f
       .eq("collection_id", collectionId)
       .select()
 
-    console.log("[v0] Artifacts moved to Unsorted:", updatedArtifacts?.length, "Error:", updateError)
+    console.log("[v0] Update query details:", {
+      collectionId,
+      userId: user.id,
+      updatedCount: updatedArtifacts?.length,
+      error: updateError,
+      errorDetails: updateError ? JSON.stringify(updateError, null, 2) : null,
+    })
 
     if (updateError) {
       console.error("[v0] Error moving artifacts to Unsorted:", updateError)
-      return { success: false, error: "Failed to move artifacts to Unsorted" }
+      return {
+        success: false,
+        error: `Failed to move artifacts to Unsorted: ${updateError.message || JSON.stringify(updateError)}`,
+      }
     }
   }
 
