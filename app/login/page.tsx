@@ -7,9 +7,11 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useState } from "react"
 import Link from "next/link"
-import { signInWithPassword, signInWithMagicLink, signInWithGoogle } from "@/lib/actions/auth"
+import { signInWithPassword, signInWithMagicLink } from "@/lib/actions/auth"
+import { createClient } from "@/lib/supabase/client"
 import BottomNav from "@/components/navigation/bottom-nav"
 import { useIsMobile } from "@/hooks/use-mobile"
+import { useSearchParams } from "next/navigation"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
@@ -20,16 +22,44 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const isMobile = useIsMobile()
+  const searchParams = useSearchParams()
+  const returnTo = searchParams.get("returnTo") || "/collections"
 
   const handleGoogleSignIn = async () => {
     setIsGoogleLoading(true)
     setError(null)
 
     try {
-      const result = await signInWithGoogle()
-      if (result?.error) {
-        setError(`Google sign-in failed: ${result.error}. Please try again.`)
+      const supabase = createClient()
+
+      const redirectTo =
+        typeof window !== "undefined"
+          ? `${window.location.origin}/auth/callback?next=${encodeURIComponent(returnTo)}`
+          : process.env.NEXT_PUBLIC_SITE_URL
+            ? `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback?next=${encodeURIComponent(returnTo)}`
+            : `/auth/callback?next=${encodeURIComponent(returnTo)}`
+
+      console.log("[v0] Google OAuth redirect URL:", redirectTo)
+      console.log("[v0] Return to after login:", returnTo)
+
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo,
+          queryParams: {
+            prompt: "select_account",
+          },
+        },
+      })
+
+      console.log("[v0] OAuth response:", { url: data?.url, error })
+
+      if (error) {
+        setError(`Google sign-in failed: ${error.message}. Please try again.`)
         setIsGoogleLoading(false)
+      } else if (data?.url) {
+        // Browser will redirect to Google OAuth
+        window.location.href = data.url
       }
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : "An error occurred"
@@ -45,7 +75,7 @@ export default function LoginPage() {
     setSuccess(null)
 
     try {
-      const result = await signInWithMagicLink(email)
+      const result = await signInWithMagicLink(email, returnTo)
       if (result.error) {
         setError(`Unable to send magic link: ${result.error}. Please check your email address and try again.`)
       } else if (result.success) {
@@ -66,7 +96,7 @@ export default function LoginPage() {
     setSuccess(null)
 
     try {
-      const result = await signInWithPassword(email, password)
+      const result = await signInWithPassword(email, password, returnTo)
       if (result?.error) {
         setError(`Sign in failed: ${result.error}. Please verify your credentials and try again.`)
       }

@@ -54,6 +54,7 @@ export async function updateSession(request: NextRequest) {
       console.log("[v0] Redirecting to login - no user for protected route")
       const url = request.nextUrl.clone()
       url.pathname = "/login"
+      url.searchParams.set("returnTo", request.nextUrl.pathname)
       return NextResponse.redirect(url)
     }
 
