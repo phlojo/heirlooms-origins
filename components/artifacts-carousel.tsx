@@ -51,9 +51,7 @@ export function ArtifactsCarousel({ artifacts, canEdit }: ArtifactsCarouselProps
 
     const isMobile = window.innerWidth < 1024
     const scrollAmount = isMobile ? scrollContainerRef.current.clientWidth * 0.75 : 340
-    const newScrollLeft =
-      scrollContainerRef.current.scrollLeft +
-      (direction === "left" ? -scrollAmount : scrollAmount)
+    const newScrollLeft = scrollContainerRef.current.scrollLeft + (direction === "left" ? -scrollAmount : scrollAmount)
 
     scrollContainerRef.current.scrollTo({
       left: newScrollLeft,
@@ -64,13 +62,9 @@ export function ArtifactsCarousel({ artifacts, canEdit }: ArtifactsCarouselProps
   if (artifacts.length === 0) {
     return (
       <div className="mx-6 rounded-lg border border-dashed p-12 text-center lg:mx-8">
-        <p className="text-sm text-muted-foreground">
-          No artifacts in this collection yet.
-        </p>
+        <p className="text-sm text-muted-foreground">No artifacts in this collection yet.</p>
         {canEdit && (
-          <p className="mt-2 text-xs text-muted-foreground">
-            Click "Add Artifact" above to add your first item.
-          </p>
+          <p className="mt-2 text-xs text-muted-foreground">Click "Add Artifact" above to add your first item.</p>
         )}
       </div>
     )
@@ -85,6 +79,7 @@ export function ArtifactsCarousel({ artifacts, canEdit }: ArtifactsCarouselProps
           size="icon"
           className="absolute left-2 top-1/2 z-10 h-10 w-10 -translate-y-1/2 rounded-full bg-background shadow-lg hover:bg-accent lg:left-4"
           onClick={() => scroll("left")}
+          onPointerDown={(e) => e.stopPropagation()}
         >
           <ChevronLeft className="h-5 w-5" />
           <span className="sr-only">Scroll left</span>
@@ -98,6 +93,7 @@ export function ArtifactsCarousel({ artifacts, canEdit }: ArtifactsCarouselProps
           size="icon"
           className="absolute right-2 top-1/2 z-10 h-10 w-10 -translate-y-1/2 rounded-full bg-background shadow-lg hover:bg-accent lg:right-4"
           onClick={() => scroll("right")}
+          onPointerDown={(e) => e.stopPropagation()}
         >
           <ChevronRight className="h-5 w-5" />
           <span className="sr-only">Scroll right</span>
@@ -107,7 +103,11 @@ export function ArtifactsCarousel({ artifacts, canEdit }: ArtifactsCarouselProps
       <div
         ref={scrollContainerRef}
         className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-thin lg:gap-6"
-        style={{ scrollbarWidth: "thin" }}
+        style={{
+          scrollbarWidth: "thin",
+          overscrollBehaviorX: "contain",
+          WebkitOverflowScrolling: "touch",
+        }}
       >
         {artifacts.map((artifact, index) => (
           <div

@@ -171,7 +171,48 @@
   * {
     @apply border-border outline-ring/50;
   }
+
+  /* iOS Safari tap and viewport optimizations */
+  html {
+    /* Use dynamic viewport units for stable UI during toolbar show/hide */
+    height: 100dvh;
+    /* Prevent text inflation on iOS */
+    -webkit-text-size-adjust: 100%;
+    /* Optimize tap highlighting */
+    -webkit-tap-highlight-color: transparent;
+    /* Improve touch scrolling */
+    -webkit-overflow-scrolling: touch;
+  }
+
   body {
     @apply bg-background text-foreground;
+    /* Use dynamic viewport height for iOS Safari stability */
+    min-height: 100dvh;
+    /* Prevent overscroll on iOS */
+    overscroll-behavior-y: none;
+    /* Remove default tap delay on mobile */
+    touch-action: manipulation;
+  }
+
+  /* Optimize input focusing to prevent zoom */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="search"],
+  input[type="tel"],
+  input[type="url"],
+  textarea,
+  select {
+    font-size: 16px; /* Prevents iOS zoom on focus */
+  }
+
+  /* Ensure safe areas are respected */
+  @supports (padding: env(safe-area-inset-bottom)) {
+    body {
+      padding-top: env(safe-area-inset-top);
+      padding-bottom: env(safe-area-inset-bottom);
+      padding-left: env(safe-area-inset-left);
+      padding-right: env(safe-area-inset-right);
+    }
   }
 }
