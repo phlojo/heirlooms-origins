@@ -64,7 +64,7 @@ async function getMyCollections(userId: string) {
       const unsortedCollection = {
         id: "unsorted",
         title: "Unsorted",
-        description: null,
+        description: "Artifacts that haven't been added to a collection yet",
         slug: "unsorted",
         thumbnailImages: unsortedThumbnails.slice(0, 5),
         itemCount: unsortedCount,
