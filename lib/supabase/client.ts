@@ -30,7 +30,20 @@ export function createClient() {
     throw new Error("Invalid Supabase URL configuration")
   }
 
-  globalClient = createSupabaseBrowserClient(supabaseUrl, supabaseAnonKey)
+  globalClient = createSupabaseBrowserClient(supabaseUrl, supabaseAnonKey, {
+    auth: {
+      detectSessionInUrl: true,
+      persistSession: true,
+      storageKey: "sb-auth-token",
+    },
+    global: {
+      headers: {
+        "X-Client-Info": "supabase-js-web",
+      },
+    },
+    // Suppress the multiple instances warning in development
+    isSingleton: true,
+  })
 
   return globalClient
 }
