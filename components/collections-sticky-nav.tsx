@@ -85,11 +85,11 @@ export function CollectionsStickyNav({
           )}
 
           {/* Divider */}
-          {showBackButton && <div className="w-px bg-border shrink-0 h-12" />}
+          {showBackButton && <div className="w-px bg-border shrink-0 h-12 mr-2.5" />}
 
           {/* Center-Left: Title and Author/Private pill stacked, left-justified */}
           <div className="flex flex-col justify-center gap-0.5 flex-1 min-w-0 py-0.5">
-            <h1 className="font-bold tracking-tight w-full leading-tight break-words line-clamp-2 text-2xl text-left pl-2.5">
+            <h1 className="font-bold tracking-tight w-full leading-tight break-words line-clamp-2 text-2xl text-left pl-[0] pr-0">
               {title}
             </h1>
             {isPrivate ? (
@@ -97,7 +97,7 @@ export function CollectionsStickyNav({
                 <Badge variant="purple">Private</Badge>
               </div>
             ) : authorUserId ? (
-              <div className="text-left mx-2.5">
+              <div className="text-left mx-[0]">
                 <Author userId={authorUserId} authorName={authorName} size="sm" />
               </div>
             ) : null}
