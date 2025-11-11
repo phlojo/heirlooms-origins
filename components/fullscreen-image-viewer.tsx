@@ -197,6 +197,7 @@ export function FullscreenImageViewer({ src, alt, onClose }: FullscreenImageView
         <img
           src={src || "/placeholder.svg"}
           alt={alt}
+          crossOrigin="anonymous"
           draggable={false}
           style={{
             transform: `scale(${scale}) translate(${position.x / scale}px, ${position.y / scale}px)`,

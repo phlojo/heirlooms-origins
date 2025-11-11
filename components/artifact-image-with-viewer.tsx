@@ -64,6 +64,7 @@ export function ArtifactImageWithViewer({ src, alt, setIsImageFullscreen }: Arti
         <img
           src={src || "/placeholder.svg"}
           alt={alt}
+          crossOrigin="anonymous"
           className="max-h-[600px] w-full object-contain transition-opacity hover:opacity-90"
           onError={handleImageError}
         />

@@ -8,10 +8,11 @@ export async function middleware(request: NextRequest) {
     "default-src 'self'",
     "base-uri 'self'",
     "font-src 'self' data: https://fonts.gstatic.com",
-    "img-src 'self' data: blob: https://res.cloudinary.com",
+    "img-src 'self' data: blob: https://res.cloudinary.com https://*.cloudinary.com",
+    "media-src 'self' data: blob: https://res.cloudinary.com https://*.cloudinary.com",
     "script-src 'self' 'unsafe-inline' 'unsafe-eval'", // Next dev/previews may need 'unsafe-eval'
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-    "connect-src 'self' https://*.supabase.co https://res.cloudinary.com https://api.cloudinary.com https://*.vercel.app",
+    "connect-src 'self' https://*.supabase.co https://res.cloudinary.com https://api.cloudinary.com https://*.cloudinary.com https://*.vercel.app",
     "frame-ancestors 'none'",
     "object-src 'none'",
   ].join("; ")
@@ -21,6 +22,10 @@ export async function middleware(request: NextRequest) {
   res.headers.set("X-Frame-Options", "DENY")
   res.headers.set("X-Content-Type-Options", "nosniff")
   res.headers.set("Permissions-Policy", "geolocation=(), microphone=(), camera=()")
+
+  res.headers.set("Cross-Origin-Resource-Policy", "cross-origin")
+  res.headers.set("Cross-Origin-Embedder-Policy", "unsafe-none")
+
   return res
 }
 
