@@ -32,15 +32,15 @@ export default function LoginPage() {
     try {
       const supabase = createClient()
 
-      const redirectTo =
-        typeof window !== "undefined"
-          ? `${window.location.origin}/auth/callback?next=${encodeURIComponent(returnTo)}`
-          : process.env.NEXT_PUBLIC_SITE_URL
-            ? `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback?next=${encodeURIComponent(returnTo)}`
-            : `/auth/callback?next=${encodeURIComponent(returnTo)}`
+      const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin
+      const redirectTo = `${baseUrl}/auth/callback?next=${encodeURIComponent(returnTo)}`
 
-      console.log("[v0] Google OAuth redirect URL:", redirectTo)
-      console.log("[v0] Return to after login:", returnTo)
+      console.log("[v0] Google OAuth configuration:")
+      console.log("[v0]   NEXT_PUBLIC_SITE_URL:", process.env.NEXT_PUBLIC_SITE_URL)
+      console.log("[v0]   window.location.origin:", window.location.origin)
+      console.log("[v0]   Using base URL:", baseUrl)
+      console.log("[v0]   Full redirect URL:", redirectTo)
+      console.log("[v0]   Return to after login:", returnTo)
 
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: "google",
