@@ -27,7 +27,11 @@ function CardHeader({ className, ...props }: React.ComponentProps<"div">) {
 
 function CardTitle({ className, ...props }: React.ComponentProps<"div">) {
   return (
-    <div data-slot="card-title" className={cn("leading-none font-semibold pb-2 leading-5 text-center", className)} {...props} />
+    <div
+      data-slot="card-title"
+      className={cn("leading-none font-semibold pb-2 leading-5 text-center", className)}
+      {...props}
+    />
   )
 }
 
@@ -37,9 +41,11 @@ function CardDescription({ className, ...props }: React.ComponentProps<"div">) {
       <div className="absolute inset-0 flex items-center">
         <span className="w-full border-t" />
       </div>
-      <div data-slot="card-description" className={cn("relative flex justify-center text-xs uppercase", className)}>
-        <span className="bg-background px-2 text-muted-foreground" {...props} />
-      </div>
+      <div
+        data-slot="card-description"
+        className={cn("relative flex justify-center text-xs uppercase", className)}
+        {...props}
+      />
     </div>
   )
 }
