@@ -101,9 +101,7 @@ export default function LoginPage() {
         <Card>
           <CardHeader>
             <CardTitle className="text-2xl">Login to Heirlooms</CardTitle>
-            <CardDescription>
-              {isMagicLink ? "Enter your email to receive a magic link" : "Sign in with your email and password"}
-            </CardDescription>
+            <CardDescription>Choose a sign-in method</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={isMagicLink ? handleMagicLink : handlePasswordLogin}>
