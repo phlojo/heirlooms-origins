@@ -31,24 +31,10 @@ export default function LoginPage() {
 
     try {
       const supabase = createClient()
-
       const baseUrl = window.location.origin
       const redirectTo = `${baseUrl}/auth/callback?next=${encodeURIComponent(returnTo)}`
 
-      console.log("[v0] 🔐 Google OAuth Initiation")
-      console.log("[v0]   Base URL:", baseUrl)
-      console.log("[v0]   Redirect URL:", redirectTo)
-      console.log("[v0]   Return destination:", returnTo)
-
-      const isPreview = baseUrl.includes(".v0-v2-preview.app") || baseUrl.includes(".vercel.app")
-      if (isPreview) {
-        console.log("[v0] ⚠️  Preview environment detected")
-        console.log("[v0]   Make sure your Supabase project allows this redirect URL:")
-        console.log("[v0]   Add to Supabase Auth → URL Configuration → Redirect URLs:")
-        console.log("[v0]   https://*.v0-v2-preview.app/**")
-      }
-
-      const { data, error } = await supabase.auth.signInWithOAuth({
+      const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
           redirectTo,
@@ -58,23 +44,12 @@ export default function LoginPage() {
         },
       })
 
-      console.log("[v0] 📤 OAuth response:", { hasUrl: !!data?.url, error: error?.message })
-
       if (error) {
-        console.error("[v0] ❌ OAuth error:", error)
-
-        if (isPreview && error.message.includes("redirect")) {
-          setError(
-            `Google sign-in is not configured for preview URLs. Add "https://*.v0-v2-preview.app/**" to your Supabase project's allowed Redirect URLs in Authentication → URL Configuration.`,
-          )
-        } else {
-          setError(`Google sign-in failed: ${error.message}`)
-        }
+        setError(`Google sign-in failed: ${error.message}`)
         setIsGoogleLoading(false)
       }
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : "An error occurred"
-      console.error("[v0] ❌ Exception during OAuth:", error)
       setError(`Google sign-in failed: ${errorMessage}`)
       setIsGoogleLoading(false)
     }

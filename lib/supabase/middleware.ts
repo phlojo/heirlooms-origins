@@ -11,14 +11,13 @@ export async function updateSession(request: NextRequest) {
 
   // If Supabase credentials are not available, skip auth checks
   if (!supabaseUrl || !supabaseAnonKey) {
-    console.log("[v0] Supabase credentials not found in middleware, skipping auth checks")
     return supabaseResponse
   }
 
   try {
     new URL(supabaseUrl)
   } catch (error) {
-    console.error("[v0] Invalid Supabase URL in middleware:", supabaseUrl)
+    console.error("Invalid Supabase URL in middleware:", supabaseUrl)
     return supabaseResponse
   }
 
@@ -43,14 +42,8 @@ export async function updateSession(request: NextRequest) {
       data: { user },
     } = await supabase.auth.getUser()
 
-    console.log("[v0] Middleware check", {
-      path: request.nextUrl.pathname,
-      hasUser: !!user,
-      isCallback: request.nextUrl.pathname.startsWith("/auth/callback"),
-    })
-
+    // Allow auth callback to proceed without interference
     if (request.nextUrl.pathname.startsWith("/auth/callback")) {
-      console.log("[v0] Allowing auth callback to proceed")
       return supabaseResponse
     }
 
@@ -58,7 +51,6 @@ export async function updateSession(request: NextRequest) {
       request.nextUrl.pathname === "/collections/new" || request.nextUrl.pathname === "/artifacts/new"
 
     if (!user && isProtectedRoute) {
-      console.log("[v0] Redirecting to login - no user for protected route")
       const url = request.nextUrl.clone()
       url.pathname = "/login"
       url.searchParams.set("returnTo", request.nextUrl.pathname)
@@ -67,8 +59,7 @@ export async function updateSession(request: NextRequest) {
 
     return supabaseResponse
   } catch (error) {
-    console.error("[v0] Middleware Supabase error:", error)
-    // Allow the request to continue even if auth check fails
+    console.error("Middleware Supabase error:", error)
     return supabaseResponse
   }
 }
