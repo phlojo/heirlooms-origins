@@ -7,7 +7,7 @@ export default async function ArtifactsPage() {
   const user = await getCurrentUser()
 
   const myArtifacts = user ? await getMyArtifacts(user.id) : []
-  const allArtifacts = await getAllPublicArtifacts()
+  const allArtifacts = await getAllPublicArtifacts(user?.id)
 
   return (
     <AppLayout user={user}>
