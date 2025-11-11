@@ -80,7 +80,7 @@ export function CollectionsStickyNav({
 
           {/* Center: Title and Author */}
           <div className="flex flex-col items-center gap-1 flex-1 min-w-0">
-            <h1 className="text-balance font-bold tracking-tight text-center text-base truncate w-full">{title}</h1>
+            <h1 className="text-balance font-bold tracking-tight text-center truncate w-full text-lg">{title}</h1>
             {authorUserId && <Author userId={authorUserId} authorName={authorName} size="sm" />}
           </div>
 
