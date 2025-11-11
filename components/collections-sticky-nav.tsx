@@ -66,7 +66,7 @@ export function CollectionsStickyNav({
 
   return (
     <div className="sticky top-3 lg:top-16 z-50 bg-background/90 border-b border rounded-lg">
-      <div className="container max-w-7xl mx-auto lg:px-8 rounded-lg py-1.5 px-1">
+      <div className="container max-w-7xl mx-auto lg:px-8 rounded-lg px-1 py-1">
         <div className="flex justify-between gap-3 items-center">
           {/* Left: Back button */}
           {showBackButton && (
