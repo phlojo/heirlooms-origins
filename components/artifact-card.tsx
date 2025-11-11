@@ -54,7 +54,7 @@ export function ArtifactCard({ artifact, showAuthor = false, authorName }: Artif
             {artifact.origin && <span className="line-clamp-1">{artifact.origin}</span>}
           </div>
           {showAuthor && artifact.user_id && (
-            <div className="pt-2 text-right">
+            <div className="text-right pt-0">
               <Author userId={artifact.user_id} authorName={authorName} size="sm" />
             </div>
           )}
