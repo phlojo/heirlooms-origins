@@ -22,6 +22,14 @@ export const metadata: Metadata = {
   title: "Heirlooms - Preserve the things that matter to you",
   description: "Document your life's artifacts and stories with structure, context, and connection",
   generator: "v0.app",
+  icons: {
+    icon: [
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/favicon-32x32.jpg", sizes: "32x32", type: "image/png" },
+      { url: "/favicon-16x16.jpg", sizes: "16x16", type: "image/png" },
+    ],
+    apple: "/apple-touch-icon.jpg",
+  },
 }
 
 export default function RootLayout({
