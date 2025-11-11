@@ -62,26 +62,26 @@ export default async function HomePage() {
             Welcome to Heirlooms
           </h1>
           <p className="mt-2 text-lg text-muted-foreground mb-6">
-            Preserve and share the objects and stories that matter to you.
+            Preserve what matters to you and discover collections from the community.
           </p>
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3 md:grid-rows-1 grid-rows-3 flex-1 md:flex-none pb-3 md:pb-0 min-h-0 p-1 -m-1">
           <HomeCard
             title="Artifacts"
-            description="Document and preserve individual items with rich media"
+            description="Capture your artifacts and browse those shared by the community."
             href="/artifacts"
             backgroundImage={backgroundImages[1]}
           />
           <HomeCard
             title="Collections"
-            description="Organize your heirlooms into meaningful collections"
+            description="Organize your collections and explore those created by the community."
             href="/collections"
             backgroundImage={backgroundImages[0]}
           />
           <HomeCard
             title="Stories"
-            description="Connect artifacts to the stories that make them meaningful"
+            description="Tell the stories behind your artifacts and read those shared by others."
             href="/stories"
             backgroundImage={backgroundImages[2]}
           />

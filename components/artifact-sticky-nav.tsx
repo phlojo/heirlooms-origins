@@ -25,6 +25,8 @@ interface ArtifactStickyNavProps {
   collectionId?: string
   collectionSlug?: string
   collectionName?: string
+  currentPosition?: number
+  totalCount?: number
 }
 
 export function ArtifactStickyNav({
@@ -40,6 +42,8 @@ export function ArtifactStickyNav({
   collectionId,
   collectionSlug,
   collectionName,
+  currentPosition,
+  totalCount,
 }: ArtifactStickyNavProps) {
   const getNavUrl = (id: string) => `/artifacts/${id}`
 
@@ -62,7 +66,7 @@ export function ArtifactStickyNav({
               size="icon"
               asChild={!!previousItem}
               disabled={!previousItem}
-              className={`shrink-0 ${!previousItem ? "opacity-30 pointer-events-none" : ""}`}
+              className={`shrink-0 ${!previousItem ? "!opacity-15 pointer-events-none" : ""}`}
             >
               {previousItem ? (
                 <Link href={getNavUrl(previousItem.id)} title={previousItem.title}>
@@ -83,6 +87,13 @@ export function ArtifactStickyNav({
               <div className="flex items-center gap-1.5 text-xs flex-wrap justify-center">
                 {collectionId && collectionName && (
                   <>
+                    {currentPosition && totalCount && (
+                      <>
+                        <span className="text-muted-foreground font-medium">
+                          {currentPosition} of {totalCount}
+                        </span>
+                      </>
+                    )}
                     <span className="text-muted-foreground">in</span>
                     <CollectionLabel
                       collectionId={collectionId}
@@ -116,7 +127,7 @@ export function ArtifactStickyNav({
               size="icon"
               asChild={!!nextItem}
               disabled={!nextItem}
-              className={`${!nextItem ? "opacity-30 pointer-events-none" : ""}`}
+              className={`${!nextItem ? "!opacity-15 pointer-events-none" : ""}`}
             >
               {nextItem ? (
                 <Link href={getNavUrl(nextItem.id)} title={nextItem.title}>

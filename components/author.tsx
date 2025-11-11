@@ -62,34 +62,34 @@ export function Author({ userId, authorName, size = "md", showAvatar = true, cla
 
   if (isLoading) {
     return (
-      <div className="inline-flex items-center gap-1.5">
-        <span className="text-xs text-muted-foreground">by</span>
+      <div className="inline-flex items-center gap-1.5 min-w-0">
+        <span className="text-xs text-muted-foreground shrink-0">by</span>
         <div
           className={cn(
-            "inline-flex w-fit items-center rounded-full bg-primary/10 font-medium text-primary/50",
+            "inline-flex w-fit items-center rounded-full bg-primary/10 font-medium text-primary/50 min-w-0",
             sizeClasses[size],
             className,
           )}
         >
-          {showAvatar && <User className={`${iconSizes[size]}`} />}
-          <span>...</span>
+          {showAvatar && <User className={`${iconSizes[size]} shrink-0`} />}
+          <span className="truncate">...</span>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="inline-flex items-center gap-1.5">
-      <span className="text-xs text-muted-foreground">by</span>
+    <div className="inline-flex items-center gap-1.5 min-w-0">
+      <span className="text-xs text-muted-foreground shrink-0">by</span>
       <div
         className={cn(
-          "inline-flex w-fit items-center rounded-full bg-primary/10 font-medium text-primary transition-colors text-center",
+          "inline-flex w-fit items-center rounded-full bg-primary/10 font-medium text-primary transition-colors text-center min-w-0",
           sizeClasses[size],
           className,
         )}
       >
-        {showAvatar && <User className={`${iconSizes[size]}`} />}
-        <span>{displayName}</span>
+        {showAvatar && <User className={`${iconSizes[size]} shrink-0`} />}
+        <span className="truncate">{displayName}</span>
       </div>
     </div>
   )

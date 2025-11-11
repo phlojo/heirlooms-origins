@@ -67,7 +67,7 @@ export function ArtifactsTabs({ user, myArtifacts, allArtifacts }: ArtifactsTabs
 
       <TabsContent value="all" className="mt-6">
         {allArtifacts.length > 0 ? (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
             {allArtifacts.map((artifact) => (
               <ArtifactCard key={artifact.id} artifact={artifact} showAuthor={true} authorName={artifact.author_name} />
             ))}
@@ -95,7 +95,7 @@ export function ArtifactsTabs({ user, myArtifacts, allArtifacts }: ArtifactsTabs
             </CardContent>
           </Card>
         ) : myArtifacts.length > 0 ? (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
             {myArtifacts.map((artifact) => (
               <ArtifactCard key={artifact.id} artifact={artifact} showAuthor={false} />
             ))}

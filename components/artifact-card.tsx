@@ -1,7 +1,6 @@
 import Link from "next/link"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
-import { ImageIcon } from "lucide-react"
-import { CollectionLabel } from "@/components/collection-label"
+import { HeirloomsIcon } from "@/components/heirlooms-icon"
 import { Author } from "@/components/author"
 import { getThumbnailUrl } from "@/lib/cloudinary"
 
@@ -29,7 +28,7 @@ export function ArtifactCard({ artifact, showAuthor = false, authorName }: Artif
 
   return (
     <Link href={`/artifacts/${artifact.id}`}>
-      <Card className="group overflow-hidden border p-0 transition-all hover:shadow-lg">
+      <Card className="group overflow-hidden border p-0 transition-all hover:shadow-lg rounded-md">
         <div className="relative aspect-square overflow-hidden bg-muted">
           {thumbnailUrl ? (
             <img
@@ -38,39 +37,19 @@ export function ArtifactCard({ artifact, showAuthor = false, authorName }: Artif
               className="h-full w-full object-cover transition-transform group-hover:scale-105"
             />
           ) : (
-            <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/5 to-primary/10">
-              <ImageIcon className="h-12 w-12 text-muted-foreground/40" />
+            <div className="flex h-full w-full items-center justify-center bg-gray-300">
+              <HeirloomsIcon className="h-8 w-8 text-gray-600" />
             </div>
           )}
         </div>
 
-        <CardHeader className="pb-3">
-          {artifact.collection ? (
-            <div className="mb-2">
-              <CollectionLabel
-                collectionId={artifact.collection.id}
-                collectionName={artifact.collection.title}
-                size="sm"
-                clickable={false}
-              />
-            </div>
-          ) : (
-            <div className="mb-2">
-              <CollectionLabel collectionId="unsorted" collectionName="Unsorted" size="sm" clickable={false} />
-            </div>
-          )}
-          <h3 className="font-semibold leading-tight line-clamp-1">{artifact.title}</h3>
+        <CardHeader className="pb-1.5 pt-2 px-2">
+          <h3 className="font-semibold text-sm leading-tight truncate">{artifact.title}</h3>
         </CardHeader>
 
-        <CardContent className="space-y-2 pt-0 pb-4">
-          {artifact.description && <p className="text-sm text-muted-foreground line-clamp-2">{artifact.description}</p>}
-          <div className="flex gap-2 text-xs text-muted-foreground">
-            {artifact.year_acquired && <span>{artifact.year_acquired}</span>}
-            {artifact.year_acquired && artifact.origin && <span>•</span>}
-            {artifact.origin && <span className="line-clamp-1">{artifact.origin}</span>}
-          </div>
+        <CardContent className="pt-0 pb-2 px-2">
           {showAuthor && artifact.user_id && (
-            <div className="pt-1">
+            <div className="flex justify-end overflow-hidden">
               <Author userId={artifact.user_id} authorName={authorName} size="sm" />
             </div>
           )}

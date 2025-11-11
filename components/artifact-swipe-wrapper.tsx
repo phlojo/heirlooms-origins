@@ -12,9 +12,10 @@ interface ArtifactSwipeWrapperProps {
   previousUrl: string | null
   nextUrl: string | null
   children: React.ReactNode
+  disableSwipe?: boolean
 }
 
-export function ArtifactSwipeWrapper({ previousUrl, nextUrl, children }: ArtifactSwipeWrapperProps) {
+export function ArtifactSwipeWrapper({ previousUrl, nextUrl, children, disableSwipe }: ArtifactSwipeWrapperProps) {
   const [showGuidance, setShowGuidance] = useState(() => {
     if (typeof window === "undefined") return false
     return !localStorage.getItem(STORAGE_KEY) && (previousUrl !== null || nextUrl !== null)
@@ -34,8 +35,8 @@ export function ArtifactSwipeWrapper({ previousUrl, nextUrl, children }: Artifac
   }
 
   useSwipeNavigation({
-    previousUrl,
-    nextUrl,
+    previousUrl: disableSwipe ? null : previousUrl,
+    nextUrl: disableSwipe ? null : nextUrl,
     onNavigate: handleDismiss,
     onSwipeStart: handleSwipeStart,
   })
@@ -43,7 +44,9 @@ export function ArtifactSwipeWrapper({ previousUrl, nextUrl, children }: Artifac
   return (
     <>
       {children}
-      {showGuidance && <SwipeGuidance onDismiss={handleDismiss} previousUrl={previousUrl} nextUrl={nextUrl} />}
+      {!disableSwipe && showGuidance && (
+        <SwipeGuidance onDismiss={handleDismiss} previousUrl={previousUrl} nextUrl={nextUrl} />
+      )}
     </>
   )
 }

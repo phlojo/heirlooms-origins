@@ -125,7 +125,7 @@ async function getAllPublicCollections() {
       }),
     )
 
-    return collectionsWithImages
+    return collectionsWithImages.filter((collection) => collection.itemCount > 0)
   } catch (error) {
     console.error("Unexpected error in getAllPublicCollections:", error)
     return []

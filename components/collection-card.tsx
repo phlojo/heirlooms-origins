@@ -28,7 +28,7 @@ export function CollectionCard({ collection, mode }: CollectionCardProps) {
     <Link href={href}>
       <Card className="group overflow-hidden border transition-all hover:shadow-lg p-0">
         <div className="relative aspect-[4/3] overflow-hidden bg-muted">
-          <div className="transition-transform group-hover:scale-105">
+          <div className="h-full transition-transform group-hover:scale-105">
             {collection.thumbnailImages && collection.thumbnailImages.length > 0 ? (
               <CollectionThumbnailGrid images={collection.thumbnailImages} title={collection.title} />
             ) : collection.cover_image ? (
@@ -44,7 +44,7 @@ export function CollectionCard({ collection, mode }: CollectionCardProps) {
         </div>
 
         <CardHeader className="pb-0">
-          <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-2 flex-wrap pb-2">
             <h3 className="font-semibold leading-tight line-clamp-1 text-2xl">{collection.title}</h3>
             {collection.is_public === false && (
               <span className="inline-flex items-center rounded-full bg-purple-500/10 px-2.5 py-0.5 text-xs font-medium text-purple-700 dark:text-purple-400 border border-purple-500/20">

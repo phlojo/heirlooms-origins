@@ -134,21 +134,26 @@ export async function getAdjacentArtifacts(artifactId: string, collectionId: str
 
   if (error || !artifacts) {
     console.error("[v0] Error fetching adjacent artifacts:", error)
-    return { previous: null, next: null }
+    return { previous: null, next: null, currentPosition: 0, totalCount: 0 }
   }
 
   // Find the current artifact's index
   const currentIndex = artifacts.findIndex((a) => a.id === artifactId)
 
   if (currentIndex === -1) {
-    return { previous: null, next: null }
+    return { previous: null, next: null, currentPosition: 0, totalCount: artifacts.length }
   }
 
   // Previous is the one before in the array (newer), next is the one after (older)
   const previous = currentIndex > 0 ? artifacts[currentIndex - 1] : null
   const next = currentIndex < artifacts.length - 1 ? artifacts[currentIndex + 1] : null
 
-  return { previous, next }
+  return {
+    previous,
+    next,
+    currentPosition: currentIndex + 1,
+    totalCount: artifacts.length,
+  }
 }
 
 /**
