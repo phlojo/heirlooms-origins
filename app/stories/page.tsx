@@ -35,9 +35,8 @@ export default async function StoriesPage() {
                 <path d="M66.6001 43.3L66.6001 28.9L54.1001 21.6L54.1001 36.1L66.6001 43.3Z" fill="currentColor" />
               </svg>
             </div>
-            All Stories
+            Stories
           </h1>
-          <p className="mt-1 text-muted-foreground">Connect artifacts to meaningful narratives</p>
         </div>
 
         <div className="flex min-h-[calc(100vh-20rem)] items-center justify-center lg:min-h-[calc(100vh-16rem)]">

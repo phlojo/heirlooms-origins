@@ -40,11 +40,8 @@ export default async function ArtifactsPage() {
                 <path d="M66.6001 43.3L66.6001 28.9L54.1001 21.6L54.1001 36.1L66.6001 43.3Z" fill="currentColor" />
               </svg>
             </div>
-            All Artifacts
+            Artifacts
           </h1>
-          <p className="mt-1 text-muted-foreground">
-            Explore the things that matter—your artifacts and those treasured by others.
-          </p>
         </div>
 
         <ArtifactsTabs user={user} myArtifacts={myArtifacts} allArtifacts={allArtifacts} />

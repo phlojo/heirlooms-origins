@@ -169,9 +169,8 @@ export default async function CollectionsPage() {
                 <path d="M66.6001 43.3L66.6001 28.9L54.1001 21.6L54.1001 36.1L66.6001 43.3Z" fill="currentColor" />
               </svg>
             </div>
-            All Collections
+            Collections
           </h1>
-          <p className="mt-1 text-muted-foreground">Browse your collections and those shared by the community.</p>
         </div>
 
         <CollectionsTabs user={user} myCollections={myCollections} allCollections={allCollections} />
