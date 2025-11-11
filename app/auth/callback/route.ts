@@ -1,46 +1,52 @@
-import { createClient } from "@/lib/supabase/server"
+import { createServerClient } from "@supabase/ssr"
+import { cookies } from "next/headers"
 import { NextResponse } from "next/server"
 
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url)
   const code = requestUrl.searchParams.get("code")
-  const origin = process.env.NEXT_PUBLIC_SITE_URL || requestUrl.origin
   const next = requestUrl.searchParams.get("next") || "/collections"
 
-  console.log("[v0] Auth callback received:")
-  console.log("[v0]   Full URL:", requestUrl.toString())
-  console.log("[v0]   Code present:", !!code)
-  console.log("[v0]   Next param:", next)
-  console.log("[v0]   Request origin:", requestUrl.origin)
-  console.log("[v0]   NEXT_PUBLIC_SITE_URL:", process.env.NEXT_PUBLIC_SITE_URL)
-  console.log("[v0]   Using origin:", origin)
+  console.log("[v0] Auth callback received")
+  console.log("[v0] Code present:", !!code)
+  console.log("[v0] Next destination:", next)
 
   if (code) {
-    const supabase = await createClient()
+    const cookieStore = await cookies()
+
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() {
+            return cookieStore.getAll()
+          },
+          setAll(cookiesToSet) {
+            try {
+              cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options))
+            } catch {
+              // The setAll method was called from a Server Component.
+              // This can be ignored if you have middleware refreshing user sessions.
+            }
+          },
+        },
+      },
+    )
 
     console.log("[v0] Exchanging code for session...")
-    const { data, error } = await supabase.auth.exchangeCodeForSession(code)
+    const { error } = await supabase.auth.exchangeCodeForSession(code)
 
     if (error) {
-      console.error("[v0] Error exchanging code for session:", error)
-      return NextResponse.redirect(`${origin}/login?error=${encodeURIComponent(error.message)}`)
+      console.error("[v0] Error exchanging code:", error.message)
+      return NextResponse.redirect(`${requestUrl.origin}/login?error=${encodeURIComponent(error.message)}`)
     }
 
-    console.log("[v0] Successfully exchanged code for session:", {
-      hasSession: !!data.session,
-      hasUser: !!data.user,
-      userId: data.user?.id,
-      email: data.user?.email,
-    })
+    console.log("[v0] Successfully exchanged code, redirecting to:", next)
 
-    const finalRedirect = `${origin}${next}`
-    console.log("[v0] Redirecting to:", finalRedirect)
-
-    const redirectResponse = NextResponse.redirect(finalRedirect)
-
-    return redirectResponse
+    return NextResponse.redirect(`${requestUrl.origin}${next}`)
   }
 
-  console.log("[v0] No code in callback, redirecting to login")
-  return NextResponse.redirect(`${origin}/login?error=No+authorization+code+provided`)
+  console.log("[v0] No code provided, redirecting to login")
+  return NextResponse.redirect(`${requestUrl.origin}/login?error=No+code+provided`)
 }
