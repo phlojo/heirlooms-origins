@@ -10,7 +10,7 @@ export async function middleware(request: NextRequest) {
     "font-src 'self' data: https://fonts.gstatic.com",
     "img-src 'self' data: blob: https://res.cloudinary.com https://*.cloudinary.com",
     "media-src 'self' data: blob: https://res.cloudinary.com https://*.cloudinary.com",
-    "script-src 'self' 'unsafe-inline' 'unsafe-eval'", // Next dev/previews may need 'unsafe-eval'
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://vercel.live https://*.vercel-scripts.com", // Next dev/previews may need 'unsafe-eval'
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "connect-src 'self' https://*.supabase.co https://res.cloudinary.com https://api.cloudinary.com https://*.cloudinary.com https://*.vercel.app",
     "frame-ancestors 'none'",
