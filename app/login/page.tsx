@@ -181,13 +181,9 @@ export default function LoginPage() {
                   {isLoading ? "Loading..." : isMagicLink ? "Send Magic Link" : "Sign In"}
                 </Button>
 
-                <button
-                  type="button"
-                  onClick={() => setIsMagicLink(!isMagicLink)}
-                  className="text-sm text-muted-foreground hover:text-foreground underline underline-offset-4"
-                >
+                <Button type="button" variant="outline" onClick={() => setIsMagicLink(!isMagicLink)} className="w-full">
                   {isMagicLink ? "Use password instead" : "Use magic link instead"}
-                </button>
+                </Button>
 
                 <div className="text-center">
                   <Link
