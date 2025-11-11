@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button"
 import { ArrowLeft } from "lucide-react"
 import { Author } from "@/components/author"
+import { Badge } from "@/components/ui/badge" // Added Badge import
 import { useRouter } from "next/navigation"
 
 interface CollectionsStickyNavProps {
@@ -85,15 +86,13 @@ export function CollectionsStickyNav({
             <h1 className="font-bold tracking-tight w-full leading-tight break-words line-clamp-2 text-2xl text-left">
               {title}
             </h1>
-            {authorUserId ? (
+            {isPrivate ? (
+              <div className="text-left">
+                <Badge variant="purple">Private</Badge>
+              </div>
+            ) : authorUserId ? (
               <div className="text-left">
                 <Author userId={authorUserId} authorName={authorName} size="sm" />
-              </div>
-            ) : isPrivate ? (
-              <div className="text-left">
-                <span className="inline-flex items-center rounded-md bg-purple-100 dark:bg-purple-900/30 px-2 py-0.5 text-xs font-medium text-purple-700 dark:text-purple-400">
-                  Private
-                </span>
               </div>
             ) : null}
           </div>
