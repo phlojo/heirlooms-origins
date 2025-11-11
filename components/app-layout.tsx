@@ -8,7 +8,6 @@ import BottomNav from "./navigation/bottom-nav"
 import { useIsMobile } from "@/hooks/use-mobile"
 import type { User as SupabaseUser } from "@supabase/supabase-js"
 import { PageTransition } from "./page-transition"
-import { cn } from "@/lib/utils"
 
 interface AppLayoutProps {
   children: React.ReactNode
@@ -44,11 +43,9 @@ export function AppLayout({ children, user, noBottomPadding = false }: AppLayout
         <SideNav isOpen={sidebarOpen} onClose={() => handleSidebarToggle(false)} isMobile={isMobile} />
 
         <main
-          className={cn(
-            "flex-1 p-6 transition-all duration-200 lg:p-8",
-            noBottomPadding ? "" : "pb-[var(--bottom-nav-height,80px)] lg:pb-8",
-            !isMobile && sidebarOpen && "lg:ml-64",
-          )}
+          className={`flex-1 p-6 transition-all duration-200 lg:p-8 ${
+            noBottomPadding ? "" : "pb-[var(--bottom-nav-height,80px)] lg:pb-8"
+          }`}
           data-bottom-padding={!noBottomPadding}
         >
           <div className="mx-auto max-w-7xl">

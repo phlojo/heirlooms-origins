@@ -35,7 +35,6 @@ export function SideNav({ isOpen, onClose, isMobile }: SideNavProps) {
           "h-[calc(100vh-4rem)] w-64 border-r bg-background transition-transform duration-200",
           "fixed left-0 top-16 z-60 lg:sticky lg:top-16",
           !isOpen && "-translate-x-full",
-          isOpen && "lg:translate-x-0",
         )}
       >
         <nav className="flex h-full flex-col gap-2 p-4">
@@ -45,7 +44,7 @@ export function SideNav({ isOpen, onClose, isMobile }: SideNavProps) {
 
             return (
               <Link
-                key={item.label}
+                key={item.label} // Use label as key instead of href to avoid duplicate keys
                 href={item.href}
                 onClick={() => isMobile && onClose()}
                 className={cn(
