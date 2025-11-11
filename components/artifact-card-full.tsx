@@ -5,7 +5,7 @@ import { CollectionLabel } from "@/components/collection-label"
 import { Author } from "@/components/author"
 import { getThumbnailUrl } from "@/lib/cloudinary"
 
-interface ArtifactCardProps {
+interface ArtifactCardFullProps {
   artifact: {
     id: string
     title: string
@@ -23,13 +23,13 @@ interface ArtifactCardProps {
   authorName?: string | null
 }
 
-export function ArtifactCard({ artifact, showAuthor = false, authorName }: ArtifactCardProps) {
+export function ArtifactCardFull({ artifact, showAuthor = false, authorName }: ArtifactCardFullProps) {
   const firstImage = artifact.media_urls?.[0]
   const thumbnailUrl = firstImage ? getThumbnailUrl(firstImage) : null
 
   return (
     <Link href={`/artifacts/${artifact.id}`}>
-      <Card className="group overflow-hidden border p-0 transition-all hover:shadow-lg rounded-lg">
+      <Card className="group overflow-hidden border p-0 transition-all hover:shadow-lg">
         <div className="relative aspect-square overflow-hidden bg-muted">
           {thumbnailUrl ? (
             <img
@@ -44,9 +44,9 @@ export function ArtifactCard({ artifact, showAuthor = false, authorName }: Artif
           )}
         </div>
 
-        <CardHeader className="pb-2 pt-3 px-3">
+        <CardHeader className="pb-3">
           {artifact.collection ? (
-            <div className="mb-1.5">
+            <div className="mb-2">
               <CollectionLabel
                 collectionId={artifact.collection.id}
                 collectionName={artifact.collection.title}
@@ -55,21 +55,22 @@ export function ArtifactCard({ artifact, showAuthor = false, authorName }: Artif
               />
             </div>
           ) : (
-            <div className="mb-1.5">
+            <div className="mb-2">
               <CollectionLabel collectionId="unsorted" collectionName="Unsorted" size="sm" clickable={false} />
             </div>
           )}
-          <h3 className="font-semibold text-sm leading-tight line-clamp-1">{artifact.title}</h3>
+          <h3 className="font-semibold leading-tight line-clamp-1">{artifact.title}</h3>
         </CardHeader>
 
-        <CardContent className="pt-0 pb-3 px-3">
+        <CardContent className="space-y-2 pt-0 pb-4">
+          {artifact.description && <p className="text-sm text-muted-foreground line-clamp-2">{artifact.description}</p>}
           <div className="flex gap-2 text-xs text-muted-foreground">
             {artifact.year_acquired && <span>{artifact.year_acquired}</span>}
             {artifact.year_acquired && artifact.origin && <span>•</span>}
             {artifact.origin && <span className="line-clamp-1">{artifact.origin}</span>}
           </div>
           {showAuthor && artifact.user_id && (
-            <div className="pt-2">
+            <div className="pt-1">
               <Author userId={artifact.user_id} authorName={authorName} size="sm" />
             </div>
           )}
