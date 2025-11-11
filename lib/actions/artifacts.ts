@@ -159,17 +159,23 @@ export async function getAdjacentArtifacts(artifactId: string, collectionId: str
 /**
  * Server action to get all artifacts from public collections
  */
-export async function getAllPublicArtifacts() {
+export async function getAllPublicArtifacts(excludeUserId?: string) {
   const supabase = await createClient()
 
-  const { data, error } = await supabase
+  let query = supabase
     .from("artifacts")
     .select(`
       *,
       collection:collections!inner(id, title, is_public)
     `)
     .eq("collection.is_public", true)
-    .order("created_at", { ascending: false })
+
+  // Exclude the current user's artifacts if specified
+  if (excludeUserId) {
+    query = query.neq("user_id", excludeUserId)
+  }
+
+  const { data, error } = await query.order("created_at", { ascending: false })
 
   if (error) {
     console.error("[v0] Error fetching public artifacts:", error)

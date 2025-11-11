@@ -59,10 +59,10 @@ export default async function HomePage() {
                 <path d="M66.6001 43.3L66.6001 28.9L54.1001 21.6L54.1001 36.1L66.6001 43.3Z" fill="currentColor" />
               </svg>
             </div>
-            Welcome to Heirlooms
+            HeirloomsApp.com
           </h1>
-          <p className="mt-2 text-lg text-muted-foreground">
-            Preserve what matters to you and discover collections from the community.
+          <p className="text-muted-foreground text-base mt-6">
+            Preserve what matters to you and discover artifacts and collections from the community.
           </p>
         </div>
 

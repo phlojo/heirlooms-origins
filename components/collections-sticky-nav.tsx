@@ -1,9 +1,11 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { ArrowLeft, Edit, ArrowRight } from "lucide-react"
-import Link from "next/link"
+import { ArrowLeft, Heart } from "lucide-react"
 import { Author } from "@/components/author"
+import { Badge } from "@/components/ui/badge"
+import { useRouter } from "next/navigation"
+import { useState } from "react"
 
 interface CollectionsStickyNavProps {
   title: string
@@ -24,6 +26,7 @@ interface CollectionsStickyNavProps {
   authorUserId?: string
   authorName?: string
   showBackButton?: boolean
+  isPrivate?: boolean
 }
 
 export function CollectionsStickyNav({
@@ -39,7 +42,11 @@ export function CollectionsStickyNav({
   authorUserId,
   authorName,
   showBackButton = true,
+  isPrivate = false,
 }: CollectionsStickyNavProps) {
+  const router = useRouter()
+  const [isFavorited, setIsFavorited] = useState(false)
+
   const getNavUrl = (id: string) => {
     const baseUrl = `/${itemType}s/${id}`
     return mode ? `${baseUrl}?mode=${mode}` : baseUrl
@@ -57,75 +64,48 @@ export function CollectionsStickyNav({
 
   const displayLabel = truncateBackLabel(backLabel)
 
+  const handleBack = () => {
+    router.back()
+  }
+
+  const toggleFavorite = () => {
+    setIsFavorited(!isFavorited)
+  }
+
   return (
     <div className="sticky top-3 lg:top-16 z-50 bg-background/90 border-b border rounded-lg">
-      <div className="container max-w-7xl mx-auto lg:px-8 py-3 px-0 rounded-lg">
-        <div className="flex items-center justify-between gap-4">
+      <div className="container max-w-7xl mx-auto lg:px-8 rounded-lg px-1 py-1">
+        <div className="flex justify-between items-center gap-0">
           {/* Left: Back button */}
-          <div className="flex items-center gap-2 min-w-0">
-            {showBackButton ? (
-              <Button variant="ghost" size="sm" asChild className="gap-2 shrink-0">
-                <Link href={backHref}>
-                  <ArrowLeft className="h-4 w-4" />
-                  <span className="text-sm font-medium hidden sm:inline">{displayLabel}</span>
-                </Link>
-              </Button>
-            ) : (
-              <Button
-                variant="ghost"
-                size="icon"
-                asChild={!!previousItem}
-                disabled={!previousItem}
-                className={`shrink-0 ${!previousItem ? "opacity-30 pointer-events-none" : ""}`}
-              >
-                {previousItem ? (
-                  <Link href={getNavUrl(previousItem.id)} title={previousItem.title}>
-                    <ArrowLeft className="h-5 w-5" />
-                  </Link>
-                ) : (
-                  <span>
-                    <ArrowLeft className="h-5 w-5" />
-                  </span>
-                )}
-              </Button>
-            )}
+          {showBackButton && (
+            <Button variant="ghost" size="sm" onClick={handleBack} className="gap-2 shrink-0 h-9">
+              <ArrowLeft className="h-4 w-4" />
+              <span className="text-sm font-medium">Back</span>
+            </Button>
+          )}
+
+          {/* Divider */}
+          {showBackButton && <div className="w-px bg-border shrink-0 h-12 mr-2.5" />}
+
+          {/* Center-Left: Title and Author/Private pill stacked, left-justified */}
+          <div className="flex flex-col justify-center gap-0.5 flex-1 min-w-0 py-0.5">
+            <h1 className="font-bold tracking-tight w-full leading-tight break-words line-clamp-2 text-2xl text-left pl-[0] pr-0">
+              {title}
+            </h1>
+            {isPrivate ? (
+              <div className="text-left">
+                <Badge variant="purple">Private</Badge>
+              </div>
+            ) : authorUserId ? (
+              <div className="text-left mx-[0]">
+                <Author userId={authorUserId} authorName={authorName} size="sm" />
+              </div>
+            ) : null}
           </div>
 
-          {/* Center: Title and Author */}
-          <div className="flex flex-col items-center gap-1 flex-1 min-w-0">
-            <h1 className="text-balance font-bold tracking-tight text-center text-base truncate w-full">{title}</h1>
-            {authorUserId && <Author userId={authorUserId} authorName={authorName} size="sm" />}
-          </div>
-
-          {/* Right: Forward/Edit button */}
-          <div className="flex items-center gap-2 shrink-0">
-            {canEdit && editHref && (
-              <Button variant="ghost" size="sm" asChild>
-                <Link href={editHref}>
-                  <Edit className="h-4 w-4" />
-                </Link>
-              </Button>
-            )}
-            {!showBackButton && (
-              <Button
-                variant="ghost"
-                size="icon"
-                asChild={!!nextItem}
-                disabled={!nextItem}
-                className={`${!nextItem ? "opacity-30 pointer-events-none" : ""}`}
-              >
-                {nextItem ? (
-                  <Link href={getNavUrl(nextItem.id)} title={nextItem.title}>
-                    <ArrowRight className="h-5 w-5" />
-                  </Link>
-                ) : (
-                  <span>
-                    <ArrowRight className="h-5 w-5" />
-                  </span>
-                )}
-              </Button>
-            )}
-          </div>
+          <Button variant="ghost" size="sm" onClick={toggleFavorite} className="shrink-0 h-9 w-9 p-0">
+            <Heart className={`h-5 w-5 ${isFavorited ? "fill-red-500 text-red-500" : "text-muted-foreground"}`} />
+          </Button>
         </div>
       </div>
     </div>

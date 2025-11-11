@@ -87,18 +87,24 @@ async function getMyCollections(userId: string) {
   }
 }
 
-async function getAllPublicCollections() {
+async function getAllPublicCollections(excludeUserId?: string) {
   const supabase = await createClient()
 
   try {
-    const { data: collections, error } = await supabase
+    let query = supabase
       .from("collections")
       .select(`
         *,
         artifacts(count)
       `)
       .eq("is_public", true)
-      .order("created_at", { ascending: false })
+
+    // Exclude the current user's collections if specified
+    if (excludeUserId) {
+      query = query.neq("user_id", excludeUserId)
+    }
+
+    const { data: collections, error } = await query.order("created_at", { ascending: false })
 
     if (error) {
       console.error("Error fetching public collections:", error)
@@ -136,7 +142,7 @@ export default async function CollectionsPage() {
   const user = await getCurrentUser()
 
   const myCollections = user ? await getMyCollections(user.id) : []
-  const allCollections = await getAllPublicCollections()
+  const allCollections = await getAllPublicCollections(user?.id)
 
   return (
     <AppLayout user={user}>

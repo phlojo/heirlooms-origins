@@ -4,11 +4,10 @@ import { Plus, Edit } from "lucide-react"
 import Link from "next/link"
 import { notFound, redirect } from "next/navigation"
 import { getCurrentUser, createClient } from "@/lib/supabase/server"
-import { getCollectionBySlug, getAdjacentCollections } from "@/lib/actions/collections"
+import { getCollectionBySlug } from "@/lib/actions/collections"
 import { getArtifactsByCollection } from "@/lib/actions/artifacts"
 import { ArtifactCard } from "@/components/artifact-card"
 import { CollectionsStickyNav } from "@/components/collections-sticky-nav"
-import { CollectionSwipeWrapper } from "@/components/collection-swipe-wrapper"
 
 export default async function CollectionDetailPage({
   params,
@@ -62,6 +61,7 @@ export default async function CollectionDetailPage({
 
   const canView = collection.is_public || (user && collection.user_id === user.id)
   const canEdit = user && collection.user_id === user.id && !isUnsorted
+  const isOwnCollection = user && collection.user_id === user.id
 
   if (!canView) {
     notFound()
@@ -85,97 +85,74 @@ export default async function CollectionDetailPage({
     console.error("[v0] Error loading artifacts:", error)
   }
 
-  let previous = null
-  let next = null
-  if (!isUnsorted) {
-    try {
-      const adjacent = await getAdjacentCollections(collection.id, user?.id || null, mode)
-      previous = adjacent.previous
-      next = adjacent.next
-    } catch (error) {
-      console.error("[v0] Error loading adjacent collections:", error)
-    }
-  }
-
-  const getNavUrl = (slug: string) => {
-    const baseUrl = `/collections/${slug}`
-    return mode !== "both" ? `${baseUrl}?mode=${mode}` : baseUrl
-  }
-
-  const previousUrl = previous ? getNavUrl(previous.slug) : null
-  const nextUrl = next ? getNavUrl(next.slug) : null
-
   return (
     <AppLayout user={user}>
-      <CollectionSwipeWrapper previousUrl={previousUrl} nextUrl={nextUrl}>
-        <div className="space-y-8">
-          <CollectionsStickyNav
-            title={collection.title}
-            backHref="/collections"
-            backLabel="All Collections"
-            previousItem={previous ? { id: previous.slug, title: previous.title } : null}
-            nextItem={next ? { id: next.slug, title: next.title } : null}
-            editHref={`/collections/${collection.id}/edit`}
-            canEdit={canEdit}
-            itemType="collection"
-            mode={mode === "both" ? undefined : mode}
-            authorUserId={collection.user_id}
-            showBackButton={false}
-          />
+      <div className="space-y-8">
+        <CollectionsStickyNav
+          title={collection.title}
+          backHref="/collections"
+          backLabel="All Collections"
+          editHref={`/collections/${collection.id}/edit`}
+          canEdit={canEdit}
+          itemType="collection"
+          mode={mode === "both" ? undefined : mode}
+          authorUserId={isOwnCollection ? undefined : collection.user_id}
+          showBackButton={true}
+          isPrivate={!collection.is_public} // Pass isPrivate prop
+        />
 
-          <div className="space-y-4">
-            {isUnsorted && (
-              <div className="inline-flex items-center gap-2 rounded-md border border-muted bg-muted/50 px-3 py-1.5 text-xs font-medium text-muted-foreground">
-                <span>System Collection</span>
-              </div>
-            )}
-            {collection.description && <p className="text-muted-foreground">{collection.description}</p>}
-
-            {canEdit && !isUnsorted && (
-              <div className="flex items-center justify-between">
-                <Button asChild className="bg-blue-600 hover:bg-blue-700 text-white">
-                  <Link href={`/artifacts/new?collectionId=${collection.id}`}>
-                    <Plus className="mr-2 h-4 w-4" />
-                    Add Artifact
-                  </Link>
-                </Button>
-                <Button asChild className="bg-purple-600 hover:bg-purple-700 text-white">
-                  <Link href={`/collections/${collection.id}/edit`}>
-                    <Edit className="mr-2 h-4 w-4" />
-                    Edit Collection
-                  </Link>
-                </Button>
-              </div>
-            )}
-
-            {isUnsorted && (
-              <div className="rounded-lg border border-dashed bg-muted/20 p-4">
-                <p className="text-sm text-muted-foreground mb-3">
-                  These artifacts don't have a home yet. They were left behind from deleted collections or created
-                  without one. You can assign and organize them anytime
-                </p>
-              </div>
-            )}
-          </div>
-
-          {artifacts.length === 0 ? (
-            <div className="rounded-lg border border-dashed p-12 text-center">
-              <p className="text-sm text-muted-foreground">
-                {isUnsorted ? "No unsorted artifacts." : "No artifacts in this collection yet."}
-              </p>
-              {canEdit && !isUnsorted && (
-                <p className="mt-2 text-xs text-muted-foreground">Click "Add Artifact" above to add your first item.</p>
-              )}
+        <div className="space-y-4">
+          {canEdit && !isUnsorted && (
+            <div className="flex items-center justify-between">
+              <Button asChild className="bg-purple-600 hover:bg-purple-700 text-white">
+                <Link href={`/collections/${collection.id}/edit`}>
+                  <Edit className="mr-2 h-4 w-4" />
+                  Edit Collection
+                </Link>
+              </Button>
+              <Button asChild className="bg-blue-600 hover:bg-blue-700 text-white">
+                <Link href={`/artifacts/new?collectionId=${collection.id}`}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Artifact
+                </Link>
+              </Button>
             </div>
-          ) : (
-            <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
-              {artifacts.map((artifact) => (
-                <ArtifactCard key={artifact.id} artifact={artifact} />
-              ))}
+          )}
+
+          {isUnsorted && (
+            <div className="inline-flex items-center gap-2 rounded-md border border-muted bg-muted/50 px-3 py-1.5 text-xs font-medium text-muted-foreground">
+              <span>System Collection</span>
+            </div>
+          )}
+          {collection.description && <p className="text-muted-foreground">{collection.description}</p>}
+
+          {isUnsorted && (
+            <div className="rounded-lg border border-dashed bg-muted/20 p-4">
+              <p className="text-sm text-muted-foreground mb-3">
+                These artifacts don't have a home yet. They were left behind from deleted collections or created without
+                one. You can assign and organize them anytime
+              </p>
             </div>
           )}
         </div>
-      </CollectionSwipeWrapper>
+
+        {artifacts.length === 0 ? (
+          <div className="rounded-lg border border-dashed p-12 text-center">
+            <p className="text-sm text-muted-foreground">
+              {isUnsorted ? "No unsorted artifacts." : "No artifacts in this collection yet."}
+            </p>
+            {canEdit && !isUnsorted && (
+              <p className="mt-2 text-xs text-muted-foreground">Click "Add Artifact" above to add your first item.</p>
+            )}
+          </div>
+        ) : (
+          <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
+            {artifacts.map((artifact) => (
+              <ArtifactCard key={artifact.id} artifact={artifact} />
+            ))}
+          </div>
+        )}
+      </div>
     </AppLayout>
   )
 }

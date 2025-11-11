@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
 import Link from "next/link"
 import { ArtifactCard } from "@/components/artifact-card"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { LoginModule } from "@/components/login-module"
 import { useEffect, useState } from "react"
 
 interface Artifact {
@@ -81,19 +81,9 @@ export function ArtifactsTabs({ user, myArtifacts, allArtifacts }: ArtifactsTabs
 
       <TabsContent value="mine" className="mt-6">
         {!user ? (
-          <Card className="mx-auto max-w-md">
-            <CardHeader>
-              <CardTitle>Sign in to view your collections and artifacts</CardTitle>
-              <CardDescription>
-                Start your journey—collect, preserve, and share the things that matter to you.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button asChild className="w-full">
-                <Link href="/login">Sign In</Link>
-              </Button>
-            </CardContent>
-          </Card>
+          <div className="mx-auto max-w-md">
+            <LoginModule returnTo="/artifacts" title="Access Your Artifacts" showBackButton={false} />
+          </div>
         ) : myArtifacts.length > 0 ? (
           <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
             {myArtifacts.map((artifact) => (

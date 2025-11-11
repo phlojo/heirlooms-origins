@@ -6,7 +6,7 @@ import { Plus } from "lucide-react"
 import Link from "next/link"
 import { CollectionCard } from "@/components/collection-card"
 import { EmptyCollections } from "@/components/empty-collections"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { LoginModule } from "@/components/login-module"
 import { useEffect, useState } from "react"
 
 interface Collection {
@@ -78,19 +78,9 @@ export function CollectionsTabs({ user, myCollections, allCollections }: Collect
 
       <TabsContent value="mine" className="mt-6">
         {!user ? (
-          <Card className="mx-auto max-w-md">
-            <CardHeader>
-              <CardTitle>Sign in to view your collections and artifacts</CardTitle>
-              <CardDescription>
-                Start your journey—collect, preserve, and share the things that matter to you.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button asChild className="w-full">
-                <Link href="/login">Sign In</Link>
-              </Button>
-            </CardContent>
-          </Card>
+          <div className="mx-auto max-w-md">
+            <LoginModule returnTo="/collections" title="Access Your Collections" showBackButton={false} />
+          </div>
         ) : myCollections.length > 0 ? (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {myCollections.map((collection) => (
