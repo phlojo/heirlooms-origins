@@ -1,7 +1,6 @@
 import Link from "next/link"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { ImageIcon } from "lucide-react"
-import { CollectionLabel } from "@/components/collection-label"
 import { Author } from "@/components/author"
 import { getThumbnailUrl } from "@/lib/cloudinary"
 
@@ -29,7 +28,7 @@ export function ArtifactCard({ artifact, showAuthor = false, authorName }: Artif
 
   return (
     <Link href={`/artifacts/${artifact.id}`}>
-      <Card className="group overflow-hidden border p-0 transition-all hover:shadow-lg rounded-lg">
+      <Card className="group overflow-hidden border p-0 transition-all hover:shadow-lg rounded-md">
         <div className="relative aspect-square overflow-hidden bg-muted">
           {thumbnailUrl ? (
             <img
@@ -45,20 +44,6 @@ export function ArtifactCard({ artifact, showAuthor = false, authorName }: Artif
         </div>
 
         <CardHeader className="pb-2 pt-3 px-3">
-          {artifact.collection ? (
-            <div className="mb-1.5">
-              <CollectionLabel
-                collectionId={artifact.collection.id}
-                collectionName={artifact.collection.title}
-                size="sm"
-                clickable={false}
-              />
-            </div>
-          ) : (
-            <div className="mb-1.5">
-              <CollectionLabel collectionId="unsorted" collectionName="Unsorted" size="sm" clickable={false} />
-            </div>
-          )}
           <h3 className="font-semibold text-sm leading-tight line-clamp-1">{artifact.title}</h3>
         </CardHeader>
 
