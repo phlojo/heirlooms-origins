@@ -21,7 +21,7 @@ export async function middleware(request: NextRequest) {
   res.headers.set("Referrer-Policy", "strict-origin-when-cross-origin")
   res.headers.set("X-Frame-Options", "DENY")
   res.headers.set("X-Content-Type-Options", "nosniff")
-  res.headers.set("Permissions-Policy", "geolocation=(), microphone=(), camera=()")
+  res.headers.set("Permissions-Policy", "geolocation=(), microphone=(self), camera=()")
 
   res.headers.set("Cross-Origin-Resource-Policy", "cross-origin")
   res.headers.set("Cross-Origin-Embedder-Policy", "unsafe-none")
