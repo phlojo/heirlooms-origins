@@ -12,6 +12,7 @@ import { GenerateImageCaptionButton } from "@/components/artifact/GenerateImageC
 import { TranscribeAudioButton } from "@/components/artifact/TranscribeAudioButton"
 import { ArtifactStickyNav } from "@/components/artifact-sticky-nav"
 import { ArtifactSwipeWrapper } from "@/components/artifact-swipe-wrapper"
+import { ArtifactImageWithViewer } from "@/components/artifact-image-with-viewer"
 
 function isAudioFile(url: string): boolean {
   return (
@@ -105,13 +106,10 @@ export default async function ArtifactDetailPage({ params }: { params: Promise<{
                     </div>
                   ) : (
                     <div key={index} className="space-y-2">
-                      <div className="min-h-[400px] overflow-hidden bg-muted -mx-6 lg:-mx-8 flex items-center justify-center">
-                        <img
-                          src={getDetailUrl(url) || "/placeholder.svg"}
-                          alt={`${artifact.title} - Image ${index + 1}`}
-                          className="max-h-[600px] w-full object-contain"
-                        />
-                      </div>
+                      <ArtifactImageWithViewer
+                        src={getDetailUrl(url) || "/placeholder.svg"}
+                        alt={`${artifact.title} - Image ${index + 1}`}
+                      />
                       <div className="space-y-1 px-6 lg:px-8">
                         {imageCaptions[url] && (
                           <p className="text-sm text-muted-foreground italic leading-relaxed">{imageCaptions[url]}</p>
