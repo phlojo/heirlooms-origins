@@ -190,8 +190,11 @@ export function EditArtifactForm({ artifact, userId }: EditArtifactFormProps) {
       }
 
       const newImages = [...uploadedImages, ...urls]
-      setUploadedImages(newImages)
-      form.setValue("media_urls", newImages)
+      const uniqueImages = Array.from(new Set(newImages)) // Remove duplicates
+      console.log("[v0] Total images before dedup:", newImages.length, "After dedup:", uniqueImages.length)
+
+      setUploadedImages(uniqueImages)
+      form.setValue("media_urls", uniqueImages)
     } catch (err) {
       console.error("[v0] Upload error:", err)
       setError(

@@ -36,6 +36,20 @@ export async function createArtifact(input: CreateArtifactInput) {
     return { error: "Unauthorized" }
   }
 
+  const uniqueMediaUrls = Array.from(new Set(validatedFields.data.media_urls || []))
+
+  if (uniqueMediaUrls.length !== (validatedFields.data.media_urls?.length || 0)) {
+    console.log(
+      "[v0] Duplicate media URLs detected before database insert:",
+      "Original count:",
+      validatedFields.data.media_urls?.length,
+      "Unique count:",
+      uniqueMediaUrls.length,
+      "URLs:",
+      validatedFields.data.media_urls,
+    )
+  }
+
   // Insert artifact into database
   const { data, error } = await supabase
     .from("artifacts")
@@ -45,7 +59,7 @@ export async function createArtifact(input: CreateArtifactInput) {
       collection_id: validatedFields.data.collectionId,
       year_acquired: validatedFields.data.year_acquired,
       origin: validatedFields.data.origin,
-      media_urls: validatedFields.data.media_urls,
+      media_urls: uniqueMediaUrls, // Use deduplicated array
       user_id: user.id,
     })
     .select()
@@ -275,6 +289,21 @@ export async function updateArtifact(input: UpdateArtifactInput, oldMediaUrls: s
     }
   }
 
+  // Deduplicate media_urls before updating in database
+  const uniqueMediaUrls = Array.from(new Set(newMediaUrls))
+
+  if (uniqueMediaUrls.length !== newMediaUrls.length) {
+    console.log(
+      "[v0] Duplicate media URLs detected before database update:",
+      "Original count:",
+      newMediaUrls.length,
+      "Unique count:",
+      uniqueMediaUrls.length,
+      "URLs:",
+      newMediaUrls,
+    )
+  }
+
   // Update artifact in database
   const { data, error } = await supabase
     .from("artifacts")
@@ -283,7 +312,7 @@ export async function updateArtifact(input: UpdateArtifactInput, oldMediaUrls: s
       description: validatedFields.data.description,
       year_acquired: validatedFields.data.year_acquired,
       origin: validatedFields.data.origin,
-      media_urls: validatedFields.data.media_urls,
+      media_urls: uniqueMediaUrls, // Use deduplicated array
       updated_at: new Date().toISOString(),
     })
     .eq("id", validatedFields.data.id)
