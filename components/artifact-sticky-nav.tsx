@@ -1,10 +1,10 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { Edit, ArrowRight, ArrowLeft } from "lucide-react"
+import { ArrowRight, ArrowLeft, Heart } from "lucide-react"
 import Link from "next/link"
-import { Author } from "@/components/author"
 import { CollectionLabel } from "@/components/collection-label"
+import { useState } from "react"
 
 interface ArtifactStickyNavProps {
   title: string
@@ -45,6 +45,8 @@ export function ArtifactStickyNav({
   currentPosition,
   totalCount,
 }: ArtifactStickyNavProps) {
+  const [isFavorited, setIsFavorited] = useState(false)
+
   const getNavUrl = (id: string) => `/artifacts/${id}`
 
   const truncateBackLabel = (label: string) => {
@@ -55,12 +57,25 @@ export function ArtifactStickyNav({
 
   const displayLabel = truncateBackLabel(backLabel)
 
+  const toggleFavorite = () => {
+    setIsFavorited(!isFavorited)
+  }
+
   return (
     <div className="sticky top-3 lg:top-16 z-50 bg-background/90 border rounded-lg">
-      <div className="container max-w-7xl mx-auto lg:px-8 py-3 px-0 rounded-lg border-none">
-        <div className="flex items-center justify-between gap-4">
-          {/* Left: Previous button */}
-          <div className="flex items-center gap-2 min-w-0">
+      <div className="container max-w-7xl mx-auto lg:px-8 rounded-lg border-none px-[4] py-[4]">
+        <div className="flex flex-col gap-0">
+          {/* First row: Title and Heart icon */}
+          <div className="flex items-center justify-between border-b gap-0 pb-0">
+            <h1 className="text-balance font-bold tracking-tight flex-1 min-w-0 px-3.5 py-2 text-xl">{title}</h1>
+            <Button variant="ghost" size="sm" onClick={toggleFavorite} className="shrink-0 h-9 w-9 p-0">
+              <Heart className={`h-5 w-5 ${isFavorited ? "fill-red-500 text-red-500" : "text-muted-foreground"}`} />
+            </Button>
+          </div>
+
+          {/* Second row: Navigation with left arrow, collection info, right arrow */}
+          <div className="flex items-center justify-between gap-0 my-0 pt-0">
+            {/* Left: Previous button */}
             <Button
               variant="ghost"
               size="icon"
@@ -78,56 +93,35 @@ export function ArtifactStickyNav({
                 </span>
               )}
             </Button>
-          </div>
 
-          {/* Center: Title and Author */}
-          <div className="flex flex-col items-center gap-1 flex-1 min-w-0">
-            <h1 className="text-balance font-bold tracking-tight text-center truncate w-full text-lg">{title}</h1>
-            {(collectionId || authorUserId) && (
-              <div className="flex items-center gap-1.5 text-xs flex-wrap justify-center">
-                {collectionId && collectionName && (
+            {/* Center: Collection info */}
+            {collectionId && collectionName && (
+              <div className="flex items-center gap-1.5 text-xs flex-wrap justify-center flex-1">
+                {currentPosition && totalCount && (
                   <>
-                    {currentPosition && totalCount && (
-                      <>
-                        <span className="text-muted-foreground font-medium">
-                          {currentPosition} of {totalCount}
-                        </span>
-                      </>
-                    )}
-                    <span className="text-muted-foreground">in</span>
-                    <CollectionLabel
-                      collectionId={collectionId}
-                      collectionSlug={collectionSlug}
-                      collectionName={collectionName}
-                      size="sm"
-                      clickable={true}
-                    />
+                    <span className="text-muted-foreground font-medium">
+                      {currentPosition} of {totalCount}
+                    </span>
                   </>
                 )}
-                {authorUserId && (
-                  <div className="flex items-center whitespace-nowrap">
-                    <Author userId={authorUserId} authorName={authorName} size="sm" />
-                  </div>
-                )}
+                <span className="text-muted-foreground">in</span>
+                <CollectionLabel
+                  collectionId={collectionId}
+                  collectionSlug={collectionSlug}
+                  collectionName={collectionName}
+                  size="sm"
+                  clickable={true}
+                />
               </div>
             )}
-          </div>
 
-          {/* Right: Edit and Next buttons */}
-          <div className="flex items-center gap-2 shrink-0">
-            {canEdit && editHref && (
-              <Button variant="ghost" size="sm" asChild>
-                <Link href={editHref}>
-                  <Edit className="h-4 w-4" />
-                </Link>
-              </Button>
-            )}
+            {/* Right: Next button */}
             <Button
               variant="ghost"
               size="icon"
               asChild={!!nextItem}
               disabled={!nextItem}
-              className={`${!nextItem ? "!opacity-15 pointer-events-none" : ""}`}
+              className={`shrink-0 ${!nextItem ? "!opacity-15 pointer-events-none" : ""}`}
             >
               {nextItem ? (
                 <Link href={getNavUrl(nextItem.id)} title={nextItem.title}>

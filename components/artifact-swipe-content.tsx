@@ -12,13 +12,9 @@ import { TranscribeAudioButton } from "@/components/artifact/TranscribeAudioButt
 import { ArtifactStickyNav } from "@/components/artifact-sticky-nav"
 import { ArtifactSwipeWrapper } from "@/components/artifact-swipe-wrapper"
 import { ArtifactImageWithViewer } from "@/components/artifact-image-with-viewer"
-
-function isAudioFile(url: string): boolean {
-  return (
-    url.includes("/video/upload/") &&
-    (url.includes(".webm") || url.includes(".mp3") || url.includes(".wav") || url.includes(".m4a"))
-  )
-}
+import { Author } from "@/components/author"
+import { Button } from "@/components/ui/button"
+import { Edit } from "lucide-react"
 
 interface ArtifactSwipeContentProps {
   artifact: any
@@ -84,6 +80,18 @@ export function ArtifactSwipeContent({
         currentPosition={currentPosition}
         totalCount={totalCount}
       />
+
+      <div className={`flex items-center py-4 px-6 lg:px-8 ${canEdit ? "justify-between" : "justify-center"}`}>
+        {canEdit && (
+          <Button asChild className="bg-purple-600 hover:bg-purple-700 text-white">
+            <Link href={`/artifacts/${artifact.id}/edit`}>
+              <Edit className="mr-2 h-4 w-4" />
+              Edit Artifact
+            </Link>
+          </Button>
+        )}
+        {artifact.user_id && <Author userId={artifact.user_id} authorName={artifact.author_name} size="sm" />}
+      </div>
 
       <div className="space-y-8">
         <div className="grid gap-6 lg:grid-cols-2">
@@ -210,5 +218,12 @@ export function ArtifactSwipeContent({
         </div>
       </div>
     </ArtifactSwipeWrapper>
+  )
+}
+
+function isAudioFile(url: string): boolean {
+  return (
+    url.includes("/video/upload/") &&
+    (url.includes(".webm") || url.includes(".mp3") || url.includes(".wav") || url.includes(".m4a"))
   )
 }

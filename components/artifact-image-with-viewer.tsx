@@ -45,7 +45,7 @@ export function ArtifactImageWithViewer({ src, alt, setIsImageFullscreen }: Arti
 
   if (hasError) {
     return (
-      <div className="min-h-[400px] bg-muted -mx-6 lg:-mx-8 flex items-center justify-center">
+      <div className="bg-muted -mx-6 lg:-mx-8 flex items-center justify-center py-8">
         <div className="text-center p-8">
           <p className="text-sm text-destructive">Failed to load image</p>
           <p className="text-xs text-muted-foreground mt-2">The image may be corrupted or unavailable</p>
@@ -56,16 +56,12 @@ export function ArtifactImageWithViewer({ src, alt, setIsImageFullscreen }: Arti
 
   return (
     <>
-      <div
-        ref={imageRef}
-        className="min-h-[400px] overflow-hidden bg-muted -mx-6 lg:-mx-8 flex items-center justify-center cursor-pointer"
-        onClick={handleImageClick}
-      >
+      <div ref={imageRef} className="overflow-hidden bg-muted -mx-6 lg:-mx-8 cursor-pointer" onClick={handleImageClick}>
         <img
           src={src || "/placeholder.svg"}
           alt={alt}
           crossOrigin="anonymous"
-          className="max-h-[600px] w-full object-contain transition-opacity hover:opacity-90"
+          className="w-full h-auto object-contain transition-opacity hover:opacity-90"
           onError={handleImageError}
         />
       </div>
