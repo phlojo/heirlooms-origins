@@ -129,14 +129,18 @@ export function NewArtifactForm({
         urls.push(data.secure_url)
       }
 
-      const newImages = [...uploadedImages, ...urls]
-      const uniqueImages = Array.from(new Set(newImages)) // Remove duplicates
-      console.log("[v0] Total images before dedup:", newImages.length, "After dedup:", uniqueImages.length)
+      setUploadedImages((prevImages) => {
+        const newImages = [...prevImages, ...urls]
+        const uniqueImages = Array.from(new Set(newImages))
+        console.log("[v0] Total images before dedup:", newImages.length, "After dedup:", uniqueImages.length)
+        console.log("[v0] Previous images:", prevImages.length, "New URLs:", urls.length, "Final:", uniqueImages.length)
 
-      setUploadedImages(uniqueImages)
-      const allMediaUrls = audioUrl ? [...uniqueImages, audioUrl] : uniqueImages
-      form.setValue("media_urls", allMediaUrls)
-      console.log("[v0] Updated media_urls after image upload:", allMediaUrls)
+        const allMediaUrls = audioUrl ? [...uniqueImages, audioUrl] : uniqueImages
+        form.setValue("media_urls", allMediaUrls)
+        console.log("[v0] Updated media_urls after image upload:", allMediaUrls)
+
+        return uniqueImages
+      })
     } catch (err) {
       console.error("[v0] Upload error:", err)
       setError(
@@ -232,6 +236,22 @@ export function NewArtifactForm({
   }
 
   async function onSubmit(data: FormData) {
+    const uniqueMediaUrls = Array.from(new Set(data.media_urls || []))
+
+    if (uniqueMediaUrls.length !== (data.media_urls?.length || 0)) {
+      console.log(
+        "[v0] WARNING: Duplicate URLs detected at submission time!",
+        "Original:",
+        data.media_urls?.length,
+        "Unique:",
+        uniqueMediaUrls.length,
+        "URLs:",
+        data.media_urls,
+      )
+      // Update the form data with deduplicated array
+      data.media_urls = uniqueMediaUrls
+    }
+
     console.log("[v0] Submitting artifact with data:", data)
     console.log("[v0] Form media_urls:", data.media_urls)
     console.log("[v0] State - uploadedImages:", uploadedImages)
