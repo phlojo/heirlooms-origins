@@ -59,9 +59,14 @@ export function ArtifactsTabs({ user, myArtifacts, allArtifacts }: ArtifactsTabs
             </Link>
           </Button>
         ) : (
-          <Button asChild variant="default" className="hidden lg:flex">
-            <Link href="/login">Sign In</Link>
-          </Button>
+          <>
+            <Button asChild variant="default" className="hidden lg:flex">
+              <Link href="/login">Sign In</Link>
+            </Button>
+            <Button asChild variant="default" className="lg:hidden">
+              <Link href="/login">Sign In</Link>
+            </Button>
+          </>
         )}
       </div>
 
