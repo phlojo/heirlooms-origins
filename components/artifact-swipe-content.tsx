@@ -49,10 +49,22 @@ export function ArtifactSwipeContent({
   if (artifact.ai_description) {
     fullDescription += `\n\n${artifact.ai_description}`
   }
-  const mediaUrls = artifact.media_urls || []
+
+  const mediaUrls = Array.from(new Set(artifact.media_urls || []))
   const totalMedia = mediaUrls.length
   const audioFiles = mediaUrls.filter((url) => isAudioFile(url)).length
   const imageFiles = totalMedia - audioFiles
+
+  if (artifact.media_urls && artifact.media_urls.length !== mediaUrls.length) {
+    console.log(
+      "[v0] Duplicate URLs detected in artifact:",
+      artifact.id,
+      "Original count:",
+      artifact.media_urls.length,
+      "Unique count:",
+      mediaUrls.length,
+    )
+  }
 
   return (
     <ArtifactSwipeWrapper previousUrl={previousUrl} nextUrl={nextUrl} disableSwipe={isImageFullscreen}>
@@ -76,10 +88,10 @@ export function ArtifactSwipeContent({
       <div className="space-y-8">
         <div className="grid gap-6 lg:grid-cols-2">
           <div className="space-y-4">
-            {artifact.media_urls && artifact.media_urls.length > 0 ? (
-              artifact.media_urls.map((url, index) =>
+            {mediaUrls.length > 0 ? (
+              mediaUrls.map((url, index) =>
                 isAudioFile(url) ? (
-                  <div key={index} className="space-y-3 px-6 lg:px-8">
+                  <div key={url} className="space-y-3 px-6 lg:px-8">
                     <AudioPlayer src={url} title="Audio Recording" />
                     {canEdit && <TranscribeAudioButton artifactId={artifact.id} audioUrl={url} />}
 
@@ -98,7 +110,7 @@ export function ArtifactSwipeContent({
                     </div>
                   </div>
                 ) : (
-                  <div key={index} className="space-y-2">
+                  <div key={url} className="space-y-2">
                     <ArtifactImageWithViewer
                       src={getDetailUrl(url) || "/placeholder.svg"}
                       alt={`${artifact.title} - Image ${index + 1}`}

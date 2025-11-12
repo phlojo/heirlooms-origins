@@ -130,8 +130,11 @@ export function NewArtifactForm({
       }
 
       const newImages = [...uploadedImages, ...urls]
-      setUploadedImages(newImages)
-      const allMediaUrls = audioUrl ? [...newImages, audioUrl] : newImages
+      const uniqueImages = Array.from(new Set(newImages)) // Remove duplicates
+      console.log("[v0] Total images before dedup:", newImages.length, "After dedup:", uniqueImages.length)
+
+      setUploadedImages(uniqueImages)
+      const allMediaUrls = audioUrl ? [...uniqueImages, audioUrl] : uniqueImages
       form.setValue("media_urls", allMediaUrls)
       console.log("[v0] Updated media_urls after image upload:", allMediaUrls)
     } catch (err) {
