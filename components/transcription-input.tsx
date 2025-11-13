@@ -256,7 +256,7 @@ export function TranscriptionInput({
         size="icon"
         onClick={handleMicClick}
         disabled={disabled || isTranscribing}
-        className="absolute right-2 top-2 h-8 w-8 rounded-full bg-muted hover:bg-muted/80"
+        className="absolute right-2 top-1.5 h-8 w-8 rounded-full bg-muted hover:bg-muted/80"
         title={isRecording ? "Stop recording" : "Start recording"}
       >
         {isTranscribing ? (
