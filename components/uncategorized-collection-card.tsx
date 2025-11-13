@@ -62,8 +62,9 @@ export function UncategorizedCollectionCard({ collection, mode }: UncategorizedC
             <TooltipProvider delayDuration={0}>
               <Tooltip open={tooltipOpen} onOpenChange={setTooltipOpen}>
                 <TooltipTrigger asChild>
-                  <button
-                    type="button"
+                  <Badge
+                    variant="blue"
+                    className="cursor-pointer"
                     onClick={(e) => {
                       e.preventDefault()
                       e.stopPropagation()
@@ -72,12 +73,11 @@ export function UncategorizedCollectionCard({ collection, mode }: UncategorizedC
                     onPointerDown={(e) => {
                       e.stopPropagation()
                     }}
-                    className="inline-flex items-center rounded-full border border-transparent bg-blue-500 px-1.5 py-0.5 text-xs font-semibold text-white transition-colors hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 cursor-pointer"
                   >
-                    <Settings className="h-4 w-4" />
-                  </button>
+                    <Settings className="h-3 w-3" />
+                  </Badge>
                 </TooltipTrigger>
-                <TooltipContent side="top" className="max-w-xs">
+                <TooltipContent side="right" align="start" className="max-w-xs">
                   <p>
                     This collection holds your uncategorized artifacts — items you&apos;ve created without assigning a
                     collection, or ones that remained after a collection was deleted.
