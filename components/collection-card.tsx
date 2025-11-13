@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Author } from "@/components/author"
 import { CollectionThumbnailGrid } from "@/components/collection-thumbnail-grid"
 import { Badge } from "@/components/ui/badge"
+import { Settings } from "lucide-react"
 
 interface CollectionCardProps {
   collection: {
@@ -48,7 +49,11 @@ export function CollectionCard({ collection, mode }: CollectionCardProps) {
           <div className="flex items-center gap-2 flex-wrap pb-2">
             <h3 className="font-semibold leading-tight line-clamp-1 text-2xl pb-0 pt-2">{collection.title}</h3>
             {collection.is_public === false && <Badge variant="purple">Private</Badge>}
-            {collection.isUnsorted && <Badge variant="blue">Default</Badge>}
+            {collection.isUnsorted && (
+              <Badge variant="blue" className="px-1.5">
+                <Settings className="h-4 w-4" />
+              </Badge>
+            )}
           </div>
         </CardHeader>
 

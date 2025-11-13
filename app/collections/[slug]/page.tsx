@@ -38,7 +38,7 @@ export default async function CollectionDetailPage({
     isUnsorted = true
     collection = {
       id: "unsorted",
-      title: "Unsorted",
+      title: "Uncategorized Artifacts",
       description: "Artifacts that haven't been added to a collection yet",
       slug: "unsorted",
       user_id: user.id,
@@ -139,7 +139,7 @@ export default async function CollectionDetailPage({
         {artifacts.length === 0 ? (
           <div className="rounded-lg border border-dashed p-12 text-center">
             <p className="text-sm text-muted-foreground">
-              {isUnsorted ? "No unsorted artifacts." : "No artifacts in this collection yet."}
+              {isUnsorted ? "No uncategorized artifacts." : "No artifacts in this collection yet."}
             </p>
             {canEdit && !isUnsorted && (
               <p className="mt-2 text-xs text-muted-foreground">Click "Add Artifact" above to add your first item.</p>
