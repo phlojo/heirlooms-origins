@@ -90,7 +90,6 @@ export async function createArtifact(input: CreateArtifactInput) {
     revalidatePath(`/collections/${validatedFields.data.collectionId}`)
   }
 
-  console.log("[v0] About to redirect to:", `/artifacts/${data.id}`)
   redirect(`/artifacts/${data.id}`)
 }
 
