@@ -6,7 +6,6 @@ import { Author } from "@/components/author"
 import { CollectionThumbnailGrid } from "@/components/collection-thumbnail-grid"
 import { Badge } from "@/components/ui/badge"
 import { Settings } from "lucide-react"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { useState } from "react"
 
 interface UncategorizedCollectionCardProps {
@@ -32,7 +31,7 @@ export function UncategorizedCollectionCard({ collection, mode }: UncategorizedC
   const [tooltipOpen, setTooltipOpen] = useState(false)
 
   return (
-    <Card className="group overflow-hidden border transition-all hover:shadow-lg p-0">
+    <Card className="group overflow-hidden border transition-all hover:shadow-lg p-0 relative">
       <Link href={href} className="block">
         <div className="relative aspect-[4/1.5] overflow-hidden bg-muted">
           <div className="h-full transition-transform group-hover:scale-105">
@@ -48,6 +47,16 @@ export function UncategorizedCollectionCard({ collection, mode }: UncategorizedC
               <CollectionThumbnailGrid images={[]} title={collection.title} />
             )}
           </div>
+          {tooltipOpen && (
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-10 pointer-events-none">
+              <div className="bg-background border border-border rounded-lg shadow-lg p-4 max-w-xs mx-4">
+                <p className="text-sm">
+                  This collection holds your uncategorized artifacts — items you&apos;ve created without assigning a
+                  collection, or ones that remained after a collection was deleted.
+                </p>
+              </div>
+            </div>
+          )}
         </div>
       </Link>
 
@@ -59,32 +68,20 @@ export function UncategorizedCollectionCard({ collection, mode }: UncategorizedC
         <div className="flex items-center gap-2 flex-wrap pb-2 relative">
           {collection.is_public === false && <Badge variant="purple">Private</Badge>}
           {collection.isUnsorted && (
-            <TooltipProvider delayDuration={0}>
-              <Tooltip open={tooltipOpen} onOpenChange={setTooltipOpen}>
-                <TooltipTrigger asChild>
-                  <Badge
-                    variant="blue"
-                    className="cursor-pointer"
-                    onClick={(e) => {
-                      e.preventDefault()
-                      e.stopPropagation()
-                      setTooltipOpen(!tooltipOpen)
-                    }}
-                    onPointerDown={(e) => {
-                      e.stopPropagation()
-                    }}
-                  >
-                    <Settings className="h-3 w-3" />
-                  </Badge>
-                </TooltipTrigger>
-                <TooltipContent side="bottom" align="start" sideOffset={8} className="max-w-xs">
-                  <p>
-                    This collection holds your uncategorized artifacts — items you&apos;ve created without assigning a
-                    collection, or ones that remained after a collection was deleted.
-                  </p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <Badge
+              variant="blue"
+              className="cursor-pointer"
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                setTooltipOpen(!tooltipOpen)
+              }}
+              onPointerDown={(e) => {
+                e.stopPropagation()
+              }}
+            >
+              <Settings className="h-3 w-3" />
+            </Badge>
           )}
         </div>
       </CardHeader>
