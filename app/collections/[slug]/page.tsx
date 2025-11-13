@@ -125,13 +125,13 @@ export default async function CollectionDetailPage({
               <span>System Collection</span>
             </div>
           )}
-          {collection.description && <p className="text-muted-foreground">{collection.description}</p>}
+          {!isUnsorted && collection.description && <p className="text-muted-foreground">{collection.description}</p>}
 
           {isUnsorted && (
             <div className="rounded-lg border border-dashed bg-muted/20 p-4">
-              <p className="text-sm text-muted-foreground mb-3">
-                These artifacts don't have a home yet. They were left behind from deleted collections or created without
-                one. You can assign and organize them anytime
+              <p className="text-sm text-muted-foreground">
+                This collection holds your uncategorized artifacts — items you&apos;ve created without assigning a
+                collection, or ones that remained after a collection was deleted.
               </p>
             </div>
           )}

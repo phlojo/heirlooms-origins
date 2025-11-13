@@ -77,7 +77,7 @@ export function UncategorizedCollectionCard({ collection, mode }: UncategorizedC
                     <Settings className="h-3 w-3" />
                   </Badge>
                 </TooltipTrigger>
-                <TooltipContent side="right" align="start" className="max-w-xs">
+                <TooltipContent side="bottom" align="center" className="max-w-xs">
                   <p>
                     This collection holds your uncategorized artifacts — items you&apos;ve created without assigning a
                     collection, or ones that remained after a collection was deleted.
@@ -90,11 +90,6 @@ export function UncategorizedCollectionCard({ collection, mode }: UncategorizedC
       </CardHeader>
 
       <CardContent className="pt-0 pb-4 space-y-4 -mt-2">
-        <Link href={href} className="block">
-          {collection.description && (
-            <p className="text-sm text-muted-foreground line-clamp-3">{collection.description}</p>
-          )}
-        </Link>
         <div className="flex items-center justify-between">
           <p className="text-sm text-muted-foreground">
             {collection.itemCount} {collection.itemCount === 1 ? "artifact" : "artifacts"}

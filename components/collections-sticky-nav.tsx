@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button"
 import { ArrowLeft, Heart, Settings } from "lucide-react"
 import { Author } from "@/components/author"
 import { Badge } from "@/components/ui/badge"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 
@@ -99,29 +98,9 @@ export function CollectionsStickyNav({
             <div className="text-left flex items-center gap-2">
               {isPrivate && <Badge variant="purple">Private</Badge>}
               {isUnsorted && (
-                <TooltipProvider delayDuration={0}>
-                  <Tooltip open={tooltipOpen} onOpenChange={setTooltipOpen}>
-                    <TooltipTrigger asChild>
-                      <Badge
-                        variant="blue"
-                        className="cursor-pointer"
-                        onClick={(e) => {
-                          e.preventDefault()
-                          e.stopPropagation()
-                          setTooltipOpen(!tooltipOpen)
-                        }}
-                      >
-                        <Settings className="h-3 w-3" />
-                      </Badge>
-                    </TooltipTrigger>
-                    <TooltipContent side="right" align="start" className="max-w-xs">
-                      <p>
-                        This collection holds your uncategorized artifacts — items you&apos;ve created without assigning
-                        a collection, or ones that remained after a collection was deleted.
-                      </p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
+                <Badge variant="blue">
+                  <Settings className="h-3 w-3" />
+                </Badge>
               )}
               {!isPrivate && !isUnsorted && authorUserId && (
                 <Author userId={authorUserId} authorName={authorName} size="sm" />
