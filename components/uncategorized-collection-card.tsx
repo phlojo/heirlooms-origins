@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Author } from "@/components/author"
 import { CollectionThumbnailGrid } from "@/components/collection-thumbnail-grid"
 import { Badge } from "@/components/ui/badge"
-import { Settings } from "lucide-react"
+import { Settings } from 'lucide-react'
 import { useState, useEffect } from "react"
 
 interface UncategorizedCollectionCardProps {
@@ -41,9 +41,19 @@ export function UncategorizedCollectionCard({ collection, mode }: UncategorizedC
     return () => window.removeEventListener("scroll", handleScroll)
   }, [tooltipOpen])
 
+  const handleCardClick = (e: React.MouseEvent) => {
+    // Let Links handle their own navigation
+  }
+
+  const handleGearClick = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setTooltipOpen(!tooltipOpen)
+  }
+
   return (
-    <Card className="group overflow-hidden border transition-all hover:shadow-lg p-0 relative">
-      <Link href={href} className="block">
+    <Link href={href}>
+      <Card className="group overflow-hidden border transition-all hover:shadow-lg p-0 relative">
         <div className="relative aspect-[4/1.5] overflow-hidden bg-muted">
           <div className="h-full transition-transform group-hover:scale-105">
             {collection.thumbnailImages && collection.thumbnailImages.length > 0 ? (
@@ -69,30 +79,25 @@ export function UncategorizedCollectionCard({ collection, mode }: UncategorizedC
             </div>
           )}
         </div>
-      </Link>
 
-      <CardHeader className="pb-0">
-        <h3 className="font-semibold leading-tight text-2xl pb-2 pt-2">{collection.title}</h3>
-        <div className="flex items-center gap-2 flex-wrap pt-1">
-          {collection.is_public === false && <Badge variant="purple">Private</Badge>}
-          {collection.isUnsorted && (
-            <button
-              onClick={(e) => {
-                e.preventDefault()
-                e.stopPropagation()
-                setTooltipOpen(!tooltipOpen)
-              }}
-              className="inline-flex"
-            >
-              <Badge variant="blue" className="cursor-pointer">
-                <Settings className="h-3 w-3" />
-              </Badge>
-            </button>
-          )}
-        </div>
-      </CardHeader>
+        <CardHeader className="pb-0">
+          <h3 className="font-semibold leading-tight text-2xl pb-2 pt-2">{collection.title}</h3>
+          <div className="flex items-center gap-2 flex-wrap pt-1">
+            {collection.is_public === false && <Badge variant="purple">Private</Badge>}
+            {collection.isUnsorted && (
+              <button
+                onClick={handleGearClick}
+                className="inline-flex"
+                type="button"
+              >
+                <Badge variant="blue" className="cursor-pointer">
+                  <Settings className="h-3 w-3" />
+                </Badge>
+              </button>
+            )}
+          </div>
+        </CardHeader>
 
-      <Link href={href}>
         <CardContent className="pt-0 pb-4 space-y-4 -mt-2">
           <div className="flex items-center justify-between">
             <p className="text-sm text-muted-foreground">
@@ -101,7 +106,7 @@ export function UncategorizedCollectionCard({ collection, mode }: UncategorizedC
             <Author userId={collection.user_id} authorName={collection.authorName || undefined} size="sm" />
           </div>
         </CardContent>
-      </Link>
-    </Card>
+      </Card>
+    </Link>
   )
 }

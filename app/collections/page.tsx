@@ -48,6 +48,12 @@ async function getMyCollections(userId: string) {
       }),
     )
 
+    collectionsWithImages.sort((a, b) => {
+      if (a.isUnsorted) return -1
+      if (b.isUnsorted) return 1
+      return 0
+    })
+
     return collectionsWithImages
   } catch (error) {
     console.error("[v0] Unexpected error in getMyCollections:", error)
