@@ -309,7 +309,7 @@ export function NewArtifactForm({
             <FormItem>
               <FormLabel>Description</FormLabel>
               <FormControl>
-                <Textarea placeholder="Tell the story of this heirloom" rows={4} {...field} />
+                <Textarea placeholder="Tell the story of this artifact" rows={4} {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>

@@ -31,7 +31,6 @@ export default async function NewArtifactPage({
           </Button>
 
           <h1 className="text-3xl font-bold tracking-tight">New Artifact</h1>
-          <p className="mt-1 text-muted-foreground">Add a new heirloom to your collection</p>
         </div>
 
         <NewArtifactForm collectionId={effectiveCollectionId} userId={user.id} />
