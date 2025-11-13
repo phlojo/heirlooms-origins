@@ -56,9 +56,21 @@ export function CollectionCard({ collection, mode }: CollectionCardProps) {
               <TooltipProvider delayDuration={200}>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Badge variant="blue" className="px-1.5 cursor-help" onClick={(e) => e.preventDefault()}>
-                      <Settings className="h-4 w-4" />
-                    </Badge>
+                    <button
+                      type="button"
+                      className="inline-flex"
+                      onClick={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                      }}
+                      onPointerDown={(e) => {
+                        e.stopPropagation()
+                      }}
+                    >
+                      <Badge variant="blue" className="px-1.5 cursor-help">
+                        <Settings className="h-4 w-4" />
+                      </Badge>
+                    </button>
                   </TooltipTrigger>
                   <TooltipContent side="top">
                     <p>
