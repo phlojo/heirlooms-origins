@@ -12,7 +12,7 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Input } from "@/components/ui/input"
 import Link from "next/link"
 import { useState } from "react"
-import { X, Upload, ImageIcon, ChevronDown } from "lucide-react"
+import { X, Upload, ImageIcon, ChevronDown } from 'lucide-react'
 import { AudioRecorder } from "@/components/audio-recorder"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { TranscriptionInput } from "@/components/transcription-input"
@@ -27,9 +27,7 @@ export function NewArtifactForm({
   userId: string
 }) {
   const [error, setError] = useState<string | null>(null)
-  const [uploadedImages, setUploadedImages] = useState<string[]>([])
   const [isUploading, setIsUploading] = useState(false)
-  const [audioUrl, setAudioUrl] = useState<string | null>(null)
   const [isUploadingAudio, setIsUploadingAudio] = useState(false)
   const [isOptionalDetailsOpen, setIsOptionalDetailsOpen] = useState(false)
 
@@ -44,6 +42,16 @@ export function NewArtifactForm({
       media_urls: [],
     },
   })
+
+  const getMediaUrls = () => form.getValues("media_urls") || []
+
+  const isAudioUrl = (url: string) => {
+    return /\.(mp3|wav|m4a|aac|ogg|webm|opus)(\?.*)?$/i.test(url)
+  }
+
+  const getImageUrls = () => getMediaUrls().filter((url) => !isAudioUrl(url))
+
+  const getAudioUrl = () => getMediaUrls().find((url) => isAudioUrl(url)) || null
 
   async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const files = e.target.files
@@ -76,11 +84,15 @@ export function NewArtifactForm({
 
       // Upload files one at a time to avoid overwhelming the server
       for (const file of Array.from(files)) {
+        console.log("[v0] Generating signature for file:", file.name)
+        
         const signatureResult = await generateCloudinarySignature(userId, file.name)
 
         if (signatureResult.error || !signatureResult.signature) {
           throw new Error(signatureResult.error || "Failed to generate upload signature")
         }
+
+        console.log("[v0] Using public_id:", signatureResult.publicId)
 
         const formData = new FormData()
         formData.append("file", file)
@@ -115,18 +127,24 @@ export function NewArtifactForm({
         }
 
         const data = await response.json()
+        console.log("[v0] Received URL from Cloudinary:", data.secure_url, "for public_id:", data.public_id)
         urls.push(data.secure_url)
       }
 
-      setUploadedImages((prevImages) => {
-        const newImages = [...prevImages, ...urls]
-        const uniqueImages = Array.from(new Set(newImages))
-
-        const allMediaUrls = audioUrl ? [...uniqueImages, audioUrl] : uniqueImages
-        form.setValue("media_urls", allMediaUrls)
-
-        return uniqueImages
-      })
+      const currentMediaUrls = getMediaUrls()
+      const currentAudio = currentMediaUrls.find((url) => isAudioUrl(url))
+      const currentImages = currentMediaUrls.filter((url) => !isAudioUrl(url))
+      
+      // Combine existing images + new images + audio (if exists)
+      const allImages = [...currentImages, ...urls]
+      const uniqueImages = Array.from(new Set(allImages))
+      const finalMediaUrls = currentAudio ? [...uniqueImages, currentAudio] : uniqueImages
+      
+      console.log("[v0] Before update - Current images:", currentImages.length, "New images:", urls.length, "Total unique:", uniqueImages.length, "Has audio:", !!currentAudio)
+      
+      form.setValue("media_urls", finalMediaUrls)
+      
+      console.log("[v0] After update - Final media_urls:", finalMediaUrls.length)
     } catch (err) {
       setError(
         err instanceof Error
@@ -141,10 +159,13 @@ export function NewArtifactForm({
   }
 
   function removeImage(index: number) {
-    const newImages = uploadedImages.filter((_, i) => i !== index)
-    setUploadedImages(newImages)
-    const allMediaUrls = audioUrl ? [...newImages, audioUrl] : newImages
-    form.setValue("media_urls", allMediaUrls)
+    const currentImages = getImageUrls()
+    const currentAudio = getAudioUrl()
+    
+    const newImages = currentImages.filter((_, i) => i !== index)
+    const finalMediaUrls = currentAudio ? [...newImages, currentAudio] : newImages
+    
+    form.setValue("media_urls", finalMediaUrls)
   }
 
   async function handleAudioRecorded(audioBlob: Blob, fileName: string) {
@@ -152,11 +173,15 @@ export function NewArtifactForm({
     setError(null)
 
     try {
+      console.log("[v0] Generating audio signature for:", fileName)
+      
       const signatureResult = await generateCloudinaryAudioSignature(userId, fileName)
 
       if (signatureResult.error || !signatureResult.signature) {
         throw new Error(signatureResult.error || "Failed to generate upload signature")
       }
+
+      console.log("[v0] Using audio public_id:", signatureResult.publicId)
 
       const formData = new FormData()
       formData.append("file", audioBlob, fileName)
@@ -187,8 +212,11 @@ export function NewArtifactForm({
 
       const data = await response.json()
 
-      setAudioUrl(data.secure_url)
-      const newMediaUrls = [...uploadedImages, data.secure_url]
+      const currentImages = getImageUrls()
+      const newMediaUrls = [...currentImages, data.secure_url]
+      
+      console.log("[v0] Audio uploaded:", data.secure_url, "Current images:", currentImages.length, "Total media:", newMediaUrls.length)
+      
       form.setValue("media_urls", newMediaUrls)
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to upload audio. Please try again.")
@@ -198,16 +226,19 @@ export function NewArtifactForm({
   }
 
   function removeAudio() {
-    setAudioUrl(null)
-    form.setValue("media_urls", uploadedImages)
+    const currentImages = getImageUrls()
+    form.setValue("media_urls", currentImages)
   }
 
   async function onSubmit(data: FormData) {
     const uniqueMediaUrls = Array.from(new Set(data.media_urls || []))
 
     if (uniqueMediaUrls.length !== (data.media_urls?.length || 0)) {
+      console.log("[v0] Found duplicates in media_urls before submit:", data.media_urls?.length, "→", uniqueMediaUrls.length)
       data.media_urls = uniqueMediaUrls
     }
+
+    console.log("[v0] Submitting artifact with media_urls:", uniqueMediaUrls)
 
     const submitData = {
       ...data,
@@ -245,6 +276,9 @@ export function NewArtifactForm({
       setError(error instanceof Error ? error.message : "An unexpected error occurred")
     }
   }
+
+  const uploadedImages = getImageUrls()
+  const audioUrl = getAudioUrl()
 
   return (
     <Form {...form}>
