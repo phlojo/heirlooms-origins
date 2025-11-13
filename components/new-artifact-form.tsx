@@ -10,12 +10,12 @@ import type { z } from "zod"
 import { Button } from "@/components/ui/button"
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
 import Link from "next/link"
 import { useState } from "react"
 import { X, Upload, ImageIcon, ChevronDown } from "lucide-react"
 import { AudioRecorder } from "@/components/audio-recorder"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
+import { TranscriptionInput } from "@/components/transcription-input"
 
 type FormData = z.infer<typeof createArtifactSchema>
 
@@ -295,7 +295,15 @@ export function NewArtifactForm({
             <FormItem>
               <FormLabel>Title</FormLabel>
               <FormControl>
-                <Input placeholder="Enter artifact title" {...field} />
+                <TranscriptionInput
+                  value={field.value}
+                  onChange={field.onChange}
+                  placeholder="Enter artifact title"
+                  type="input"
+                  fieldType="title"
+                  userId={userId}
+                  disabled={isUploading || isUploadingAudio}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -309,7 +317,16 @@ export function NewArtifactForm({
             <FormItem>
               <FormLabel>Description</FormLabel>
               <FormControl>
-                <Textarea placeholder="Tell the story of this artifact" rows={4} {...field} />
+                <TranscriptionInput
+                  value={field.value}
+                  onChange={field.onChange}
+                  placeholder="Tell the story of this artifact"
+                  type="textarea"
+                  fieldType="description"
+                  userId={userId}
+                  rows={4}
+                  disabled={isUploading || isUploadingAudio}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>

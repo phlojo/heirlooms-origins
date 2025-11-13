@@ -170,3 +170,59 @@ export async function extractPublicIdFromUrl(url: string): Promise<string | null
     return null
   }
 }
+
+/**
+ * Generate a signature for transcription audio file upload to Cloudinary
+ * These are stored separately from artifact media and used for transcription purposes
+ */
+export async function generateCloudinaryTranscriptionSignature(
+  userId: string,
+  fileName: string,
+  fieldType: "title" | "description",
+) {
+  const cloudName = process.env.CLOUDINARY_CLOUD_NAME
+  const apiKey = process.env.CLOUDINARY_API_KEY
+  const apiSecret = process.env.CLOUDINARY_API_SECRET
+
+  if (!cloudName || !apiKey || !apiSecret) {
+    return {
+      error:
+        "Cloudinary credentials not configured. Please add CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET to your environment variables.",
+    }
+  }
+
+  try {
+    const timestamp = Math.round(Date.now() / 1000)
+
+    const safeUser = (userId || "anon").replace(/[^a-zA-Z0-9_-]/g, "")
+    const baseName = (fileName || "file")
+      .replace(/\.[^.]+$/, "")
+      .replace(/[^a-zA-Z0-9_-]/g, "")
+      .substring(0, 50)
+
+    const now = new Date()
+    const yyyy = now.getUTCFullYear()
+    const mm = String(now.getUTCMonth() + 1).padStart(2, "0")
+    // Store transcription audio in a separate folder: users/{userId}/transcriptions/{fieldType}/{yyyy}/{mm}/{fileName}
+    const publicId = `users/${safeUser}/transcriptions/${fieldType}/${yyyy}/${mm}/${baseName}`
+
+    // Use Node crypto for server-side signature generation
+    const crypto = await import("node:crypto")
+    const toSign = `public_id=${publicId}&timestamp=${timestamp}`
+    const signature = crypto
+      .createHash("sha1")
+      .update(toSign + apiSecret)
+      .digest("hex")
+
+    return {
+      signature,
+      timestamp,
+      publicId,
+      cloudName,
+      apiKey,
+    }
+  } catch (error) {
+    console.error("[v0] Error generating Cloudinary transcription signature:", error)
+    return { error: "Failed to generate upload signature. Please try again." }
+  }
+}
