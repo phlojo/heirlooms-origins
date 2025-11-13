@@ -296,14 +296,14 @@ export function NewArtifactForm({
 
         <Collapsible open={isOptionalDetailsOpen} onOpenChange={setIsOptionalDetailsOpen}>
           <CollapsibleTrigger asChild>
-            <Button
-              type="button"
-              variant="ghost"
-              className="flex w-full items-center justify-between px-0 hover:bg-transparent"
-            >
-              <span className="text-sm font-medium">Optional Details</span>
-              <ChevronDown className={`h-4 w-4 transition-transform ${isOptionalDetailsOpen ? "rotate-180" : ""}`} />
-            </Button>
+            <button type="button" className="flex w-full items-center justify-between text-left group py-1">
+              <span className="text-sm font-medium text-foreground">Optional Details</span>
+              <ChevronDown
+                className={`h-4 w-4 text-muted-foreground transition-all group-hover:text-foreground ${
+                  isOptionalDetailsOpen ? "rotate-180" : ""
+                }`}
+              />
+            </button>
           </CollapsibleTrigger>
           <CollapsibleContent className="space-y-6 pt-6">
             <FormField
