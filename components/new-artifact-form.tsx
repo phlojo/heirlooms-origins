@@ -276,14 +276,21 @@ export function NewArtifactForm({
       if (result?.error) {
         console.log("[v0] Artifact creation error:", result)
         if (result.fieldErrors) {
+          console.log("[v0] Field validation errors:", result.fieldErrors)
+          // Set form field errors
           Object.entries(result.fieldErrors).forEach(([field, messages]) => {
-            if (messages && messages.length > 0) {
+            if (messages && Array.isArray(messages) && messages.length > 0) {
               form.setError(field as keyof FormData, {
                 type: "server",
                 message: messages[0],
               })
             }
           })
+          // Also show a summary in the error message
+          const errorSummary = Object.entries(result.fieldErrors)
+            .map(([field, messages]) => `${field}: ${Array.isArray(messages) ? messages.join(", ") : messages}`)
+            .join("; ")
+          setError(`Validation errors: ${errorSummary}`)
         } else {
           setError(result.error)
         }
