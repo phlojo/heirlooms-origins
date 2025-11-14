@@ -53,7 +53,26 @@ export default async function CollectionDetailPage({
 
   let artifacts = []
   try {
-    artifacts = await getArtifactsByCollection(collection.id)
+    if (isUncategorized && user) {
+      // Custom query for uncategorized: include both NULL and matching collection_id
+      const { data, error } = await supabase
+        .from("artifacts")
+        .select(
+          `
+          *,
+          user:users!artifacts_user_id_fkey(id, name, email, avatar_url),
+          collection:collections(id, title, slug)
+        `
+        )
+        .eq("user_id", user.id)
+        .or(`collection_id.is.null,collection_id.eq.${collection.id}`)
+        .order("created_at", { ascending: false })
+
+      if (error) throw error
+      artifacts = data || []
+    } else {
+      artifacts = await getArtifactsByCollection(collection.id)
+    }
   } catch (error) {
     console.error("Error loading artifacts:", error)
   }
