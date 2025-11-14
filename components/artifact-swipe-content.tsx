@@ -8,7 +8,8 @@ import ReactMarkdown from "react-markdown"
 import { ArtifactAiPanelWrapper } from "@/components/artifact/ArtifactAiPanelWrapper"
 import { GenerateDescriptionButton } from "@/components/artifact/GenerateDescriptionButton"
 import { GenerateImageCaptionButton } from "@/components/artifact/GenerateImageCaptionButton"
-import { TranscribeAudioButton } from "@/components/artifact/TranscribeAudioButton"
+import { GenerateVideoSummaryButton } from "@/components/artifact/GenerateVideoSummaryButton"
+import { TranscribeAudioButtonPerMedia } from "@/components/artifact/TranscribeAudioButtonPerMedia"
 import { ArtifactStickyNav } from "@/components/artifact-sticky-nav"
 import { ArtifactSwipeWrapper } from "@/components/artifact-swipe-wrapper"
 import { ArtifactImageWithViewer } from "@/components/artifact-image-with-viewer"
@@ -50,12 +51,15 @@ export function ArtifactSwipeContent({
   const router = useRouter()
   
   const imageCaptions = artifact.image_captions || {}
+  const videoSummaries = artifact.video_summaries || {}
+  const audioTranscripts = artifact.audio_transcripts || {}
   
   const mediaUrls = Array.from(new Set(artifact.media_urls || []))
   
   const totalMedia = mediaUrls.length
   const audioFiles = mediaUrls.filter((url) => isAudioFile(url)).length
-  const imageFiles = totalMedia - audioFiles
+  const videoFiles = mediaUrls.filter((url) => isVideoFile(url)).length
+  const imageFiles = totalMedia - audioFiles - videoFiles
 
   const handleMediaAdded = async (newUrls: string[]) => {
     try {
@@ -182,46 +186,85 @@ export function ArtifactSwipeContent({
         
         {mediaUrls.length > 0 ? (
           <div className="space-y-6">
-            {mediaUrls.map((url, index) =>
-              isAudioFile(url) ? (
-                <div key={url} className="space-y-3 px-6 lg:px-8">
-                  <div className="rounded-lg border bg-card p-4">
-                    <h3 className="text-sm font-semibold mb-3">Audio Recording {audioFiles > 1 ? `${index + 1}` : ''}</h3>
-                    <AudioPlayer src={url} title="Audio Recording" />
-                    {canEdit && <div className="mt-3"><TranscribeAudioButton artifactId={artifact.id} audioUrl={url} /></div>}
-
-                    <div className="rounded-lg border bg-muted/30 p-4 mt-3">
-                      <h4 className="text-sm font-semibold mb-2">Transcript</h4>
-                      {artifact.transcript ? (
-                        <div className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
-                          {artifact.transcript}
+            {mediaUrls.map((url, index) => {
+              if (isAudioFile(url)) {
+                const transcript = audioTranscripts[url]
+                return (
+                  <div key={url} className="space-y-3 px-6 lg:px-8">
+                    <div className="rounded-lg border bg-card p-4">
+                      <h3 className="text-sm font-semibold mb-3">Audio Recording {audioFiles > 1 ? `${index + 1}` : ''}</h3>
+                      <AudioPlayer src={url} title="Audio Recording" />
+                      
+                      {canEdit && (
+                        <div className="mt-3">
+                          <TranscribeAudioButtonPerMedia artifactId={artifact.id} audioUrl={url} />
                         </div>
-                      ) : (
-                        <p className="text-sm text-muted-foreground italic">
-                          No transcript available yet. Click the "AI Transcribe Audio" button above to generate a
-                          transcript of this audio recording.
-                        </p>
                       )}
+
+                      <div className="rounded-lg border bg-muted/30 p-4 mt-3">
+                        <h4 className="text-sm font-semibold mb-2">Transcript</h4>
+                        {transcript ? (
+                          <div className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
+                            {transcript}
+                          </div>
+                        ) : (
+                          <p className="text-sm text-muted-foreground italic">
+                            {canEdit 
+                              ? 'No transcript available yet. Click "AI Transcribe" above to generate one.'
+                              : 'No transcript available.'}
+                          </p>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ) : (
-                <div key={url} className="space-y-3">
-                  <h3 className="text-sm font-semibold px-6 lg:px-8">Photo {imageFiles > 1 ? `${index + 1}` : ''}</h3>
-                  <ArtifactImageWithViewer
-                    src={getDetailUrl(url) || "/placeholder.svg"}
-                    alt={`${artifact.title} - Image ${index + 1}`}
-                    setIsImageFullscreen={setIsImageFullscreen}
-                  />
-                  <div className="px-6 lg:px-8 space-y-3">
-                    {imageCaptions[url] && (
-                      <p className="text-sm text-muted-foreground italic leading-relaxed">{imageCaptions[url]}</p>
-                    )}
-                    {canEdit && <GenerateImageCaptionButton artifactId={artifact.id} imageUrl={url} />}
+                )
+              } else if (isVideoFile(url)) {
+                const summary = videoSummaries[url]
+                return (
+                  <div key={url} className="space-y-3">
+                    <h3 className="text-sm font-semibold px-6 lg:px-8">Video {videoFiles > 1 ? `${index + 1}` : ''}</h3>
+                    <video 
+                      src={url} 
+                      controls 
+                      className="w-full"
+                      style={{ maxHeight: '70vh' }}
+                    >
+                      Your browser does not support the video tag.
+                    </video>
+                    <div className="px-6 lg:px-8 space-y-3">
+                      {summary && (
+                        <div className="rounded-lg border bg-muted/30 p-3">
+                          <h4 className="text-xs font-semibold mb-1 text-purple-600">AI Summary</h4>
+                          <p className="text-sm text-foreground leading-relaxed">{summary}</p>
+                        </div>
+                      )}
+                      {canEdit && <GenerateVideoSummaryButton artifactId={artifact.id} videoUrl={url} />}
+                    </div>
                   </div>
-                </div>
-              ),
-            )}
+                )
+              } else {
+                const caption = imageCaptions[url]
+                return (
+                  <div key={url} className="space-y-3">
+                    <h3 className="text-sm font-semibold px-6 lg:px-8">Photo {imageFiles > 1 ? `${index + 1}` : ''}</h3>
+                    <ArtifactImageWithViewer
+                      src={getDetailUrl(url) || "/placeholder.svg"}
+                      alt={`${artifact.title} - Image ${index + 1}`}
+                      setIsImageFullscreen={setIsImageFullscreen}
+                    />
+                    <div className="px-6 lg:px-8 space-y-3">
+                      {caption && (
+                        <div className="rounded-lg border bg-muted/30 p-3">
+                          <h4 className="text-xs font-semibold mb-1 text-purple-600">AI Caption</h4>
+                          <p className="text-sm text-foreground leading-relaxed">{caption}</p>
+                        </div>
+                      )}
+                      {canEdit && <GenerateImageCaptionButton artifactId={artifact.id} imageUrl={url} />}
+                    </div>
+                  </div>
+                )
+              }
+            })}
           </div>
         ) : (
           <div className="min-h-[200px] rounded-lg border bg-muted/30 flex items-center justify-center mx-6 lg:mx-8">
@@ -266,8 +309,14 @@ export function ArtifactSwipeContent({
                   </div>
                   {imageFiles > 0 && (
                     <div className="flex justify-between">
-                      <dt className="text-muted-foreground">Photos/Videos</dt>
+                      <dt className="text-muted-foreground">Photos</dt>
                       <dd className="font-medium">{imageFiles}</dd>
+                    </div>
+                  )}
+                  {videoFiles > 0 && (
+                    <div className="flex justify-between">
+                      <dt className="text-muted-foreground">Videos</dt>
+                      <dd className="font-medium">{videoFiles}</dd>
                     </div>
                   )}
                   {audioFiles > 0 && (
@@ -318,5 +367,14 @@ function isAudioFile(url: string): boolean {
   return (
     url.includes("/video/upload/") &&
     (url.includes(".webm") || url.includes(".mp3") || url.includes(".wav") || url.includes(".m4a"))
+  )
+}
+
+function isVideoFile(url: string): boolean {
+  const lower = url.toLowerCase()
+  return (
+    url.includes("/video/upload/") &&
+    (lower.includes(".mp4") || lower.includes(".mov") || lower.includes(".avi")) &&
+    !isAudioFile(url)
   )
 }
