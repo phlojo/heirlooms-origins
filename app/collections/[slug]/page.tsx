@@ -47,7 +47,6 @@ export default async function CollectionDetailPage({
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     }
-    console.log("[v0] Unsorted collection detected, isUnsorted:", isUnsorted)
   } else {
     try {
       collection = await getCollectionBySlug(slug)
@@ -59,13 +58,15 @@ export default async function CollectionDetailPage({
     if (!collection) {
       notFound()
     }
+    
+    if (collection.slug === "uncategorized") {
+      isUnsorted = true
+    }
   }
 
   const canView = collection.is_public || (user && collection.user_id === user.id)
   const canEdit = user && collection.user_id === user.id && !isUnsorted
   const isOwnCollection = user && collection.user_id === user.id
-
-  console.log("[v0] Collection:", collection.title, "isUnsorted:", isUnsorted, "canEdit:", canEdit, "isOwnCollection:", isOwnCollection)
 
   if (!canView) {
     notFound()
