@@ -534,8 +534,8 @@ export function ArtifactSwipeContent({
 
       {/* Save Module */}
       {isEditMode && canEdit && (
-        <div className="fixed bottom-[calc(80px+env(safe-area-inset-bottom))] left-0 right-0 flex justify-center pointer-events-none z-40">
-          <div className="pointer-events-auto bg-card/95 backdrop-blur-sm border rounded-3xl shadow-lg px-6 py-3 mx-4 w-auto">
+        <div className="fixed bottom-[calc(120px+env(safe-area-inset-bottom))] left-0 right-0 flex justify-center pointer-events-none z-40">
+          <div className="pointer-events-auto bg-card/95 backdrop-blur-sm border rounded-3xl shadow-lg p-4 mx-4 w-auto">
             <div className="flex items-center gap-3">
               <Button 
                 onClick={handleSave} 
