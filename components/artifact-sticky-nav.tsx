@@ -1,7 +1,7 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { ArrowRight, ArrowLeft, Heart } from "lucide-react"
+import { ArrowRight, ArrowLeft, Heart } from 'lucide-react'
 import Link from "next/link"
 import { CollectionLabel } from "@/components/collection-label"
 import { useState } from "react"
@@ -20,6 +20,7 @@ interface ArtifactStickyNavProps {
   } | null
   editHref?: string
   canEdit?: boolean
+  isEditMode?: boolean
   authorUserId?: string
   authorName?: string
   collectionId?: string
@@ -37,6 +38,7 @@ export function ArtifactStickyNav({
   nextItem,
   editHref,
   canEdit = false,
+  isEditMode = false,
   authorUserId,
   authorName,
   collectionId,
@@ -47,7 +49,7 @@ export function ArtifactStickyNav({
 }: ArtifactStickyNavProps) {
   const [isFavorited, setIsFavorited] = useState(false)
 
-  const getNavUrl = (id: string) => `/artifacts/${id}`
+  const getNavUrl = (id: string) => isEditMode ? `/artifacts/${id}/edit` : `/artifacts/${id}`
 
   const truncateBackLabel = (label: string) => {
     const withoutSuffix = label.endsWith(" Collection") ? label.slice(0, -11) : label

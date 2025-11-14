@@ -1,11 +1,8 @@
-import { AppLayout } from "@/components/app-layout"
-import { Button } from "@/components/ui/button"
-import { ArrowLeft } from "lucide-react"
-import Link from "next/link"
-import { notFound, redirect } from "next/navigation"
+import { notFound, redirect } from 'next/navigation'
 import { getCurrentUser } from "@/lib/supabase/server"
-import { getArtifactById } from "@/lib/actions/artifacts"
-import { EditArtifactForm } from "@/components/edit-artifact-form"
+import { getArtifactById, getAdjacentArtifacts } from "@/lib/actions/artifacts"
+import { AppLayout } from "@/components/app-layout"
+import { ArtifactSwipeContent } from "@/components/artifact-swipe-content"
 
 export default async function EditArtifactPage({ params }: { params: Promise<{ id: string }> }) {
   const user = await getCurrentUser()
@@ -21,28 +18,30 @@ export default async function EditArtifactPage({ params }: { params: Promise<{ i
     notFound()
   }
 
-  // Only the owner can edit
   if (artifact.user_id !== user.id) {
     notFound()
   }
 
+  const { previous, next, currentPosition, totalCount } = await getAdjacentArtifacts(id, artifact.collection_id)
+
+  const collectionHref = artifact.collection?.slug
+    ? `/collections/${artifact.collection.slug}`
+    : `/collections/${artifact.collection_id}`
+
   return (
     <AppLayout user={user}>
-      <div className="mx-auto max-w-2xl space-y-8">
-        <div>
-          <Button variant="ghost" size="sm" asChild className="mb-4">
-            <Link href={`/artifacts/${id}`}>
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Artifact
-            </Link>
-          </Button>
-
-          <h1 className="text-3xl font-bold tracking-tight">Edit Artifact</h1>
-          <p className="mt-1 text-muted-foreground">Update the details and photos of your heirloom</p>
-        </div>
-
-        <EditArtifactForm artifact={artifact} userId={user.id} />
-      </div>
+      <ArtifactSwipeContent
+        artifact={artifact}
+        previous={previous}
+        next={next}
+        currentPosition={currentPosition}
+        totalCount={totalCount}
+        collectionHref={collectionHref}
+        canEdit={true}
+        isEditMode={true}
+        previousUrl={previous ? `/artifacts/${previous.id}/edit` : null}
+        nextUrl={next ? `/artifacts/${next.id}/edit` : null}
+      />
     </AppLayout>
   )
 }

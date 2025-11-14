@@ -8,7 +8,7 @@ import {
   type UpdateArtifactInput,
 } from "@/lib/schemas"
 import { revalidatePath } from "next/cache"
-import { redirect } from "next/navigation"
+import { redirect } from 'next/navigation'
 import { deleteCloudinaryMedia, extractPublicIdFromUrl } from "./cloudinary"
 
 /**
@@ -302,4 +302,86 @@ export async function updateArtifact(input: UpdateArtifactInput, oldMediaUrls: s
   }
 
   return { success: true, data }
+}
+
+/**
+ * Server action to delete a single media item from an artifact
+ */
+export async function deleteMediaFromArtifact(artifactId: string, mediaUrl: string) {
+  const supabase = await createClient()
+
+  // Check authentication
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    return { success: false, error: "Unauthorized" }
+  }
+
+  // Get current artifact
+  const { data: artifact, error: fetchError } = await supabase
+    .from("artifacts")
+    .select("user_id, media_urls, image_captions, video_summaries, audio_transcripts, audio_summaries, collection:collections(slug)")
+    .eq("id", artifactId)
+    .single()
+
+  if (fetchError || !artifact) {
+    return { success: false, error: "Artifact not found" }
+  }
+
+  // Verify ownership
+  if (artifact.user_id !== user.id) {
+    return { success: false, error: "Unauthorized" }
+  }
+
+  // Remove the URL from media_urls array
+  const updatedMediaUrls = (artifact.media_urls || []).filter((url: string) => url !== mediaUrl)
+
+  // Remove associated AI metadata
+  const updatedImageCaptions = { ...(artifact.image_captions || {}) }
+  delete updatedImageCaptions[mediaUrl]
+
+  const updatedVideoSummaries = { ...(artifact.video_summaries || {}) }
+  delete updatedVideoSummaries[mediaUrl]
+
+  const updatedAudioTranscripts = { ...(artifact.audio_transcripts || {}) }
+  delete updatedAudioTranscripts[mediaUrl]
+
+  const updatedAudioSummaries = { ...(artifact.audio_summaries || {}) }
+  delete updatedAudioSummaries[mediaUrl]
+
+  // Update the artifact
+  const { error: updateError } = await supabase
+    .from("artifacts")
+    .update({
+      media_urls: updatedMediaUrls,
+      image_captions: updatedImageCaptions,
+      video_summaries: updatedVideoSummaries,
+      audio_transcripts: updatedAudioTranscripts,
+      audio_summaries: updatedAudioSummaries,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", artifactId)
+
+  if (updateError) {
+    console.error("[v0] Error deleting media:", updateError)
+    return { success: false, error: "Failed to delete media" }
+  }
+
+  // Delete from Cloudinary
+  const publicId = await extractPublicIdFromUrl(mediaUrl)
+  if (publicId) {
+    await deleteCloudinaryMedia(publicId)
+  }
+
+  // Revalidate paths
+  revalidatePath(`/artifacts/${artifactId}`)
+  revalidatePath(`/artifacts/${artifactId}/edit`)
+  revalidatePath("/collections")
+  if (artifact.collection?.slug) {
+    revalidatePath(`/collections/${artifact.collection.slug}`)
+  }
+
+  return { success: true }
 }
