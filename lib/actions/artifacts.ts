@@ -437,3 +437,61 @@ export async function getArtifactBySlug(artifactSlug: string) {
 
   return data
 }
+
+/**
+ * Server action to delete an artifact and all its media
+ */
+export async function deleteArtifact(artifactId: string) {
+  const supabase = await createClient()
+
+  // Check authentication
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    return { success: false, error: "Unauthorized" }
+  }
+
+  // Get current artifact
+  const { data: artifact, error: fetchError } = await supabase
+    .from("artifacts")
+    .select("user_id, slug, media_urls, collection:collections(slug)")
+    .eq("id", artifactId)
+    .single()
+
+  if (fetchError || !artifact) {
+    return { success: false, error: "Artifact not found" }
+  }
+
+  // Verify ownership
+  if (artifact.user_id !== user.id) {
+    return { success: false, error: "Unauthorized" }
+  }
+
+  // Delete all media from Cloudinary
+  const mediaUrls = artifact.media_urls || []
+  for (const url of mediaUrls) {
+    const publicId = await extractPublicIdFromUrl(url)
+    if (publicId) {
+      await deleteCloudinaryMedia(publicId)
+    }
+  }
+
+  // Delete the artifact from database
+  const { error: deleteError } = await supabase.from("artifacts").delete().eq("id", artifactId)
+
+  if (deleteError) {
+    console.error("[v0] Error deleting artifact:", deleteError)
+    return { success: false, error: "Failed to delete artifact" }
+  }
+
+  // Revalidate paths
+  revalidatePath(`/artifacts/${artifact.slug}`)
+  revalidatePath("/collections")
+  if (artifact.collection?.slug) {
+    revalidatePath(`/collections/${artifact.collection.slug}`)
+  }
+
+  return { success: true }
+}

@@ -5,23 +5,31 @@ import Link from "next/link"
 import { getDetailUrl } from "@/lib/cloudinary"
 import { AudioPlayer } from "@/components/audio-player"
 import ReactMarkdown from "react-markdown"
-import { ArtifactAiPanelWrapper } from "@/components/artifact/ArtifactAiPanelWrapper"
-import { GenerateDescriptionButton } from "@/components/artifact/GenerateDescriptionButton"
-import { GenerateImageCaptionButton } from "@/components/artifact/GenerateImageCaptionButton"
-import { GenerateVideoSummaryButton } from "@/components/artifact/GenerateVideoSummaryButton"
-import { TranscribeAudioButtonPerMedia } from "@/components/artifact/TranscribeAudioButtonPerMedia"
 import { ArtifactStickyNav } from "@/components/artifact-sticky-nav"
 import { ArtifactSwipeWrapper } from "@/components/artifact-swipe-wrapper"
 import { ArtifactImageWithViewer } from "@/components/artifact-image-with-viewer"
-import { Author } from "@/components/author"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible"
 import { AddMediaModal } from "@/components/add-media-modal"
-import { Edit, ChevronDown, Plus, Save, X, Trash2 } from 'lucide-react'
-import { updateArtifact, deleteMediaFromArtifact } from "@/lib/actions/artifacts"
+import { ChevronDown, Plus, Save, X, Trash2, Loader2 } from 'lucide-react'
+import { updateArtifact, deleteMediaFromArtifact, deleteArtifact } from "@/lib/actions/artifacts"
 import { useRouter } from 'next/navigation'
+import { GenerateImageCaptionButton } from "@/components/artifact/GenerateImageCaptionButton"
+import { GenerateVideoSummaryButton } from "@/components/artifact/GenerateVideoSummaryButton"
+import { TranscribeAudioButtonPerMedia } from "@/components/artifact/TranscribeAudioButtonPerMedia"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 interface ArtifactSwipeContentProps {
   artifact: any
@@ -52,10 +60,12 @@ export function ArtifactSwipeContent({
   const [isAttributesOpen, setIsAttributesOpen] = useState(false)
   const [isProvenanceOpen, setIsProvenanceOpen] = useState(false)
   const [isAddMediaOpen, setIsAddMediaOpen] = useState(false)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   
   const [editTitle, setEditTitle] = useState(artifact.title)
   const [editDescription, setEditDescription] = useState(artifact.description || "")
   const [isSaving, setIsSaving] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
   
   const router = useRouter()
   
@@ -103,6 +113,26 @@ export function ArtifactSwipeContent({
     }
   }
 
+  const handleDeleteArtifact = async () => {
+    setIsDeleting(true)
+    try {
+      const result = await deleteArtifact(artifact.id)
+      if (result.success) {
+        router.push(collectionHref)
+        router.refresh()
+      } else {
+        alert(result.error || "Failed to delete artifact")
+        setIsDeleting(false)
+        setDeleteDialogOpen(false)
+      }
+    } catch (error) {
+      console.error("[v0] Failed to delete artifact:", error)
+      alert("Failed to delete artifact. Please try again.")
+      setIsDeleting(false)
+      setDeleteDialogOpen(false)
+    }
+  }
+
   const handleMediaAdded = async (newUrls: string[]) => {
     try {
       const currentUrls = artifact.media_urls || []
@@ -126,7 +156,11 @@ export function ArtifactSwipeContent({
   }
 
   return (
-    <ArtifactSwipeWrapper previousUrl={previousUrl} nextUrl={nextUrl} disableSwipe={isImageFullscreen}>
+    <ArtifactSwipeWrapper 
+      previousUrl={isEditMode ? null : previousUrl} 
+      nextUrl={isEditMode ? null : nextUrl} 
+      disableSwipe={isImageFullscreen || isEditMode}
+    >
       <ArtifactStickyNav
         title={isEditMode ? editTitle : artifact.title}
         backHref={collectionHref}
@@ -136,8 +170,8 @@ export function ArtifactSwipeContent({
         editHref={`/artifacts/${artifact.slug}/edit`}
         canEdit={canEdit}
         isEditMode={isEditMode}
-        authorUserId={artifact.user_id}
-        authorName={artifact.author_name}
+        authorUserId={isEditMode ? undefined : artifact.user_id}
+        authorName={isEditMode ? undefined : artifact.author_name}
         collectionId={artifact.collection_id}
         collectionSlug={artifact.collection?.slug}
         collectionName={artifact.collection?.title}
@@ -145,58 +179,34 @@ export function ArtifactSwipeContent({
         totalCount={totalCount}
       />
 
-      <div className={`flex items-center py-4 px-6 lg:px-8 ${canEdit || artifact.user_id ? "justify-between" : "justify-center"}`}>
-        <div className="flex items-center gap-2">
-          {canEdit && !isEditMode && (
-            <Button asChild className="bg-purple-600 hover:bg-purple-700 text-white">
-              <Link href={`/artifacts/${artifact.slug}/edit`}>
-                <Edit className="mr-2 h-4 w-4" />
-                Edit Artifact
+      {isEditMode ? (
+        <div className="py-4 px-6 lg:px-8">
+          <div className="flex items-center gap-3">
+            <Button 
+              onClick={handleSave} 
+              disabled={isSaving}
+              className="bg-green-600 hover:bg-green-700 text-white"
+            >
+              <Save className="mr-2 h-4 w-4" />
+              {isSaving ? "Saving..." : "Save Changes"}
+            </Button>
+            <Button 
+              asChild
+              variant="outline"
+            >
+              <Link href={`/artifacts/${artifact.slug}`}>
+                <X className="mr-2 h-4 w-4" />
+                Cancel
               </Link>
             </Button>
-          )}
-          {isEditMode && (
-            <>
-              <Button 
-                onClick={handleSave} 
-                disabled={isSaving}
-                className="bg-green-600 hover:bg-green-700 text-white"
-              >
-                <Save className="mr-2 h-4 w-4" />
-                {isSaving ? "Saving..." : "Save Changes"}
-              </Button>
-              <Button 
-                asChild
-                variant="outline"
-              >
-                <Link href={`/artifacts/${artifact.slug}`}>
-                  <X className="mr-2 h-4 w-4" />
-                  Cancel
-                </Link>
-              </Button>
-            </>
-          )}
+          </div>
         </div>
-        {artifact.user_id && <Author userId={artifact.user_id} authorName={artifact.author_name} size="sm" />}
-      </div>
-
-      {isEditMode && canEdit && (
-        <div className="px-6 lg:px-8 mb-6">
-          <ArtifactAiPanelWrapper
-            artifactId={artifact.id}
-            analysis_status={artifact.analysis_status}
-            analysis_error={artifact.analysis_error}
-            transcript={artifact.transcript}
-            ai_description={artifact.ai_description}
-            image_captions={artifact.image_captions}
-          />
-        </div>
-      )}
+      ) : null}
 
       <div className="space-y-6 px-6 lg:px-8">
         {isEditMode && (
           <section className="space-y-2">
-            <label htmlFor="title" className="text-sm font-semibold">Title</label>
+            <label htmlFor="title" className="text-sm font-semibold text-foreground">Title</label>
             <Input
               id="title"
               value={editTitle}
@@ -209,7 +219,7 @@ export function ArtifactSwipeContent({
 
         {/* Description Section */}
         <section className="space-y-4">
-          <h2 className="text-xl font-semibold">Description</h2>
+          <h2 className="text-lg font-semibold text-foreground">Description</h2>
           {isEditMode ? (
             <Textarea
               value={editDescription}
@@ -230,18 +240,12 @@ export function ArtifactSwipeContent({
               )}
             </div>
           )}
-          {isEditMode && (
-            <div>
-              <GenerateDescriptionButton artifactId={artifact.id} />
-            </div>
-          )}
         </section>
 
-        {/* Attributes Section */}
         <section>
           <Collapsible open={isAttributesOpen} onOpenChange={setIsAttributesOpen}>
             <CollapsibleTrigger className="flex w-full items-center justify-between rounded-lg border bg-card p-4 hover:bg-accent transition-colors">
-              <h2 className="text-xl font-semibold">Attributes</h2>
+              <h2 className="text-lg font-semibold text-foreground">Attributes</h2>
               <ChevronDown className={`h-5 w-5 transition-transform ${isAttributesOpen ? 'rotate-180' : ''}`} />
             </CollapsibleTrigger>
             <CollapsibleContent>
@@ -258,7 +262,7 @@ export function ArtifactSwipeContent({
       {/* Media Items Section */}
       <section className="space-y-6 my-6">
         <div className="flex items-center justify-between px-6 lg:px-8">
-          <h2 className="text-xl font-semibold">Media Items</h2>
+          <h2 className="text-lg font-semibold text-foreground">Media Items</h2>
           {isEditMode && canEdit && (
             <Button
               onClick={() => setIsAddMediaOpen(true)}
@@ -306,14 +310,6 @@ export function ArtifactSwipeContent({
                           <div className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
                             {transcript}
                           </div>
-                        </div>
-                      )}
-                      {!transcript && isEditMode && (
-                        <div className="rounded-lg border bg-muted/30 p-4 mt-3">
-                          <h4 className="text-sm font-semibold mb-2">Transcript</h4>
-                          <p className="text-sm text-muted-foreground italic">
-                            No transcript available yet. Click "AI Transcribe" above to generate one.
-                          </p>
                         </div>
                       )}
                     </div>
@@ -398,17 +394,22 @@ export function ArtifactSwipeContent({
         )}
       </section>
 
-      {/* Provenance Section */}
       <div className="px-6 lg:px-8">
         <section className="pb-8">
           <Collapsible open={isProvenanceOpen} onOpenChange={setIsProvenanceOpen}>
             <CollapsibleTrigger className="flex w-full items-center justify-between rounded-lg border bg-card p-4 hover:bg-accent transition-colors">
-              <h2 className="text-xl font-semibold">Provenance</h2>
+              <h2 className="text-lg font-semibold text-foreground">Provenance</h2>
               <ChevronDown className={`h-5 w-5 transition-transform ${isProvenanceOpen ? 'rotate-180' : ''}`} />
             </CollapsibleTrigger>
             <CollapsibleContent>
               <div className="mt-2 rounded-lg border bg-card p-4">
                 <dl className="space-y-3 text-sm">
+                  {artifact.author_name && (
+                    <div className="flex justify-between">
+                      <dt className="text-muted-foreground">Author</dt>
+                      <dd className="font-medium">{artifact.author_name}</dd>
+                    </div>
+                  )}
                   <div className="flex justify-between">
                     <dt className="text-muted-foreground">Collection</dt>
                     <dd className="font-medium">
@@ -474,6 +475,62 @@ export function ArtifactSwipeContent({
             </CollapsibleContent>
           </Collapsible>
         </section>
+
+        {isEditMode && canEdit && (
+          <section className="border-t pt-6 pb-8">
+            <div className="space-y-4">
+              <div>
+                <h3 className="text-lg font-semibold text-destructive">Danger Zone</h3>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Permanently delete this artifact. This action cannot be undone and all media will be lost.
+                </p>
+              </div>
+
+              <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive" type="button" disabled={isDeleting}>
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Delete Artifact
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Delete Artifact</AlertDialogTitle>
+                    <AlertDialogDescription className="space-y-3">
+                      <p>
+                        You are about to permanently delete <strong>"{artifact.title}"</strong>.
+                      </p>
+                      <p className="text-destructive font-medium">
+                        All media files ({totalMedia} {totalMedia === 1 ? 'file' : 'files'}) will be permanently deleted from storage.
+                      </p>
+                      <p className="text-xs text-muted-foreground">This action cannot be undone.</p>
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={(e) => {
+                        e.preventDefault()
+                        handleDeleteArtifact()
+                      }}
+                      disabled={isDeleting}
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    >
+                      {isDeleting ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Deleting...
+                        </>
+                      ) : (
+                        "Delete Artifact"
+                      )}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
+          </section>
+        )}
       </div>
 
       {isEditMode && canEdit && (
