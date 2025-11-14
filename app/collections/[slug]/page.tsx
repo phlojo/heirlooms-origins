@@ -59,22 +59,19 @@ export default async function CollectionDetailPage({
       
       const { data, error } = await supabase
         .from("artifacts")
-        .select(
-          `
+        .select(`
           *,
-          user:users!artifacts_user_id_fkey(id, name, email, avatar_url),
           collection:collections(id, title, slug)
-        `
-        )
+        `)
         .eq("collection_id", collection.id)
+        .eq("user_id", user.id)
         .order("created_at", { ascending: false })
 
       console.log("[v0] Query error:", error)
-      console.log("[v0] Query data:", data)
+      console.log("[v0] Query data count:", data?.length || 0)
       
       if (error) {
         console.error("[v0] Supabase error details:", JSON.stringify(error, null, 2))
-        throw error
       }
       artifacts = data || []
     } else {
