@@ -128,6 +128,19 @@ export default async function CollectionDetailPage({
           </div>
         )}
 
+        {isUncategorized && (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mx-6 lg:mx-8 text-xs space-y-1">
+            <p className="font-semibold text-yellow-900">Debug Info:</p>
+            <p>Collection ID: {collection.id}</p>
+            <p>Collection Slug: {collection.slug}</p>
+            <p>Is Uncategorized: {isUncategorized.toString()}</p>
+            <p>Artifacts Found: {artifacts.length}</p>
+            <p>User ID: {user?.id || 'none'}</p>
+            <p>Mode: {mode}</p>
+            <p>Is Own Collection: {isOwnCollection.toString()}</p>
+          </div>
+        )}
+
         <div className="space-y-4">
           {!isUncategorized && collection.description && <p className="text-muted-foreground pb-2">{collection.description}</p>}
 
