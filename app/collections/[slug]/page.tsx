@@ -105,12 +105,14 @@ export default async function CollectionDetailPage({
               </Button>
             )}
             {isUncategorized && <div />}
-            <Button asChild className="bg-blue-600 hover:bg-blue-700 text-white">
-              <Link href={`/artifacts/new?collectionId=${collection.id}`}>
-                <Plus className="mr-2 h-4 w-4" />
-                Add Artifact
-              </Link>
-            </Button>
+            {!isUncategorized && (
+              <Button asChild className="bg-blue-600 hover:bg-blue-700 text-white">
+                <Link href={`/artifacts/new?collectionId=${collection.id}`}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Artifact
+                </Link>
+              </Button>
+            )}
           </div>
         )}
 
