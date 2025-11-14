@@ -14,7 +14,7 @@ import { ArtifactSwipeWrapper } from "@/components/artifact-swipe-wrapper"
 import { ArtifactImageWithViewer } from "@/components/artifact-image-with-viewer"
 import { Author } from "@/components/author"
 import { Button } from "@/components/ui/button"
-import { Edit } from "lucide-react"
+import { Edit } from 'lucide-react'
 
 interface ArtifactSwipeContentProps {
   artifact: any
@@ -46,7 +46,13 @@ export function ArtifactSwipeContent({
     fullDescription += `\n\n${artifact.ai_description}`
   }
 
+  console.log("[v0] Raw artifact.media_urls from database:", artifact.media_urls)
+  
   const mediaUrls = Array.from(new Set(artifact.media_urls || []))
+  
+  console.log("[v0] After deduplication:", mediaUrls)
+  console.log("[v0] Duplicate count:", (artifact.media_urls?.length || 0) - mediaUrls.length)
+
   const totalMedia = mediaUrls.length
   const audioFiles = mediaUrls.filter((url) => isAudioFile(url)).length
   const imageFiles = totalMedia - audioFiles
