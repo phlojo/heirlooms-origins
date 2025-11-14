@@ -49,8 +49,8 @@ export function ArtifactSwipeContent({
   nextUrl,
 }: ArtifactSwipeContentProps) {
   const [isImageFullscreen, setIsImageFullscreen] = useState(false)
-  const [isSpecsOpen, setIsSpecsOpen] = useState(false)
-  const [isDetailsOpen, setIsDetailsOpen] = useState(false)
+  const [isAttributesOpen, setIsAttributesOpen] = useState(false)
+  const [isProvenanceOpen, setIsProvenanceOpen] = useState(false)
   const [isAddMediaOpen, setIsAddMediaOpen] = useState(false)
   
   const [editTitle, setEditTitle] = useState(artifact.title)
@@ -237,17 +237,17 @@ export function ArtifactSwipeContent({
           )}
         </section>
 
-        {/* Specs Section */}
+        {/* Attributes Section */}
         <section>
-          <Collapsible open={isSpecsOpen} onOpenChange={setIsSpecsOpen}>
+          <Collapsible open={isAttributesOpen} onOpenChange={setIsAttributesOpen}>
             <CollapsibleTrigger className="flex w-full items-center justify-between rounded-lg border bg-card p-4 hover:bg-accent transition-colors">
-              <h2 className="text-xl font-semibold">Specs</h2>
-              <ChevronDown className={`h-5 w-5 transition-transform ${isSpecsOpen ? 'rotate-180' : ''}`} />
+              <h2 className="text-xl font-semibold">Attributes</h2>
+              <ChevronDown className={`h-5 w-5 transition-transform ${isAttributesOpen ? 'rotate-180' : ''}`} />
             </CollapsibleTrigger>
             <CollapsibleContent>
               <div className="mt-2 rounded-lg border bg-card p-4">
                 <p className="text-sm text-muted-foreground italic">
-                  No specs added yet. Future updates will include fields for make, model, year, measurements, materials, and condition.
+                  No attributes added yet. Future updates will include fields for make, model, year, measurements, materials, and condition.
                 </p>
               </div>
             </CollapsibleContent>
@@ -398,13 +398,13 @@ export function ArtifactSwipeContent({
         )}
       </section>
 
-      {/* Artifact Insights Section */}
+      {/* Provenance Section */}
       <div className="px-6 lg:px-8">
         <section className="pb-8">
-          <Collapsible open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
+          <Collapsible open={isProvenanceOpen} onOpenChange={setIsProvenanceOpen}>
             <CollapsibleTrigger className="flex w-full items-center justify-between rounded-lg border bg-card p-4 hover:bg-accent transition-colors">
-              <h2 className="text-xl font-semibold">Artifact Insights</h2>
-              <ChevronDown className={`h-5 w-5 transition-transform ${isDetailsOpen ? 'rotate-180' : ''}`} />
+              <h2 className="text-xl font-semibold">Provenance</h2>
+              <ChevronDown className={`h-5 w-5 transition-transform ${isProvenanceOpen ? 'rotate-180' : ''}`} />
             </CollapsibleTrigger>
             <CollapsibleContent>
               <div className="mt-2 rounded-lg border bg-card p-4">

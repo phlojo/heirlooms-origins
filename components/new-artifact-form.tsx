@@ -27,7 +27,7 @@ export function NewArtifactForm({
   userId: string
 }) {
   const [error, setError] = useState<string | null>(null)
-  const [isSpecsOpen, setIsSpecsOpen] = useState(false)
+  const [isAttributesOpen, setIsAttributesOpen] = useState(false)
 
   const form = useForm<FormData>({
     resolver: zodResolver(createArtifactSchema),
@@ -154,16 +154,16 @@ export function NewArtifactForm({
         </div>
 
         <div className="px-6 lg:px-8 py-6 border-b">
-          <Collapsible open={isSpecsOpen} onOpenChange={setIsSpecsOpen}>
+          <Collapsible open={isAttributesOpen} onOpenChange={setIsAttributesOpen}>
             <CollapsibleTrigger asChild>
               <button
                 type="button"
                 className="flex w-full items-center justify-between text-left group py-1"
               >
-                <h2 className="text-xl font-semibold">Specs</h2>
+                <h2 className="text-xl font-semibold">Attributes</h2>
                 <ChevronDown
                   className={`h-5 w-5 text-muted-foreground transition-all group-hover:text-foreground ${
-                    isSpecsOpen ? "rotate-180" : ""
+                    isAttributesOpen ? "rotate-180" : ""
                   }`}
                 />
               </button>
@@ -284,7 +284,7 @@ export function NewArtifactForm({
 
         <div className="px-6 lg:px-8 py-6 border-b">
           <p className="text-sm text-muted-foreground italic">
-            Artifact details will be available after creation
+            Provenance details will be available after creation
           </p>
         </div>
 
