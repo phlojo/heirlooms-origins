@@ -49,7 +49,7 @@ export function AddMediaModal({ open, onOpenChange, artifactId, userId, onMediaA
     }
   }
 
-  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleMediaUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files
     if (!files || files.length === 0) return
 
@@ -64,10 +64,10 @@ export function AddMediaModal({ open, onOpenChange, artifactId, userId, onMediaA
     }
 
     const totalSize = Array.from(files).reduce((sum, file) => sum + file.size, 0)
-    const MAX_TOTAL_SIZE = 30 * 1024 * 1024
+    const MAX_TOTAL_SIZE = 50 * 1024 * 1024
 
     if (totalSize > MAX_TOTAL_SIZE) {
-      setError("Total file size exceeds 30MB. Please upload fewer or smaller images.")
+      setError("Total file size exceeds 50MB. Please upload fewer or smaller files.")
       e.target.value = ""
       return
     }
@@ -79,7 +79,19 @@ export function AddMediaModal({ open, onOpenChange, artifactId, userId, onMediaA
       const urls: string[] = []
 
       for (const file of Array.from(files)) {
-        const signatureResult = await generateCloudinarySignature(userId, file.name)
+        let uploadUrl: string
+        let signatureResult: any
+
+        if (selectedType === "audio" || file.type.startsWith("audio/")) {
+          signatureResult = await generateCloudinaryAudioSignature(userId, file.name)
+          uploadUrl = `https://api.cloudinary.com/v1_1/${signatureResult.cloudName}/video/upload`
+        } else if (selectedType === "video" || file.type.startsWith("video/")) {
+          signatureResult = await generateCloudinarySignature(userId, file.name)
+          uploadUrl = `https://api.cloudinary.com/v1_1/${signatureResult.cloudName}/video/upload`
+        } else {
+          signatureResult = await generateCloudinarySignature(userId, file.name)
+          uploadUrl = `https://api.cloudinary.com/v1_1/${signatureResult.cloudName}/image/upload`
+        }
 
         if (signatureResult.error || !signatureResult.signature) {
           throw new Error(signatureResult.error || "Failed to generate upload signature")
@@ -95,8 +107,6 @@ export function AddMediaModal({ open, onOpenChange, artifactId, userId, onMediaA
         if (signatureResult.eager) {
           formData.append("eager", signatureResult.eager)
         }
-
-        const uploadUrl = `https://api.cloudinary.com/v1_1/${signatureResult.cloudName}/image/upload`
 
         const response = await fetch(uploadUrl, {
           method: "POST",
@@ -121,7 +131,7 @@ export function AddMediaModal({ open, onOpenChange, artifactId, userId, onMediaA
       onMediaAdded(urls)
       handleClose()
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to upload photos. Please try again.")
+      setError(err instanceof Error ? err.message : "Failed to upload files. Please try again.")
     } finally {
       setIsUploading(false)
       e.target.value = ""
@@ -180,16 +190,15 @@ export function AddMediaModal({ open, onOpenChange, artifactId, userId, onMediaA
         <DialogHeader>
           <DialogTitle>Add Media</DialogTitle>
           <DialogDescription>
-            {!selectedType && "Choose the type of media you want to add"}
-            {selectedType === "photo" && !selectedMode && "Upload or take a photo"}
-            {selectedType === "video" && !selectedMode && "Upload or record a video"}
-            {selectedType === "audio" && !selectedMode && "Upload or record audio"}
+            {!selectedType && "Step 1: Choose the type of media to add"}
+            {selectedType && !selectedMode && "Step 2: Choose how to add your media"}
             {selectedMode === "upload" && "Select files to upload"}
             {selectedMode === "record" && "Record your media"}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
+          {/* Step 1: Choose Media Type */}
           {!selectedType && (
             <div className="grid gap-3">
               <Button
@@ -200,7 +209,7 @@ export function AddMediaModal({ open, onOpenChange, artifactId, userId, onMediaA
                 <Camera className="h-8 w-8" />
                 <div className="text-center">
                   <div className="font-semibold">Photo</div>
-                  <div className="text-xs text-muted-foreground">Upload or take a photo</div>
+                  <div className="text-xs text-muted-foreground">Upload or take photos</div>
                 </div>
               </Button>
 
@@ -212,7 +221,7 @@ export function AddMediaModal({ open, onOpenChange, artifactId, userId, onMediaA
                 <Video className="h-8 w-8" />
                 <div className="text-center">
                   <div className="font-semibold">Video</div>
-                  <div className="text-xs text-muted-foreground">Upload or record a video</div>
+                  <div className="text-xs text-muted-foreground">Upload or record videos</div>
                 </div>
               </Button>
 
@@ -230,14 +239,19 @@ export function AddMediaModal({ open, onOpenChange, artifactId, userId, onMediaA
             </div>
           )}
 
+          {/* Step 2: Choose Upload or Capture/Record */}
           {selectedType && !selectedMode && (
             <div className="grid gap-3">
               <Button variant="outline" className="h-auto flex-col gap-2 py-6" asChild>
                 <label className="cursor-pointer">
                   <Upload className="h-8 w-8" />
                   <div className="text-center">
-                    <div className="font-semibold">Upload {selectedType === "photo" ? "Photos" : selectedType === "video" ? "Video" : "Audio"}</div>
-                    <div className="text-xs text-muted-foreground">Choose files from your device</div>
+                    <div className="font-semibold">
+                      Upload {selectedType === "photo" ? "Photos" : selectedType === "video" ? "Videos" : "Audio Files"}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      Choose multiple files from your device
+                    </div>
                   </div>
                   <input
                     type="file"
@@ -248,8 +262,8 @@ export function AddMediaModal({ open, onOpenChange, artifactId, userId, onMediaA
                         ? "video/*"
                         : "audio/*"
                     }
-                    multiple={selectedType === "photo"}
-                    onChange={handlePhotoUpload}
+                    multiple
+                    onChange={handleMediaUpload}
                     className="hidden"
                     disabled={isUploading}
                   />
@@ -276,6 +290,7 @@ export function AddMediaModal({ open, onOpenChange, artifactId, userId, onMediaA
             </div>
           )}
 
+          {/* Recording UI for Audio */}
           {selectedMode === "record" && selectedType === "audio" && (
             <div className="space-y-4">
               <AudioRecorder onAudioRecorded={handleAudioRecorded} disabled={isUploading} />
@@ -285,6 +300,7 @@ export function AddMediaModal({ open, onOpenChange, artifactId, userId, onMediaA
             </div>
           )}
 
+          {/* Coming Soon for Photo/Video Capture */}
           {selectedMode === "record" && (selectedType === "photo" || selectedType === "video") && (
             <div className="space-y-4">
               <div className="rounded-lg border border-dashed p-8 text-center">
@@ -298,12 +314,14 @@ export function AddMediaModal({ open, onOpenChange, artifactId, userId, onMediaA
             </div>
           )}
 
+          {/* Error Display */}
           {error && (
             <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-3">
               <p className="text-sm text-destructive">{error}</p>
             </div>
           )}
 
+          {/* Upload Progress */}
           {isUploading && (
             <div className="rounded-lg border border-dashed p-4 text-center">
               <p className="text-sm text-muted-foreground">Uploading...</p>
