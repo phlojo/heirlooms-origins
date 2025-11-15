@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import Link from "next/link"
 import { useState } from "react"
-import { ChevronDown } from 'lucide-react'
+import { ChevronDown, Plus } from 'lucide-react'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { AddMediaModal } from "@/components/add-media-modal"
 
@@ -28,6 +28,7 @@ export function NewArtifactForm({
 }) {
   const [error, setError] = useState<string | null>(null)
   const [isAttributesOpen, setIsAttributesOpen] = useState(false)
+  const [isAddMediaOpen, setIsAddMediaOpen] = useState(false)
 
   const form = useForm<FormData>({
     resolver: zodResolver(createArtifactSchema),
@@ -209,17 +210,29 @@ export function NewArtifactForm({
         <div className="py-6 border-b">
           <div className="px-6 lg:px-8 flex items-center justify-between mb-6">
             <h2 className="text-xl font-semibold">Media Items</h2>
-            <AddMediaModal
-              artifactId={null}
-              userId={userId}
-              onMediaAdded={(newUrls) => {
-                const currentUrls = form.getValues("media_urls") || []
-                const allUrls = [...currentUrls, ...newUrls]
-                const uniqueUrls = Array.from(new Set(allUrls))
-                form.setValue("media_urls", uniqueUrls)
-              }}
-            />
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setIsAddMediaOpen(true)}
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Add Media
+            </Button>
           </div>
+
+          <AddMediaModal
+            open={isAddMediaOpen}
+            onOpenChange={setIsAddMediaOpen}
+            artifactId={null}
+            userId={userId}
+            onMediaAdded={(newUrls) => {
+              const currentUrls = form.getValues("media_urls") || []
+              const allUrls = [...currentUrls, ...newUrls]
+              const uniqueUrls = Array.from(new Set(allUrls))
+              form.setValue("media_urls", uniqueUrls)
+            }}
+          />
 
           {totalMediaCount === 0 ? (
             <div className="px-6 lg:px-8">
