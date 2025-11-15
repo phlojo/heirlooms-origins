@@ -3,6 +3,7 @@ import { getCurrentUser } from "@/lib/supabase/server"
 import { getArtifactBySlug, getAdjacentArtifacts } from "@/lib/actions/artifacts"
 import { AppLayout } from "@/components/app-layout"
 import { ArtifactSwipeContent } from "@/components/artifact-swipe-content"
+import { isCurrentUserAdmin } from "@/lib/utils/admin"
 
 export default async function EditArtifactPage({ params }: { params: Promise<{ slug: string }> }) {
   const user = await getCurrentUser()
@@ -18,7 +19,9 @@ export default async function EditArtifactPage({ params }: { params: Promise<{ s
     notFound()
   }
 
-  if (artifact.user_id !== user.id) {
+  const isAdmin = await isCurrentUserAdmin()
+
+  if (!isAdmin && artifact.user_id !== user.id) {
     notFound()
   }
 

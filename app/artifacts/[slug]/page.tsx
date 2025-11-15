@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import { getCurrentUser } from "@/lib/supabase/server"
 import { getArtifactBySlug, getAdjacentArtifacts } from "@/lib/actions/artifacts"
 import { ArtifactSwipeContent } from "@/components/artifact-swipe-content"
+import { isCurrentUserAdmin } from "@/lib/utils/admin"
 
 export default async function ArtifactDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const user = await getCurrentUser()
@@ -14,8 +15,10 @@ export default async function ArtifactDetailPage({ params }: { params: Promise<{
     notFound()
   }
 
-  const canView = artifact.collection?.is_public || (user && artifact.user_id === user.id)
-  const canEdit = user && artifact.user_id === user.id
+  const isAdmin = await isCurrentUserAdmin()
+
+  const canView = artifact.collection?.is_public || (user && artifact.user_id === user.id) || isAdmin
+  const canEdit = user && (artifact.user_id === user.id || isAdmin)
 
   if (!canView) {
     notFound()

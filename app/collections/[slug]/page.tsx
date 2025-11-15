@@ -9,6 +9,7 @@ import { getArtifactsByCollection } from "@/lib/actions/artifacts"
 import { ArtifactCard } from "@/components/artifact-card"
 import { CollectionsStickyNav } from "@/components/collections-sticky-nav"
 import { Author } from "@/components/author"
+import { isCurrentUserAdmin } from "@/lib/utils/admin"
 
 export default async function CollectionDetailPage({
   params,
@@ -43,8 +44,10 @@ export default async function CollectionDetailPage({
   
   const isUncategorized = collection.slug === "uncategorized"
 
-  const canView = collection.is_public || (user && collection.user_id === user.id)
-  const canEdit = user && collection.user_id === user.id && !isUncategorized
+  const isAdmin = await isCurrentUserAdmin()
+  
+  const canView = collection.is_public || (user && collection.user_id === user.id) || isAdmin
+  const canEdit = user && (collection.user_id === user.id || isAdmin) && !isUncategorized
   const isOwnCollection = user && collection.user_id === user.id
 
   if (!canView) {

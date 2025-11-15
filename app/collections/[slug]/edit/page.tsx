@@ -1,8 +1,9 @@
 import { AppLayout } from "@/components/app-layout"
 import { EditCollectionForm } from "@/components/edit-collection-form"
-import { redirect, notFound } from "next/navigation"
+import { redirect, notFound } from 'next/navigation'
 import { getCurrentUser } from "@/lib/supabase/server"
 import { getCollection } from "@/lib/actions/collections"
+import { isCurrentUserAdmin } from "@/lib/utils/admin"
 
 export default async function EditCollectionPage({ params }: { params: Promise<{ slug: string }> }) {
   const user = await getCurrentUser()
@@ -18,8 +19,10 @@ export default async function EditCollectionPage({ params }: { params: Promise<{
     notFound()
   }
 
-  // Check ownership
-  if (collection.user_id !== user.id) {
+  const isAdmin = await isCurrentUserAdmin()
+
+  // Check ownership or admin status
+  if (!isAdmin && collection.user_id !== user.id) {
     notFound()
   }
 
