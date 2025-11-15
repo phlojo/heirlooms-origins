@@ -3,7 +3,7 @@ import type { Metadata } from "next"
 
 import "./globals.css"
 
-import { Geist, Geist_Mono, Source_Serif_4 } from "next/font/google"
+import { Geist, Geist_Mono, Source_Serif_4 } from 'next/font/google'
 import { ThemeProvider } from "@/components/theme-provider"
 import { Analytics } from "@vercel/analytics/react"
 import { SupabaseProvider } from "@/lib/supabase/browser-context"
@@ -19,10 +19,17 @@ const _sourceSerif_4 = Source_Serif_4({
   weight: ["200", "300", "400", "500", "600", "700", "800", "900"],
 })
 
+// SEARCH ENGINE INDEXING CONTROL
+// To re-enable search engine indexing, set NEXT_PUBLIC_ALLOW_INDEXING=true in your environment variables
+const allowIndexing = process.env.NEXT_PUBLIC_ALLOW_INDEXING === "true"
+
 export const metadata: Metadata = {
   title: "Heirlooms - Preserve the things that matter to you",
   description: "Document your life's artifacts and stories with structure, context, and connection",
   generator: "v0.app",
+  robots: allowIndexing
+    ? { index: true, follow: true }
+    : { index: false, follow: false, nocache: true },
   icons: {
     icon: [
       { url: "/favicon.svg", type: "image/svg+xml" },
