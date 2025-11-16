@@ -6,12 +6,6 @@ import { cn } from "@/lib/utils"
 
 interface AnimatedArtifactsIconProps {
   className?: string
-  /**
-   * Visual variant for the icon
-   * - "default": Regular outline style
-   * - "active": Filled/bold style for selected state
-   */
-  variant?: "default" | "active"
 }
 
 /**
@@ -26,9 +20,9 @@ interface AnimatedArtifactsIconProps {
  * - Respects prefers-reduced-motion
  * - Continues animating even when tab is active
  * 
- * Variants:
- * - default: Regular outline icons
- * - active: Filled style with stroke-[2.5] for selected state
+ * Styling:
+ * - Inherits color from parent (text-muted-foreground or text-foreground)
+ * - No stroke or fill changes - consistent with other bottom nav icons
  * 
  * Accessibility:
  * - No rapid flashing (4s interval is very slow)
@@ -36,8 +30,7 @@ interface AnimatedArtifactsIconProps {
  * - Semantic HTML with proper ARIA attributes
  */
 export function AnimatedArtifactsIcon({ 
-  className, 
-  variant = "default" 
+  className
 }: AnimatedArtifactsIconProps) {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isTransitioning, setIsTransitioning] = useState(false)
@@ -75,11 +68,8 @@ export function AnimatedArtifactsIcon({
         className={cn(
           "transition-opacity duration-[400ms] ease-in-out",
           isTransitioning ? "opacity-0" : "opacity-100",
-          variant === "active" && "stroke-[2.5] fill-current/10",
           className,
         )}
-        fill={variant === "active" ? "currentColor" : "none"}
-        fillOpacity={variant === "active" ? 0.1 : 0}
       />
     </div>
   )
