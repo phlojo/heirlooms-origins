@@ -61,7 +61,7 @@ export default async function HomePage() {
                 <path d="M66.6001 43.3L66.6001 28.9L54.1001 21.6L54.1001 36.1L66.6001 43.3Z" fill="currentColor" />
               </svg>
             </div>
-            Heirlooms
+            Heirlooms <span className="text-sm text-muted-foreground font-normal">(beta)</span>
             <div className="ml-auto lg:hidden">
               <ThemeToggle />
             </div>
