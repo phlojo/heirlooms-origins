@@ -3,8 +3,9 @@
 import type React from "react"
 
 import { useEffect, useState, useRef } from "react"
-import { X, ZoomIn, ZoomOut, RotateCcw } from "lucide-react"
+import { X, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react'
 import { Button } from "@/components/ui/button"
+import MediaImage from "@/components/media-image"
 
 interface FullscreenImageViewerProps {
   src: string
@@ -194,19 +195,25 @@ export function FullscreenImageViewer({ src, alt, onClose }: FullscreenImageView
         onTouchEnd={handleTouchEnd}
         style={{ cursor: scale > 1 ? (isDragging ? "grabbing" : "grab") : "default" }}
       >
-        <img
-          src={src || "/placeholder.svg"}
-          alt={alt}
-          crossOrigin="anonymous"
-          draggable={false}
+        <div
           style={{
             transform: `scale(${scale}) translate(${position.x / scale}px, ${position.y / scale}px)`,
             transition: isDragging ? "none" : "transform 0.2s ease-out",
             maxWidth: "100%",
             maxHeight: "100%",
-            objectFit: "contain",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
           }}
-        />
+        >
+          <MediaImage
+            src={src || "/placeholder.svg"}
+            alt={alt}
+            className="max-w-full max-h-full"
+            objectFit="contain"
+            draggable={false}
+          />
+        </div>
       </div>
     </div>
   )

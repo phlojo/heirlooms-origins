@@ -7,6 +7,7 @@ import { CollectionThumbnailGrid } from "@/components/collection-thumbnail-grid"
 import { Badge } from "@/components/ui/badge"
 import { Settings } from 'lucide-react'
 import { useState, useEffect } from "react"
+import MediaImage from "@/components/media-image"
 
 interface UncategorizedCollectionCardProps {
   collection: {
@@ -59,10 +60,11 @@ export function UncategorizedCollectionCard({ collection, mode }: UncategorizedC
             {collection.thumbnailImages && collection.thumbnailImages.length > 0 ? (
               <CollectionThumbnailGrid images={collection.thumbnailImages} title={collection.title} />
             ) : collection.cover_image ? (
-              <img
+              <MediaImage
                 src={collection.cover_image || "/placeholder.svg"}
                 alt={collection.title}
-                className="h-full w-full object-cover"
+                className="w-full h-full"
+                objectFit="cover"
               />
             ) : (
               <CollectionThumbnailGrid images={[]} title={collection.title} />
