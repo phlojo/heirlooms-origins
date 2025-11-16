@@ -108,7 +108,7 @@ export default async function CollectionDetailPage({
           </div>
         )}
 
-        {isOwnCollection && (
+        {canEdit && (
           <div className="flex items-center justify-between py-4 px-6 lg:px-8">
             {!isUncategorized && (
               <Button asChild className="bg-purple-600 hover:bg-purple-700 text-white">
