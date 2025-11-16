@@ -7,10 +7,11 @@ import { cn } from "@/lib/utils"
 interface AnimatedArtifactsIconProps {
   className?: string
   /**
-   * If true, pauses the icon cycling animation
-   * Useful when the tab is active or user is interacting
+   * Visual variant for the icon
+   * - "default": Regular outline style
+   * - "active": Filled/bold style for selected state
    */
-  paused?: boolean
+  variant?: "default" | "active"
 }
 
 /**
@@ -23,14 +24,21 @@ interface AnimatedArtifactsIconProps {
  * - Changes icon every 4 seconds
  * - Uses opacity cross-fade for smooth transition
  * - Respects prefers-reduced-motion
- * - Can be paused when user is interacting
+ * - Continues animating even when tab is active
+ * 
+ * Variants:
+ * - default: Regular outline icons
+ * - active: Filled style with stroke-[2.5] for selected state
  * 
  * Accessibility:
  * - No rapid flashing (4s interval is very slow)
  * - Respects prefers-reduced-motion preference
  * - Semantic HTML with proper ARIA attributes
  */
-export function AnimatedArtifactsIcon({ className, paused = false }: AnimatedArtifactsIconProps) {
+export function AnimatedArtifactsIcon({ 
+  className, 
+  variant = "default" 
+}: AnimatedArtifactsIconProps) {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isTransitioning, setIsTransitioning] = useState(false)
 
@@ -38,8 +46,8 @@ export function AnimatedArtifactsIcon({ className, paused = false }: AnimatedArt
     // Respect user's motion preferences
     const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches
     
-    if (prefersReducedMotion || paused) {
-      // If reduced motion is preferred or paused, just show the general icon
+    if (prefersReducedMotion) {
+      // If reduced motion is preferred, just show the general icon
       setCurrentIndex(0)
       return
     }
@@ -56,7 +64,7 @@ export function AnimatedArtifactsIcon({ className, paused = false }: AnimatedArt
     }, 4000)
 
     return () => clearInterval(interval)
-  }, [paused])
+  }, [])
 
   const currentType = artifactIconCycle[currentIndex]
   const IconComponent = getArtifactTypeIcon(currentType)
@@ -67,8 +75,11 @@ export function AnimatedArtifactsIcon({ className, paused = false }: AnimatedArt
         className={cn(
           "transition-opacity duration-[400ms] ease-in-out",
           isTransitioning ? "opacity-0" : "opacity-100",
+          variant === "active" && "stroke-[2.5] fill-current/10",
           className,
         )}
+        fill={variant === "active" ? "currentColor" : "none"}
+        fillOpacity={variant === "active" ? 0.1 : 0}
       />
     </div>
   )

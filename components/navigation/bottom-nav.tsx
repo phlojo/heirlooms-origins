@@ -106,7 +106,10 @@ export default function BottomNav() {
               }}
             >
               {item.useAnimatedIcon ? (
-                <AnimatedArtifactsIcon className="h-6 w-6" paused={isActive} />
+                <AnimatedArtifactsIcon 
+                  className="h-6 w-6" 
+                  variant={isActive ? "active" : "default"} 
+                />
               ) : (
                 item.icon && <item.icon className="h-6 w-6" />
               )}
