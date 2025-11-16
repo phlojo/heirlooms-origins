@@ -1,5 +1,5 @@
 /**
- * Media URL utilities for detecting file types and normalizing media arrays.
+ * Media URL utilities for detecting file types and preserving media order.
  */
 
 /**
@@ -85,21 +85,43 @@ export function getPrimaryVisualMediaUrl(urls?: string[] | null): string | null 
  * Normalizes an array of media URLs by:
  * 1. Removing duplicates
  * 2. Filtering out null/undefined/empty strings
- * 3. Ordering as: images → videos → audio
+ * 3. PRESERVING the user's upload order (no sorting by type)
  */
 export function normalizeMediaUrls(urls: string[]): string[] {
   if (!urls || !Array.isArray(urls) || urls.length === 0) return [];
   
-  // Remove duplicates and filter out empty/null values
-  const uniqueUrls = Array.from(
-    new Set(urls.filter(url => url && typeof url === 'string' && url.trim() !== ''))
-  );
+  // Remove duplicates while preserving order and filter out empty/null values
+  const seen = new Set<string>();
+  const uniqueUrls: string[] = [];
   
-  // Separate by type
-  const images = uniqueUrls.filter(url => isImageUrl(url));
-  const videos = uniqueUrls.filter(url => isVideoUrl(url));
-  const audio = uniqueUrls.filter(url => isAudioUrl(url));
+  for (const url of urls) {
+    if (url && typeof url === 'string' && url.trim() !== '' && !seen.has(url)) {
+      seen.add(url);
+      uniqueUrls.push(url);
+    }
+  }
   
-  // Return in visual-first order: images → videos → audio
-  return [...images, ...videos, ...audio];
+  return uniqueUrls;
+}
+
+/**
+ * Get file size limit based on media type
+ * Videos: 500MB, Images/Audio: 50MB
+ */
+export function getFileSizeLimit(file: File): number {
+  const isVideo = file.type.startsWith('video/');
+  return isVideo ? 500 * 1024 * 1024 : 50 * 1024 * 1024;
+}
+
+/**
+ * Format file size for display
+ */
+export function formatFileSize(bytes: number): string {
+  if (bytes >= 1024 * 1024 * 1024) {
+    return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)}GB`;
+  }
+  if (bytes >= 1024 * 1024) {
+    return `${(bytes / (1024 * 1024)).toFixed(1)}MB`;
+  }
+  return `${(bytes / 1024).toFixed(1)}KB`;
 }

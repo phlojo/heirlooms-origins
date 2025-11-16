@@ -69,7 +69,7 @@ export async function POST(request: Request) {
     }
 
     console.log("[v0] Starting single image caption for artifact:", artifactId)
-    console.log("[v0] Image URL:", imageUrl.substring(0, 50) + "...")
+    console.log("[v0] Image URL (unique key):", imageUrl.substring(0, 80) + "...")
 
     // Generate caption for the single image
     const result = await generateText({
@@ -93,14 +93,16 @@ export async function POST(request: Request) {
     })
 
     const caption = result.text.trim()
-    console.log("[v0] Generated caption:", caption)
+    console.log("[v0] Generated caption for URL:", imageUrl.substring(0, 50))
+    console.log("[v0] Caption:", caption)
 
-    // Merge with existing captions
     const existingCaptions = artifact.image_captions || {}
     const updatedCaptions = {
       ...existingCaptions,
-      [imageUrl]: caption,
+      [imageUrl]: caption, // imageUrl is the unique identifier
     }
+
+    console.log("[v0] Storing caption with key:", imageUrl.substring(0, 50))
 
     const { error: updateError } = await supabase
       .from("artifacts")

@@ -28,7 +28,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { normalizeMediaUrls } from "@/lib/media"
+import { normalizeMediaUrls, getFileSizeLimit, formatFileSize } from "@/lib/media"
 
 type FormData = z.infer<typeof updateArtifactSchema>
 
@@ -112,21 +112,25 @@ export function EditArtifactForm({ artifact, userId }: EditArtifactFormProps) {
     const files = e.target.files
     if (!files || files.length === 0) return
 
-    const MAX_FILE_SIZE = 15 * 1024 * 1024 // 15MB per file
-    const oversizedFiles = Array.from(files).filter((file) => file.size > MAX_FILE_SIZE)
+    const oversizedFiles = Array.from(files).filter((file) => {
+      const limit = getFileSizeLimit(file)
+      return file.size > limit
+    })
 
     if (oversizedFiles.length > 0) {
-      const fileNames = oversizedFiles.map((f) => f.name).join(", ")
-      setError(`The following files are too large (max 15MB): ${fileNames}`)
+      const fileErrors = oversizedFiles.map((f) => 
+        `${f.name} (${formatFileSize(f.size)}, max: ${formatFileSize(getFileSizeLimit(f))})`
+      ).join(", ")
+      setError(`The following files are too large: ${fileErrors}`)
       e.target.value = ""
       return
     }
 
     const totalSize = Array.from(files).reduce((sum, file) => sum + file.size, 0)
-    const MAX_TOTAL_SIZE = 30 * 1024 * 1024 // 30MB total
+    const MAX_TOTAL_SIZE = 1000 * 1024 * 1024 // 1GB total for batch uploads
 
     if (totalSize > MAX_TOTAL_SIZE) {
-      setError("Total file size exceeds 30MB. Please upload fewer or smaller images.")
+      setError("Total file size exceeds 1GB. Please upload fewer or smaller files.")
       e.target.value = ""
       return
     }
@@ -192,7 +196,9 @@ export function EditArtifactForm({ artifact, userId }: EditArtifactFormProps) {
         urls.push(data.secure_url)
       }
 
-      form.setValue("media_urls", (prev) => normalizeMediaUrls([...(prev || []), ...urls]))
+      const currentUrls = form.getValues("media_urls") || []
+      const urlsArray = Array.isArray(currentUrls) ? currentUrls : []
+      form.setValue("media_urls", normalizeMediaUrls([...urlsArray, ...urls]))
     } catch (err) {
       console.error("[v0] Upload error:", err)
       setError(

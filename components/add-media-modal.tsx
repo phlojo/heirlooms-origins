@@ -6,12 +6,12 @@ import { Button } from "@/components/ui/button"
 import { Camera, Video, Mic, Upload, X } from 'lucide-react'
 import { AudioRecorder } from "@/components/audio-recorder"
 import { generateCloudinarySignature, generateCloudinaryAudioSignature } from "@/lib/actions/cloudinary"
-import { normalizeMediaUrls } from "@/lib/media"
+import { normalizeMediaUrls, getFileSizeLimit, formatFileSize } from "@/lib/media"
 
 interface AddMediaModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  artifactId: string
+  artifactId: string | null
   userId: string
   onMediaAdded: (urls: string[]) => void
 }
@@ -54,21 +54,25 @@ export function AddMediaModal({ open, onOpenChange, artifactId, userId, onMediaA
     const files = e.target.files
     if (!files || files.length === 0) return
 
-    const MAX_FILE_SIZE = 15 * 1024 * 1024
-    const oversizedFiles = Array.from(files).filter((file) => file.size > MAX_FILE_SIZE)
+    const oversizedFiles = Array.from(files).filter((file) => {
+      const limit = getFileSizeLimit(file)
+      return file.size > limit
+    })
 
     if (oversizedFiles.length > 0) {
-      const fileNames = oversizedFiles.map((f) => f.name).join(", ")
-      setError(`The following files are too large (max 15MB): ${fileNames}`)
+      const fileErrors = oversizedFiles.map((f) => 
+        `${f.name} (${formatFileSize(f.size)}, max: ${formatFileSize(getFileSizeLimit(f))})`
+      ).join(", ")
+      setError(`The following files are too large: ${fileErrors}`)
       e.target.value = ""
       return
     }
 
     const totalSize = Array.from(files).reduce((sum, file) => sum + file.size, 0)
-    const MAX_TOTAL_SIZE = 50 * 1024 * 1024
+    const MAX_TOTAL_SIZE = 1000 * 1024 * 1024 // 1GB total for batch uploads
 
     if (totalSize > MAX_TOTAL_SIZE) {
-      setError("Total file size exceeds 50MB. Please upload fewer or smaller files.")
+      setError("Total file size exceeds 1GB. Please upload fewer or smaller files.")
       e.target.value = ""
       return
     }
@@ -129,7 +133,7 @@ export function AddMediaModal({ open, onOpenChange, artifactId, userId, onMediaA
         urls.push(data.secure_url)
       }
 
-      onMediaAdded(normalizeMediaUrls(urls))
+      onMediaAdded(urls)
       handleClose()
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to upload files. Please try again.")
@@ -176,7 +180,7 @@ export function AddMediaModal({ open, onOpenChange, artifactId, userId, onMediaA
       }
 
       const data = await response.json()
-      onMediaAdded(normalizeMediaUrls([data.secure_url]))
+      onMediaAdded([data.secure_url])
       handleClose()
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to upload audio. Please try again.")
@@ -222,7 +226,7 @@ export function AddMediaModal({ open, onOpenChange, artifactId, userId, onMediaA
                 <Video className="h-8 w-8" />
                 <div className="text-center">
                   <div className="font-semibold">Video</div>
-                  <div className="text-xs text-muted-foreground">Upload or record videos</div>
+                  <div className="text-xs text-muted-foreground">Upload or record videos (up to 500MB)</div>
                 </div>
               </Button>
 
