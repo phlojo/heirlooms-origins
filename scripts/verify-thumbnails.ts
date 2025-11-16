@@ -88,7 +88,7 @@ async function verifyThumbnails() {
     
     // Check if collection has any visual media from artifacts
     const artifactThumbnails = collection.artifacts
-      ?.map((artifact: any) => getPrimaryVisualMediaUrl(artifact.media_urls))
+      ?.map(artifact => getPrimaryVisualMediaUrl(artifact.media_urls))
       .filter(Boolean)
     
     if (hasCoverImage) {
