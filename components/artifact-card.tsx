@@ -26,12 +26,8 @@ interface ArtifactCardProps {
 }
 
 export function ArtifactCard({ artifact, showAuthor = false, authorName }: ArtifactCardProps) {
-  console.log("[v0] ArtifactCard rendering:", artifact.slug, "media_urls:", artifact.media_urls)
-  
   const primaryMedia = getPrimaryVisualMediaUrl(artifact.media_urls)
   const thumbnailUrl = primaryMedia ? getThumbnailUrl(primaryMedia) : null
-  
-  console.log("[v0] ArtifactCard thumbnail:", thumbnailUrl)
 
   return (
     <Link href={`/artifacts/${artifact.slug}`}>

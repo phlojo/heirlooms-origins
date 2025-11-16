@@ -2,12 +2,13 @@
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
-import { Plus } from "lucide-react"
+import { Plus, Loader2 } from 'lucide-react'
 import Link from "next/link"
 import { ArtifactCard } from "@/components/artifact-card"
 import { LoginModule } from "@/components/login-module"
 import { useEffect, useState } from "react"
-import { usePathname } from "next/navigation"
+import { usePathname } from 'next/navigation'
+import { getAllPublicArtifactsPaginated, getMyArtifactsPaginated } from "@/lib/actions/artifacts"
 
 interface Artifact {
   id: string
@@ -15,6 +16,7 @@ interface Artifact {
   description: string | null
   media_urls: string[]
   author_name: string | null
+  created_at: string
   collection: {
     id: string
     title: string
@@ -29,10 +31,18 @@ interface ArtifactsTabsProps {
 }
 
 const STORAGE_KEY = "heirloom-artifacts-tab"
+const PAGE_SIZE = 24
 
 export function ArtifactsTabs({ user, myArtifacts, allArtifacts }: ArtifactsTabsProps) {
   const [activeTab, setActiveTab] = useState<string>("all")
   const pathname = usePathname()
+
+  const [allArtifactsList, setAllArtifactsList] = useState<Artifact[]>(allArtifacts)
+  const [myArtifactsList, setMyArtifactsList] = useState<Artifact[]>(myArtifacts)
+  const [allHasMore, setAllHasMore] = useState(allArtifacts.length === PAGE_SIZE)
+  const [myHasMore, setMyHasMore] = useState(myArtifacts.length === PAGE_SIZE)
+  const [isLoadingAll, setIsLoadingAll] = useState(false)
+  const [isLoadingMy, setIsLoadingMy] = useState(false)
 
   useEffect(() => {
     const savedTab = sessionStorage.getItem(STORAGE_KEY)
@@ -44,6 +54,44 @@ export function ArtifactsTabs({ user, myArtifacts, allArtifacts }: ArtifactsTabs
   const handleTabChange = (value: string) => {
     setActiveTab(value)
     sessionStorage.setItem(STORAGE_KEY, value)
+  }
+
+  const handleLoadMoreAll = async () => {
+    if (isLoadingAll || !allHasMore) return
+
+    setIsLoadingAll(true)
+    try {
+      const lastArtifact = allArtifactsList[allArtifactsList.length - 1]
+      const cursor = lastArtifact ? { createdAt: lastArtifact.created_at, id: lastArtifact.id } : undefined
+
+      const result = await getAllPublicArtifactsPaginated(user?.id, PAGE_SIZE, cursor)
+      
+      setAllArtifactsList((prev) => [...prev, ...result.artifacts])
+      setAllHasMore(result.hasMore)
+    } catch (error) {
+      console.error("Error loading more artifacts:", error)
+    } finally {
+      setIsLoadingAll(false)
+    }
+  }
+
+  const handleLoadMoreMy = async () => {
+    if (isLoadingMy || !myHasMore || !user) return
+
+    setIsLoadingMy(true)
+    try {
+      const lastArtifact = myArtifactsList[myArtifactsList.length - 1]
+      const cursor = lastArtifact ? { createdAt: lastArtifact.created_at, id: lastArtifact.id } : undefined
+
+      const result = await getMyArtifactsPaginated(user.id, PAGE_SIZE, cursor)
+      
+      setMyArtifactsList((prev) => [...prev, ...result.artifacts])
+      setMyHasMore(result.hasMore)
+    } catch (error) {
+      console.error("Error loading more artifacts:", error)
+    } finally {
+      setIsLoadingMy(false)
+    }
   }
 
   return (
@@ -68,12 +116,34 @@ export function ArtifactsTabs({ user, myArtifacts, allArtifacts }: ArtifactsTabs
       </div>
 
       <TabsContent value="all" className="mt-6">
-        {allArtifacts.length > 0 ? (
-          <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
-            {allArtifacts.map((artifact) => (
-              <ArtifactCard key={artifact.id} artifact={artifact} showAuthor={true} authorName={artifact.author_name} />
-            ))}
-          </div>
+        {allArtifactsList.length > 0 ? (
+          <>
+            <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
+              {allArtifactsList.map((artifact) => (
+                <ArtifactCard key={artifact.id} artifact={artifact} showAuthor={true} authorName={artifact.author_name} />
+              ))}
+            </div>
+            {allHasMore && (
+              <div className="mt-8 flex justify-center">
+                <Button
+                  onClick={handleLoadMoreAll}
+                  disabled={isLoadingAll}
+                  size="lg"
+                  variant="outline"
+                  className="min-w-[200px]"
+                >
+                  {isLoadingAll ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Loading...
+                    </>
+                  ) : (
+                    "Load more artifacts"
+                  )}
+                </Button>
+              </div>
+            )}
+          </>
         ) : (
           <div className="rounded-lg border border-dashed p-12 text-center">
             <p className="text-sm text-muted-foreground">No public artifacts available yet.</p>
@@ -86,12 +156,34 @@ export function ArtifactsTabs({ user, myArtifacts, allArtifacts }: ArtifactsTabs
           <div className="mx-auto max-w-md">
             <LoginModule returnTo={pathname} title="Access Your Artifacts" showBackButton={false} />
           </div>
-        ) : myArtifacts.length > 0 ? (
-          <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
-            {myArtifacts.map((artifact) => (
-              <ArtifactCard key={artifact.id} artifact={artifact} showAuthor={false} />
-            ))}
-          </div>
+        ) : myArtifactsList.length > 0 ? (
+          <>
+            <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
+              {myArtifactsList.map((artifact) => (
+                <ArtifactCard key={artifact.id} artifact={artifact} showAuthor={false} />
+              ))}
+            </div>
+            {myHasMore && (
+              <div className="mt-8 flex justify-center">
+                <Button
+                  onClick={handleLoadMoreMy}
+                  disabled={isLoadingMy}
+                  size="lg"
+                  variant="outline"
+                  className="min-w-[200px]"
+                >
+                  {isLoadingMy ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Loading...
+                    </>
+                  ) : (
+                    "Load more artifacts"
+                  )}
+                </Button>
+              </div>
+            )}
+          </>
         ) : (
           <div className="rounded-lg border border-dashed p-12 text-center">
             <p className="text-sm text-muted-foreground">You haven't created any artifacts yet.</p>

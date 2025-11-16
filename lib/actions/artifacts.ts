@@ -158,6 +158,104 @@ export async function getAdjacentArtifacts(artifactId: string, collectionId: str
   }
 }
 
+export async function getAllPublicArtifactsPaginated(
+  excludeUserId?: string,
+  limit: number = 24,
+  cursor?: { createdAt: string; id: string }
+) {
+  const supabase = await createClient()
+
+  let query = supabase
+    .from("artifacts")
+    .select(`
+      *,
+      collection:collections!inner(id, title, is_public)
+    `)
+    .eq("collection.is_public", true)
+
+  if (excludeUserId) {
+    query = query.neq("user_id", excludeUserId)
+  }
+
+  // Cursor-based pagination using created_at and id for stable ordering
+  if (cursor) {
+    query = query.or(`created_at.lt.${cursor.createdAt},and(created_at.eq.${cursor.createdAt},id.lt.${cursor.id})`)
+  }
+
+  const { data, error } = await query
+    .order("created_at", { ascending: false })
+    .order("id", { ascending: false })
+    .limit(limit + 1) // Fetch one extra to determine if there are more
+
+  if (error) {
+    console.error("Error fetching public artifacts:", error)
+    return { artifacts: [], hasMore: false }
+  }
+
+  const hasMore = data.length > limit
+  const artifacts = hasMore ? data.slice(0, limit) : data
+
+  const userIds = [...new Set(artifacts.map((artifact) => artifact.user_id))]
+  const { data: profiles } = await supabase.from("profiles").select("id, display_name").in("id", userIds)
+
+  const profileMap = new Map(profiles?.map((p) => [p.id, p.display_name]) || [])
+
+  const enrichedArtifacts = artifacts.map((artifact) => ({
+    ...artifact,
+    author_name: profileMap.get(artifact.user_id) || null,
+  }))
+
+  return {
+    artifacts: enrichedArtifacts,
+    hasMore,
+  }
+}
+
+export async function getMyArtifactsPaginated(
+  userId: string,
+  limit: number = 24,
+  cursor?: { createdAt: string; id: string }
+) {
+  const supabase = await createClient()
+
+  let query = supabase
+    .from("artifacts")
+    .select(`
+      *,
+      collection:collections(id, title, is_public)
+    `)
+    .eq("user_id", userId)
+
+  // Cursor-based pagination
+  if (cursor) {
+    query = query.or(`created_at.lt.${cursor.createdAt},and(created_at.eq.${cursor.createdAt},id.lt.${cursor.id})`)
+  }
+
+  const { data, error } = await query
+    .order("created_at", { ascending: false })
+    .order("id", { ascending: false })
+    .limit(limit + 1)
+
+  if (error) {
+    console.error("Error fetching my artifacts:", error)
+    return { artifacts: [], hasMore: false }
+  }
+
+  const hasMore = data.length > limit
+  const artifacts = hasMore ? data.slice(0, limit) : data
+
+  const enrichedArtifacts = artifacts.map((artifact) => ({
+    ...artifact,
+    author_name: null,
+  }))
+
+  return {
+    artifacts: enrichedArtifacts,
+    hasMore,
+  }
+}
+
+
 export async function getAllPublicArtifacts(excludeUserId?: string) {
   const supabase = await createClient()
 

@@ -31,7 +31,6 @@ function MediaImage({
   }, [effectiveSrc, currentSrc])
 
   const handleError = (): void => {
-    console.log("[v0] MediaImage error for:", currentSrc)
     if (currentSrc !== fallbackSrc) {
       setCurrentSrc(fallbackSrc)
       setLoadState('loading')
@@ -41,7 +40,6 @@ function MediaImage({
   }
 
   const handleLoad = (): void => {
-    console.log("[v0] MediaImage loaded:", currentSrc)
     setLoadState('loaded')
   }
 

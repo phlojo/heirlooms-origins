@@ -18,10 +18,6 @@ export function ArtifactImageWithViewer({ src, alt, setIsImageFullscreen }: Arti
   const [hasError, setHasError] = useState(false)
   const imageRef = useRef<HTMLDivElement>(null)
 
-  useEffect(() => {
-    console.log("[v0] ArtifactImageWithViewer mounted with src:", src)
-  }, [src])
-
   const handleImageClick = () => {
     // Save current scroll position
     setScrollPosition(window.scrollY)

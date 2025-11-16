@@ -1,14 +1,14 @@
 import { AppLayout } from "@/components/app-layout"
 import { getCurrentUser } from "@/lib/supabase/server"
-import { getAllPublicArtifacts, getMyArtifacts } from "@/lib/actions/artifacts"
+import { getAllPublicArtifactsPaginated, getMyArtifactsPaginated } from "@/lib/actions/artifacts"
 import { ArtifactsTabs } from "@/components/artifacts-tabs"
 import { ThemeToggle } from "@/components/theme-toggle"
 
 export default async function ArtifactsPage() {
   const user = await getCurrentUser()
 
-  const myArtifacts = user ? await getMyArtifacts(user.id) : []
-  const allArtifacts = await getAllPublicArtifacts(user?.id)
+  const myArtifactsResult = user ? await getMyArtifactsPaginated(user.id, 24) : { artifacts: [], hasMore: false }
+  const allArtifactsResult = await getAllPublicArtifactsPaginated(user?.id, 24)
 
   return (
     <AppLayout user={user}>
@@ -48,7 +48,11 @@ export default async function ArtifactsPage() {
           </h1>
         </div>
 
-        <ArtifactsTabs user={user} myArtifacts={myArtifacts} allArtifacts={allArtifacts} />
+        <ArtifactsTabs 
+          user={user} 
+          myArtifacts={myArtifactsResult.artifacts} 
+          allArtifacts={allArtifactsResult.artifacts} 
+        />
       </div>
     </AppLayout>
   )
