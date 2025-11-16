@@ -10,7 +10,6 @@ import { ArtifactSwipeWrapper } from "@/components/artifact-swipe-wrapper"
 import { ArtifactImageWithViewer } from "@/components/artifact-image-with-viewer"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible"
 import { AddMediaModal } from "@/components/add-media-modal"
 import { ChevronDown, Plus, Save, X, Trash2, Loader2, Pencil, Share2, BarChart3, MessageSquare } from 'lucide-react'
@@ -19,6 +18,8 @@ import { useRouter } from 'next/navigation'
 import { GenerateImageCaptionButton } from "@/components/artifact/GenerateImageCaptionButton"
 import { GenerateVideoSummaryButton } from "@/components/artifact/GenerateVideoSummaryButton"
 import { TranscribeAudioButtonPerMedia } from "@/components/artifact/TranscribeAudioButtonPerMedia"
+import { TranscriptionInput } from "@/components/transcription-input"
+import { useSupabase } from "@/lib/supabase/browser-context"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -94,17 +95,16 @@ export function ArtifactSwipeContent({
   const [isDeleting, setIsDeleting] = useState(false)
   
   const router = useRouter()
-  
-  const imageCaptions = isEditMode ? editImageCaptions : (artifact.image_captions || {})
-  const audioTranscripts = artifact.audio_transcripts || {}
-  const mediaUrls = isEditMode ? Array.from(new Set(editMediaUrls)) : Array.from(new Set(artifact.media_urls || []))
-  
-  const hasUnsavedChanges = isEditMode && (
-    editTitle !== originalState.title ||
-    editDescription !== originalState.description ||
-    JSON.stringify(editMediaUrls) !== JSON.stringify(originalState.media_urls) ||
-    JSON.stringify(editImageCaptions) !== JSON.stringify(originalState.image_captions)
-  )
+  const supabase = useSupabase()
+  const [userId, setUserId] = useState<string>("")
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      if (data.user) {
+        setUserId(data.user.id)
+      }
+    })
+  }, [supabase])
 
   useEffect(() => {
     if (!isEditMode || !hasUnsavedChanges) return
@@ -118,10 +118,21 @@ export function ArtifactSwipeContent({
     return () => window.removeEventListener('beforeunload', handleBeforeUnload)
   }, [isEditMode, hasUnsavedChanges])
   
-  const totalMedia = mediaUrls.length
-  const audioFiles = mediaUrls.filter((url) => isAudioFile(url)).length
-  const videoFiles = mediaUrls.filter((url) => isVideoFile(url)).length
+  const totalMedia = editMediaUrls.length
+  const audioFiles = editMediaUrls.filter((url) => isAudioFile(url)).length
+  const videoFiles = editMediaUrls.filter((url) => isVideoFile(url)).length
   const imageFiles = totalMedia - audioFiles - videoFiles
+
+  const imageCaptions = isEditMode ? editImageCaptions : (artifact.image_captions || {})
+  const audioTranscripts = artifact.audio_transcripts || {}
+  const mediaUrls = isEditMode ? Array.from(new Set(editMediaUrls)) : Array.from(new Set(artifact.media_urls || []))
+  
+  const hasUnsavedChanges = isEditMode && (
+    editTitle !== originalState.title ||
+    editDescription !== originalState.description ||
+    JSON.stringify(editMediaUrls) !== JSON.stringify(originalState.media_urls) ||
+    JSON.stringify(editImageCaptions) !== JSON.stringify(originalState.image_captions)
+  )
 
   const handleSave = async () => {
     setIsSaving(true)
@@ -371,7 +382,7 @@ export function ArtifactSwipeContent({
         <section className="space-y-4">
           {isEditMode && <h2 className="text-lg font-semibold text-foreground">Description</h2>}
           {isEditMode ? (
-            <Textarea
+            <Input
               value={editDescription}
               onChange={(e) => setEditDescription(e.target.value)}
               placeholder="Enter artifact description"
@@ -512,14 +523,21 @@ export function ArtifactSwipeContent({
                           </div>
                           {isEditingThisCaption ? (
                             <div className="space-y-2">
-                              <Textarea
+                              <TranscriptionInput
                                 value={editCaptionText}
-                                onChange={(e) => setEditCaptionText(e.target.value)}
-                                className="text-sm min-h-[80px]"
+                                onChange={setEditCaptionText}
+                                placeholder="Add caption..."
+                                type="textarea"
+                                fieldType="description"
+                                userId={userId}
+                                entityType="artifact"
+                                rows={3}
                               />
                               <div className="flex gap-2">
                                 <Button
+                                  type="button"
                                   size="sm"
+                                  variant="default"
                                   onClick={() => handleSaveCaption(url)}
                                   disabled={isSavingCaption}
                                   className="bg-green-600 hover:bg-green-700"
@@ -527,6 +545,7 @@ export function ArtifactSwipeContent({
                                   {isSavingCaption ? <Loader2 className="h-3 w-3 animate-spin" /> : "Save"}
                                 </Button>
                                 <Button
+                                  type="button"
                                   size="sm"
                                   variant="outline"
                                   onClick={handleCancelEditCaption}
@@ -592,14 +611,21 @@ export function ArtifactSwipeContent({
                           </div>
                           {isEditingThisCaption ? (
                             <div className="space-y-2">
-                              <Textarea
+                              <TranscriptionInput
                                 value={editCaptionText}
-                                onChange={(e) => setEditCaptionText(e.target.value)}
-                                className="text-sm min-h-[80px]"
+                                onChange={setEditCaptionText}
+                                placeholder="Add caption..."
+                                type="textarea"
+                                fieldType="description"
+                                userId={userId}
+                                entityType="artifact"
+                                rows={3}
                               />
                               <div className="flex gap-2">
                                 <Button
+                                  type="button"
                                   size="sm"
+                                  variant="default"
                                   onClick={() => handleSaveCaption(url)}
                                   disabled={isSavingCaption}
                                   className="bg-green-600 hover:bg-green-700"
@@ -607,6 +633,7 @@ export function ArtifactSwipeContent({
                                   {isSavingCaption ? <Loader2 className="h-3 w-3 animate-spin" /> : "Save"}
                                 </Button>
                                 <Button
+                                  type="button"
                                   size="sm"
                                   variant="outline"
                                   onClick={handleCancelEditCaption}
