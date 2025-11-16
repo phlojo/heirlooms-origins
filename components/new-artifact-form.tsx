@@ -19,6 +19,8 @@ import { AddMediaModal } from "@/components/add-media-modal"
 import { normalizeMediaUrls, isAudioUrl, isVideoUrl, isImageUrl } from "@/lib/media"
 import { deleteCloudinaryMedia, extractPublicIdFromUrl } from "@/lib/actions/cloudinary"
 import MediaImage from "@/components/media-image"
+import { TranscriptionInput } from "@/components/transcription-input"
+import { useSupabase } from "@/lib/supabase/browser-context"
 
 type FormData = z.infer<typeof createArtifactSchema>
 
@@ -139,10 +141,14 @@ export function NewArtifactForm({
               <FormItem>
                 <FormLabel>Title</FormLabel>
                 <FormControl>
-                  <Input
-                    {...field}
+                  <TranscriptionInput
+                    value={field.value}
+                    onChange={field.onChange}
                     placeholder="Enter artifact title"
-                    className="text-lg"
+                    type="input"
+                    fieldType="title"
+                    userId={userId}
+                    entityType="artifact"
                   />
                 </FormControl>
                 <FormMessage />
@@ -159,11 +165,15 @@ export function NewArtifactForm({
               <FormItem>
                 <FormLabel>Description</FormLabel>
                 <FormControl>
-                  <Textarea
-                    {...field}
+                  <TranscriptionInput
+                    value={field.value}
+                    onChange={field.onChange}
                     placeholder="Tell the story of this artifact..."
+                    type="textarea"
+                    fieldType="description"
+                    userId={userId}
+                    entityType="artifact"
                     rows={6}
-                    className="resize-none"
                   />
                 </FormControl>
                 <FormDescription>

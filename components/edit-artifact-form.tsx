@@ -10,8 +10,7 @@ import { useForm } from "react-hook-form"
 import type { z } from "zod"
 import { Button } from "@/components/ui/button"
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
+import { TranscriptionInput } from "@/components/transcription-input"
 import { useRouter } from 'next/navigation'
 import { useState, useEffect } from "react"
 import { X, Upload, ImageIcon, Loader2 } from 'lucide-react'
@@ -282,7 +281,15 @@ export function EditArtifactForm({ artifact, userId }: EditArtifactFormProps) {
               <FormItem>
                 <FormLabel>Title</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter artifact title" {...field} />
+                  <TranscriptionInput
+                    value={field.value}
+                    onChange={field.onChange}
+                    placeholder="Enter artifact title"
+                    type="input"
+                    fieldType="title"
+                    userId={userId}
+                    entityType="artifact"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -296,7 +303,16 @@ export function EditArtifactForm({ artifact, userId }: EditArtifactFormProps) {
               <FormItem>
                 <FormLabel>Description</FormLabel>
                 <FormControl>
-                  <Textarea placeholder="Tell the story of this heirloom" rows={4} {...field} />
+                  <TranscriptionInput
+                    value={field.value}
+                    onChange={field.onChange}
+                    placeholder="Tell the story of this heirloom"
+                    type="textarea"
+                    fieldType="description"
+                    userId={userId}
+                    entityType="artifact"
+                    rows={4}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>

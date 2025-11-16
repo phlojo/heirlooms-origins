@@ -1,16 +1,15 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter } from 'next/navigation'
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
+import { TranscriptionInput } from "@/components/transcription-input"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { AlertCircle, Loader2, CheckCircle2, Trash2 } from "lucide-react"
+import { AlertCircle, Loader2, CheckCircle2, Trash2 } from 'lucide-react'
 import { updateCollection, deleteCollection } from "@/lib/actions/collections"
 import { collectionSchema, type CollectionInput } from "@/lib/schemas"
 import {
@@ -25,6 +24,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { useSupabase } from "@/lib/supabase/browser-context"
 
 interface EditCollectionFormProps {
   collection: {
@@ -38,6 +38,7 @@ interface EditCollectionFormProps {
 
 export function EditCollectionForm({ collection }: EditCollectionFormProps) {
   const router = useRouter()
+  const supabase = useSupabase()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -47,6 +48,15 @@ export function EditCollectionForm({ collection }: EditCollectionFormProps) {
   const [pendingNavigation, setPendingNavigation] = useState<string | null>(null)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [deleteArtifactsChoice, setDeleteArtifactsChoice] = useState<"delete" | "keep">("keep")
+  const [userId, setUserId] = useState<string>("")
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      if (data.user) {
+        setUserId(data.user.id)
+      }
+    })
+  }, [supabase])
 
   const form = useForm<CollectionInput>({
     resolver: zodResolver(collectionSchema),
@@ -57,7 +67,6 @@ export function EditCollectionForm({ collection }: EditCollectionFormProps) {
     },
   })
 
-  // Track form changes for unsaved changes warning
   useEffect(() => {
     const subscription = form.watch(() => {
       setHasUnsavedChanges(true)
@@ -65,7 +74,6 @@ export function EditCollectionForm({ collection }: EditCollectionFormProps) {
     return () => subscription.unsubscribe()
   }, [form])
 
-  // Warn before leaving with unsaved changes
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       if (hasUnsavedChanges && !successData) {
@@ -169,7 +177,15 @@ export function EditCollectionForm({ collection }: EditCollectionFormProps) {
 
         <div className="space-y-2">
           <Label htmlFor="title">Title</Label>
-          <Input id="title" placeholder="Family Jewelry" {...form.register("title")} />
+          <TranscriptionInput
+            value={form.watch("title")}
+            onChange={(value) => form.setValue("title", value)}
+            placeholder="Family Jewelry"
+            type="input"
+            fieldType="title"
+            userId={userId}
+            entityType="collection"
+          />
           {form.formState.errors.title && (
             <p className="text-sm text-destructive">{form.formState.errors.title.message}</p>
           )}
@@ -177,11 +193,15 @@ export function EditCollectionForm({ collection }: EditCollectionFormProps) {
 
         <div className="space-y-2">
           <Label htmlFor="description">Description</Label>
-          <Textarea
-            id="description"
+          <TranscriptionInput
+            value={form.watch("description") || ""}
+            onChange={(value) => form.setValue("description", value)}
             placeholder="A collection of precious jewelry passed down through generations..."
-            className="min-h-[100px]"
-            {...form.register("description")}
+            type="textarea"
+            fieldType="description"
+            userId={userId}
+            entityType="collection"
+            rows={4}
           />
           {form.formState.errors.description && (
             <p className="text-sm text-destructive">{form.formState.errors.description.message}</p>
