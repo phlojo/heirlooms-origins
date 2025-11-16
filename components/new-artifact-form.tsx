@@ -16,6 +16,7 @@ import { useState } from "react"
 import { ChevronDown, Plus } from 'lucide-react'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { AddMediaModal } from "@/components/add-media-modal"
+import { normalizeMediaUrls, isAudioUrl, isVideoUrl } from "@/lib/media"
 
 type FormData = z.infer<typeof createArtifactSchema>
 
@@ -44,30 +45,16 @@ export function NewArtifactForm({
 
   const getMediaUrls = () => form.getValues("media_urls") || []
 
-  const isAudioUrl = (url: string) => {
-    return /\.(mp3|wav|m4a|aac|ogg|webm|opus)(\?.*)?$/i.test(url)
-  }
-
-  const isVideoUrl = (url: string) => {
-    return /\.(mp4|mov|avi|wmv|flv|webm|mkv)(\?.*)?$/i.test(url) || url.includes('/video/upload/')
-  }
-
   const getImageUrls = () => getMediaUrls().filter((url) => !isAudioUrl(url) && !isVideoUrl(url))
   const getVideoUrls = () => getMediaUrls().filter((url) => isVideoUrl(url))
   const getAudioUrls = () => getMediaUrls().filter((url) => isAudioUrl(url))
 
   async function onSubmit(data: FormData) {
-    const uniqueMediaUrls = Array.from(new Set(data.media_urls || []))
-
-    if (uniqueMediaUrls.length !== (data.media_urls?.length || 0)) {
-      console.log("[v0] Found duplicates in media_urls before submit:", data.media_urls?.length, "→", uniqueMediaUrls.length)
-      data.media_urls = uniqueMediaUrls
-    }
-
-    console.log("[v0] Submitting artifact with media_urls:", uniqueMediaUrls)
+    const normalizedUrls = normalizeMediaUrls(data.media_urls || [])
 
     const submitData = {
       ...data,
+      media_urls: normalizedUrls,
     }
 
     setError(null)
@@ -227,10 +214,7 @@ export function NewArtifactForm({
             artifactId={null}
             userId={userId}
             onMediaAdded={(newUrls) => {
-              const currentUrls = form.getValues("media_urls") || []
-              const allUrls = [...currentUrls, ...newUrls]
-              const uniqueUrls = Array.from(new Set(allUrls))
-              form.setValue("media_urls", uniqueUrls)
+              form.setValue("media_urls", (prev) => normalizeMediaUrls([...(prev || []), ...newUrls]))
             }}
           />
 

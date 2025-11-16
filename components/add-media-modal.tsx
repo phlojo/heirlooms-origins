@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Camera, Video, Mic, Upload, X } from 'lucide-react'
 import { AudioRecorder } from "@/components/audio-recorder"
 import { generateCloudinarySignature, generateCloudinaryAudioSignature } from "@/lib/actions/cloudinary"
+import { normalizeMediaUrls } from "@/lib/media"
 
 interface AddMediaModalProps {
   open: boolean
@@ -128,7 +129,7 @@ export function AddMediaModal({ open, onOpenChange, artifactId, userId, onMediaA
         urls.push(data.secure_url)
       }
 
-      onMediaAdded(urls)
+      onMediaAdded(normalizeMediaUrls(urls))
       handleClose()
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to upload files. Please try again.")
@@ -175,7 +176,7 @@ export function AddMediaModal({ open, onOpenChange, artifactId, userId, onMediaA
       }
 
       const data = await response.json()
-      onMediaAdded([data.secure_url])
+      onMediaAdded(normalizeMediaUrls([data.secure_url]))
       handleClose()
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to upload audio. Please try again.")

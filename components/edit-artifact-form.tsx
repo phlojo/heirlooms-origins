@@ -28,6 +28,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import { normalizeMediaUrls } from "@/lib/media"
 
 type FormData = z.infer<typeof updateArtifactSchema>
 
@@ -191,12 +192,7 @@ export function EditArtifactForm({ artifact, userId }: EditArtifactFormProps) {
         urls.push(data.secure_url)
       }
 
-      const currentUrls = form.getValues("media_urls") || []
-      const newImages = [...currentUrls, ...urls]
-      const uniqueImages = Array.from(new Set(newImages))
-      console.log("[v0] Total images before dedup:", newImages.length, "After dedup:", uniqueImages.length)
-
-      form.setValue("media_urls", uniqueImages)
+      form.setValue("media_urls", (prev) => normalizeMediaUrls([...(prev || []), ...urls]))
     } catch (err) {
       console.error("[v0] Upload error:", err)
       setError(
@@ -213,25 +209,21 @@ export function EditArtifactForm({ artifact, userId }: EditArtifactFormProps) {
   function removeImage(index: number) {
     const currentUrls = form.getValues("media_urls") || []
     const newImages = currentUrls.filter((_, i) => i !== index)
-    form.setValue("media_urls", newImages)
+    form.setValue("media_urls", normalizeMediaUrls(newImages))
   }
 
   async function onSubmit(data: FormData) {
     setError(null)
 
-    const uniqueMediaUrls = Array.from(new Set(data.media_urls || []))
-    
-    if (uniqueMediaUrls.length !== (data.media_urls?.length || 0)) {
-      console.log("[v0] Found duplicates before submit:", data.media_urls?.length, "→", uniqueMediaUrls.length)
-    }
+    const normalizedUrls = normalizeMediaUrls(data.media_urls || [])
 
     const submitData = {
       ...data,
-      media_urls: uniqueMediaUrls,
+      media_urls: normalizedUrls,
       year_acquired: data.year_acquired || undefined,
     }
 
-    console.log("[v0] Submitting artifact update with", uniqueMediaUrls.length, "media URLs")
+    console.log("[v0] Submitting artifact update with", normalizedUrls.length, "media URLs")
 
     const result = await updateArtifact(submitData, artifact.media_urls || [])
 
@@ -270,12 +262,7 @@ export function EditArtifactForm({ artifact, userId }: EditArtifactFormProps) {
     )
   }
 
-  const uploadedImages = Array.from(new Set(form.watch("media_urls") || []))
-  
-  const rawMediaUrls = form.watch("media_urls") || []
-  if (rawMediaUrls.length !== uploadedImages.length) {
-    console.log("[v0] Duplicates detected in form preview:", rawMediaUrls.length, "→", uploadedImages.length)
-  }
+  const uploadedImages = form.watch("media_urls") || []
 
   return (
     <>
