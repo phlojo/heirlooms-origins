@@ -1,4 +1,4 @@
-import { Package, Car, Watch, Camera, Wine, Gamepad2, Type as type, LucideIcon } from 'lucide-react'
+import { Package, Car, Watch, Camera, Wine, Dices, type LucideIcon } from 'lucide-react'
 
 /**
  * Artifact Type Icon Configuration
@@ -21,7 +21,7 @@ export const artifactTypeIcons: Record<ArtifactType, LucideIcon> = {
   watches: Watch,
   cameras: Camera,
   whiskey: Wine,
-  toys: Gamepad2,
+  toys: Dices,
 }
 
 /**
