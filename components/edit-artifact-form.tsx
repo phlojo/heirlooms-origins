@@ -76,7 +76,7 @@ export function EditArtifactForm({ artifact, userId }: EditArtifactFormProps) {
   useEffect(() => {
     const currentUrls = form.getValues("media_urls") || []
     const originalUrls = artifact.media_urls || []
-    if (JSON.stringify(originalUrls.sort()) !== JSON.stringify(currentUrls.sort())) {
+    if (JSON.stringify(originalUrls) !== JSON.stringify(currentUrls)) {
       setHasUnsavedChanges(true)
     }
   }, [form.watch("media_urls"), artifact.media_urls])

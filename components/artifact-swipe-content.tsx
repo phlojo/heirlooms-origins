@@ -102,7 +102,7 @@ export function ArtifactSwipeContent({
   const hasUnsavedChanges = isEditMode && (
     editTitle !== originalState.title ||
     editDescription !== originalState.description ||
-    JSON.stringify(editMediaUrls.sort()) !== JSON.stringify(originalState.media_urls.sort()) ||
+    JSON.stringify(editMediaUrls) !== JSON.stringify(originalState.media_urls) ||
     JSON.stringify(editImageCaptions) !== JSON.stringify(originalState.image_captions)
   )
 
