@@ -3,7 +3,7 @@
 import { useState } from "react"
 import clsx from "clsx"
 
-export function MediaImage({
+function MediaImage({
   src,
   alt = "",
   className = "",
@@ -36,4 +36,5 @@ export function MediaImage({
   )
 }
 
+export { MediaImage }
 export default MediaImage

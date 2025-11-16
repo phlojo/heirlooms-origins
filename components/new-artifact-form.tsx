@@ -17,9 +17,8 @@ import { ChevronDown, Plus, X } from 'lucide-react'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { AddMediaModal } from "@/components/add-media-modal"
 import { normalizeMediaUrls, isAudioUrl, isVideoUrl, isImageUrl } from "@/lib/media"
-import { GenerateImageCaptionButton } from "@/components/artifact/GenerateImageCaptionButton"
 import { deleteCloudinaryMedia, extractPublicIdFromUrl } from "@/lib/actions/cloudinary"
-import { MediaImage } from "@/components/media-image"
+import MediaImage from "@/components/media-image"
 
 type FormData = z.infer<typeof createArtifactSchema>
 
