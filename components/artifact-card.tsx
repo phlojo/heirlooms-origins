@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { HeirloomsIcon } from "@/components/heirlooms-icon"
 import { Author } from "@/components/author"
 import { getThumbnailUrl } from "@/lib/cloudinary"
+import { getPrimaryVisualMediaUrl } from "@/lib/media"
 
 interface ArtifactCardProps {
   artifact: {
@@ -24,8 +25,8 @@ interface ArtifactCardProps {
 }
 
 export function ArtifactCard({ artifact, showAuthor = false, authorName }: ArtifactCardProps) {
-  const firstImage = artifact.media_urls?.[0]
-  const thumbnailUrl = firstImage ? getThumbnailUrl(firstImage) : null
+  const primaryMedia = getPrimaryVisualMediaUrl(artifact.media_urls)
+  const thumbnailUrl = primaryMedia ? getThumbnailUrl(primaryMedia) : null
 
   return (
     <Link href={`/artifacts/${artifact.slug}`}>

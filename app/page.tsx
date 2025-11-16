@@ -3,6 +3,7 @@ import { getCurrentUser } from "@/lib/supabase/server"
 import { HomeCard } from "@/components/home-card"
 import { createClient } from "@/lib/supabase/server"
 import { ThemeToggle } from "@/components/theme-toggle"
+import { getPrimaryVisualMediaUrl } from "@/lib/media"
 
 export const dynamic = "force-dynamic"
 
@@ -17,12 +18,11 @@ export default async function HomePage() {
     .not("media_urls", "is", null)
     .limit(20)
 
-  // Extract first image URL from each artifact's media_urls array
   const allImages =
     artifacts
       ?.map((artifact) => {
         const mediaUrls = artifact.media_urls as string[] | null
-        return mediaUrls && mediaUrls.length > 0 ? mediaUrls[0] : null
+        return getPrimaryVisualMediaUrl(mediaUrls)
       })
       .filter((url): url is string => url !== null) || []
 

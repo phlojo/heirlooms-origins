@@ -2,6 +2,7 @@ import { AppLayout } from "@/components/app-layout"
 import { getCurrentUser, createClient } from "@/lib/supabase/server"
 import { CollectionsTabs } from "@/components/collections-tabs"
 import { ThemeToggle } from "@/components/theme-toggle"
+import { getPrimaryVisualMediaUrl } from "@/lib/media"
 
 async function getMyCollections(userId: string) {
   const supabase = await createClient()
@@ -34,7 +35,7 @@ async function getMyCollections(userId: string) {
           .order("created_at", { ascending: false })
           .limit(5)
 
-        const thumbnailImages = artifacts?.map((artifact) => artifact.media_urls?.[0]).filter(Boolean) || []
+        const thumbnailImages = artifacts?.map((artifact) => getPrimaryVisualMediaUrl(artifact.media_urls)).filter(Boolean) || []
 
         const isUncategorized = collection.slug === "uncategorized"
 
@@ -94,7 +95,7 @@ async function getAllPublicCollections(excludeUserId?: string) {
           .order("created_at", { ascending: false })
           .limit(5)
 
-        const thumbnailImages = artifacts?.map((artifact) => artifact.media_urls?.[0]).filter(Boolean) || []
+        const thumbnailImages = artifacts?.map((artifact) => getPrimaryVisualMediaUrl(artifact.media_urls)).filter(Boolean) || []
 
         return {
           ...collection,
