@@ -1,4 +1,4 @@
-import { Package, Car, Watch, Camera, Wine, Dices, Type as type, LucideIcon } from 'lucide-react'
+import { Package, Car, Watch, Camera, Wine, Dices, Type as type, type LucideIcon } from 'lucide-react'
 
 /**
  * Artifact Type Icon Configuration
