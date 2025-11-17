@@ -67,6 +67,7 @@ export default async function CollectionDetailPage({
           year_acquired,
           origin,
           media_urls,
+          thumbnail_url,
           user_id,
           collection_id,
           created_at,
