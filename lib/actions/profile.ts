@@ -119,6 +119,55 @@ export async function setUserPassword(newPassword: string) {
 }
 
 /**
+ * Update user's display name
+ */
+export async function updateDisplayName(displayName: string) {
+  const supabase = await createClient()
+
+  // Check authentication
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    return { success: false, error: "Unauthorized" }
+  }
+
+  // Validate display name
+  if (!displayName.trim()) {
+    return { success: false, error: "Display name cannot be empty" }
+  }
+
+  if (displayName.length > 50) {
+    return { success: false, error: "Display name must be 50 characters or less" }
+  }
+
+  // Update profile with new display name
+  const { error } = await supabase
+    .from("profiles")
+    .upsert(
+      {
+        id: user.id,
+        display_name: displayName.trim(),
+        updated_at: new Date().toISOString(),
+      },
+      {
+        onConflict: "id",
+      },
+    )
+    .select()
+    .single()
+
+  if (error) {
+    console.error("[v0] Display name update error:", error)
+    return { success: false, error: "Failed to update display name" }
+  }
+
+  revalidatePath("/profile")
+  return { success: true }
+}
+
+/**
  * Get user's authentication provider
  * Returns 'google' for OAuth, 'password' for email/password, 'magiclink' for magic link
  */

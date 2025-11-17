@@ -7,6 +7,8 @@ import { Package, ImageIcon, Calendar, Mail, User, Settings, Lock } from 'lucide
 import { ThemePreferenceToggle } from "@/components/theme-preference-toggle"
 import { LogoutButton } from "@/components/logout-button"
 import { PasswordForm } from "@/components/password-form"
+import { DisplayNameForm } from "@/components/display-name-form"
+import { ProfileStatLink } from "@/components/profile-stat-link"
 import { getUserAuthProvider } from "@/lib/actions/profile"
 
 async function getUserProfile(userId: string) {
@@ -15,7 +17,7 @@ async function getUserProfile(userId: string) {
   const { data: profile, error } = await supabase.from("profiles").select("*").eq("id", userId).single()
 
   if (error) {
-    console.error("[v0] Error fetching profile:", error.message)
+    console.error("Error fetching profile:", error.message)
     return null
   }
 
@@ -121,7 +123,7 @@ export default async function ProfilePage() {
                   <User className="mt-0.5 h-5 w-5 text-muted-foreground" />
                   <div className="flex-1">
                     <p className="text-sm font-medium">Display Name</p>
-                    <p className="text-sm text-muted-foreground">{profile?.display_name || "Not set"}</p>
+                    <DisplayNameForm currentDisplayName={profile?.display_name} userId={user.id} />
                   </div>
                 </div>
 
@@ -151,29 +153,23 @@ export default async function ProfilePage() {
               <CardDescription>Overview of your collections and artifacts</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex items-center justify-between rounded-lg border p-4">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-                    <Package className="h-5 w-5 text-primary" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium">Collections</p>
-                    <p className="text-2xl font-bold">{stats.collectionsCount}</p>
-                  </div>
-                </div>
-              </div>
+              <ProfileStatLink
+                href="/collections"
+                icon={<Package className="h-5 w-5 text-primary" />}
+                label="Collections"
+                count={stats.collectionsCount}
+                storageKey="heirloom-collections-tab"
+                targetTab="mine"
+              />
 
-              <div className="flex items-center justify-between rounded-lg border p-4">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-                    <ImageIcon className="h-5 w-5 text-primary" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium">Artifacts</p>
-                    <p className="text-2xl font-bold">{stats.artifactsCount}</p>
-                  </div>
-                </div>
-              </div>
+              <ProfileStatLink
+                href="/artifacts"
+                icon={<ImageIcon className="h-5 w-5 text-primary" />}
+                label="Artifacts"
+                count={stats.artifactsCount}
+                storageKey="heirloom-artifacts-tab"
+                targetTab="mine"
+              />
             </CardContent>
           </Card>
         </div>
