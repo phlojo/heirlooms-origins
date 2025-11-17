@@ -72,7 +72,7 @@ export function ArtifactSwipeContent({
     image_captions: artifact.image_captions || {},
     video_summaries: artifact.video_summaries || {},
     audio_transcripts: artifact.audio_transcripts || {},
-    thumbnail_url: artifact.thumbnail_url || null, // Track original thumbnail
+    thumbnail_url: artifact.thumbnail_url || null,
   })
   
   const [isImageFullscreen, setIsImageFullscreen] = useState(false)
@@ -94,7 +94,7 @@ export function ArtifactSwipeContent({
   const [editMediaUrls, setEditMediaUrls] = useState<string[]>(artifact.media_urls || [])
   const [editImageCaptions, setEditImageCaptions] = useState<Record<string, string>>(artifact.image_captions || {})
   const [editVideoSummaries, setEditVideoSummaries] = useState<Record<string, string>>(artifact.video_summaries || {})
-  const [editThumbnailUrl, setEditThumbnailUrl] = useState<string | null>(artifact.thumbnail_url || null) // Added state to track user's selected thumbnail in edit mode
+  const [editThumbnailUrl, setEditThumbnailUrl] = useState<string | null>(artifact.thumbnail_url || null) 
   
   const [isSaving, setIsSaving] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
@@ -126,13 +126,17 @@ export function ArtifactSwipeContent({
   const audioTranscripts = artifact.audio_transcripts || {}
   const mediaUrls = isEditMode ? Array.from(new Set(editMediaUrls)) : Array.from(new Set(artifact.media_urls || []))
   
+  const audioUrlsFiltered = mediaUrls.filter(isAudioFile)
+  const videoUrlsFiltered = mediaUrls.filter(isVideoFile)
+  const imageUrlsFiltered = mediaUrls.filter(url => !isAudioFile(url) && !isVideoFile(url))
+  
   const hasUnsavedChanges = isEditMode && (
     editTitle !== originalState.title ||
     editDescription !== originalState.description ||
     JSON.stringify(editMediaUrls) !== JSON.stringify(originalState.media_urls) ||
     JSON.stringify(editImageCaptions) !== JSON.stringify(originalState.image_captions) ||
     JSON.stringify(editVideoSummaries) !== JSON.stringify(originalState.video_summaries) ||
-    editThumbnailUrl !== originalState.thumbnail_url // Include thumbnail in change detection
+    editThumbnailUrl !== originalState.thumbnail_url
   )
 
   useEffect(() => {
@@ -158,7 +162,7 @@ export function ArtifactSwipeContent({
           media_urls: editMediaUrls,
           image_captions: editImageCaptions,
           video_summaries: editVideoSummaries,
-          thumbnail_url: editThumbnailUrl, // User's selected thumbnail
+          thumbnail_url: editThumbnailUrl, 
         },
         originalState.media_urls
       )
@@ -176,9 +180,7 @@ export function ArtifactSwipeContent({
     if (!confirm("Are you sure you want to delete this media item?")) return
     
     if (isEditMode) {
-      // Remove from local state
       setEditMediaUrls(prev => prev.filter(url => url !== urlToDelete))
-      // Remove caption if exists
       setEditImageCaptions(prev => {
         const updated = { ...prev }
         delete updated[urlToDelete]
@@ -195,7 +197,6 @@ export function ArtifactSwipeContent({
         setEditThumbnailUrl(newThumbnail || null)
       }
     } else {
-      // Immediate delete in view mode (shouldn't happen but kept for safety)
       try {
         await deleteMediaFromArtifact(artifact.id, urlToDelete)
         router.refresh()
@@ -228,7 +229,6 @@ export function ArtifactSwipeContent({
 
   const handleMediaAdded = async (newUrls: string[]) => {
     if (isEditMode) {
-      // Add to local state
       const combinedUrls = [...editMediaUrls, ...newUrls]
       const uniqueUrls = Array.from(new Set(combinedUrls))
       setEditMediaUrls(uniqueUrls)
@@ -240,7 +240,6 @@ export function ArtifactSwipeContent({
         }
       }
     } else {
-      // Immediate save in view mode (shouldn't happen but kept for safety)
       try {
         const currentUrls = artifact.media_urls || []
         const combinedUrls = [...currentUrls, ...newUrls]
@@ -275,7 +274,6 @@ export function ArtifactSwipeContent({
 
   const handleSaveCaption = async (url: string) => {
     if (isEditMode) {
-      // Save to local state
       setEditImageCaptions(prev => ({
         ...prev,
         [url]: editCaptionText
@@ -283,7 +281,6 @@ export function ArtifactSwipeContent({
       setEditingCaption(null)
       setEditCaptionText("")
     } else {
-      // Immediate save in view mode (shouldn't happen but kept for safety)
       setIsSavingCaption(true)
       try {
         const { updateMediaCaption } = await import("@/lib/actions/artifacts")
@@ -326,7 +323,7 @@ export function ArtifactSwipeContent({
     setEditMediaUrls(originalState.media_urls)
     setEditImageCaptions(originalState.image_captions)
     setEditVideoSummaries(originalState.video_summaries)
-    setEditThumbnailUrl(originalState.thumbnail_url) // Reset thumbnail selection
+    setEditThumbnailUrl(originalState.thumbnail_url) 
     setCancelDialogOpen(false)
     router.push(`/artifacts/${artifact.slug}`)
   }
@@ -497,9 +494,10 @@ export function ArtifactSwipeContent({
               if (isAudioFile(url)) {
                 const transcript = audioTranscripts[url]
                 return (
-                  <div key={url} className="space-y-3 px-6 lg:px-8">
+                  <div key={url} className="space-y-3">
                     {isEditMode && (
-                      <div className="flex justify-end">
+                      <div className="flex items-center justify-between px-6 lg:px-8">
+                        <h3 className="text-sm font-semibold">Audio{audioUrlsFiltered.length > 1 ? ` ${audioUrlsFiltered.indexOf(url) + 1}` : ''}</h3>
                         <Button
                           variant="ghost"
                           size="sm"
@@ -510,33 +508,35 @@ export function ArtifactSwipeContent({
                         </Button>
                       </div>
                     )}
-                    <AudioPlayer src={url} title="Audio Recording" />
-                    
-                    {isEditMode && (
-                      <div className="mt-3">
-                        <TranscribeAudioButtonPerMedia artifactId={artifact.id} audioUrl={url} />
-                      </div>
-                    )}
-
-                    {transcript && (
-                      <div className="rounded-lg border bg-muted/30 p-4 mt-3">
-                        <h4 className="text-sm font-semibold mb-2">Transcript</h4>
-                        <div className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
-                          {transcript}
+                    <div className="px-6 lg:px-8 space-y-3">
+                      <AudioPlayer src={url} title="Audio Recording" />
+                      
+                      {isEditMode && (
+                        <div className="mt-3">
+                          <TranscribeAudioButtonPerMedia artifactId={artifact.id} audioUrl={url} />
                         </div>
-                      </div>
-                    )}
+                      )}
+
+                      {transcript && (
+                        <div className="rounded-lg border bg-muted/30 p-4 mt-3">
+                          <h4 className="text-sm font-semibold mb-2">Transcript</h4>
+                          <div className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
+                            {transcript}
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )
               } else if (isVideoFile(url)) {
                 const summary = videoSummaries[url]
                 const isEditingThisCaption = editingCaption === url
-                const isSelectedThumbnail = isEditMode && editThumbnailUrl === url // Check if this video is the selected thumbnail
+                const isSelectedThumbnail = isEditMode && editThumbnailUrl === url
                 return (
                   <div key={url} className="space-y-3">
                     {isEditMode && (
                       <div className="flex items-center justify-between px-6 lg:px-8">
-                        <h3 className="text-sm font-semibold">Video {videoFiles > 1 ? `${mediaUrls.indexOf(url) + 1}` : ''}</h3>
+                        <h3 className="text-sm font-semibold">Video{videoUrlsFiltered.length > 1 ? ` ${videoUrlsFiltered.indexOf(url) + 1}` : ''}</h3>
                         <div className="flex items-center gap-2">
                           <Button
                             type="button"
@@ -646,12 +646,12 @@ export function ArtifactSwipeContent({
               } else {
                 const caption = imageCaptions[url]
                 const isEditingThisCaption = editingCaption === url
-                const isSelectedThumbnail = isEditMode && editThumbnailUrl === url // Check if this image is the selected thumbnail
+                const isSelectedThumbnail = isEditMode && editThumbnailUrl === url
                 return (
                   <div key={url} className="space-y-3">
                     {isEditMode && (
                       <div className="flex items-center justify-between px-6 lg:px-8">
-                        <h3 className="text-sm font-semibold">Photo {imageFiles > 1 ? `${mediaUrls.indexOf(url) + 1}` : ''}</h3>
+                        <h3 className="text-sm font-semibold">Photo{imageUrlsFiltered.length > 1 ? ` ${imageUrlsFiltered.indexOf(url) + 1}` : ''}</h3>
                         <div className="flex items-center gap-2">
                           <Button
                             type="button"
@@ -676,7 +676,7 @@ export function ArtifactSwipeContent({
                     )}
                     <ArtifactImageWithViewer
                       src={getDetailUrl(url) || "/placeholder.svg"}
-                      alt={`${artifact.title} - Image ${mediaUrls.indexOf(url) + 1}`}
+                      alt={`${artifact.title} - Image ${imageUrlsFiltered.indexOf(url) + 1}`}
                       setIsImageFullscreen={setIsImageFullscreen}
                     />
                     <div className="px-6 lg:px-8 space-y-3">
@@ -748,7 +748,7 @@ export function ArtifactSwipeContent({
             })}
           </div>
         ) : (
-          <div className="min-h-[200px] rounded-lg border bg-muted/30 flex items-center justify-center mx-6 lg:mx-8">
+          <div className="min-h-[200px] rounded-lg border bg-muted/30 flex items-center justify-center mx-6 lg:px-8">
             <p className="text-sm text-muted-foreground">No media available</p>
           </div>
         )}
@@ -831,7 +831,6 @@ export function ArtifactSwipeContent({
                       <dd className="font-medium text-green-600">{Object.keys(imageCaptions).length}</dd>
                     </div>
                   )}
-                  {/* Display video summary count */}
                   {videoSummaries && Object.keys(videoSummaries).length > 0 && (
                     <div className="flex justify-between">
                       <dt className="text-muted-foreground">AI Video Summaries</dt>

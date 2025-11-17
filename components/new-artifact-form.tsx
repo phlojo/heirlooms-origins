@@ -292,8 +292,9 @@ export function NewArtifactForm({ collectionId, userId }: NewArtifactFormProps) 
               {uploadedMedia.map((url, idx) => {
                 if (isAudioFile(url)) {
                   return (
-                    <div key={url} className="space-y-3 px-6 lg:px-8">
-                      <div className="flex items-center justify-end">
+                    <div key={url} className="space-y-3">
+                      <div className="flex items-center justify-between px-6 lg:px-8">
+                        <h3 className="text-sm font-semibold">Audio {audioFiles.length > 1 ? `${audioFiles.indexOf(url) + 1}` : ''}</h3>
                         <Button
                           type="button"
                           variant="ghost"
@@ -304,19 +305,21 @@ export function NewArtifactForm({ collectionId, userId }: NewArtifactFormProps) 
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
-                      <AudioPlayer src={url} title="Audio Recording" />
-                      {audioTranscripts[url] && (
-                        <div className="rounded-lg bg-muted/50 p-3 text-sm">
-                          <p className="font-medium text-muted-foreground mb-1">AI Transcript:</p>
-                          <p className="whitespace-pre-wrap">{audioTranscripts[url]}</p>
+                      <div className="px-6 lg:px-8 space-y-3">
+                        <AudioPlayer src={url} title="Audio Recording" />
+                        {audioTranscripts[url] && (
+                          <div className="rounded-lg bg-muted/50 p-3 text-sm">
+                            <p className="font-medium text-muted-foreground mb-1">AI Transcript:</p>
+                            <p className="whitespace-pre-wrap">{audioTranscripts[url]}</p>
+                          </div>
+                        )}
+                        <div className="flex justify-start">
+                          <TranscribeAudioButtonPerMedia
+                            artifactId="temp"
+                            audioUrl={url}
+                            onTranscriptGenerated={(transcript) => handleAudioTranscriptGenerated(url, transcript)}
+                          />
                         </div>
-                      )}
-                      <div className="flex justify-start">
-                        <TranscribeAudioButtonPerMedia
-                          artifactId="temp"
-                          audioUrl={url}
-                          onTranscriptGenerated={(transcript) => handleAudioTranscriptGenerated(url, transcript)}
-                        />
                       </div>
                     </div>
                   )
