@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button"
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import Link from "next/link"
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 import { ChevronDown, Plus, Trash2, Star } from 'lucide-react'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { normalizeMediaUrls, isImageUrl, isVideoUrl } from "@/lib/media"
@@ -18,6 +18,7 @@ import { TranscriptionInput } from "@/components/transcription-input"
 import { AddMediaModal } from "@/components/add-media-modal"
 import { AudioPlayer } from "@/components/audio-player"
 import { getDetailUrl } from "@/lib/cloudinary"
+import { deleteCloudinaryMedia, extractPublicIdFromUrl } from "@/lib/actions/cloudinary"
 
 type FormData = z.infer<typeof createArtifactSchema>
 
@@ -32,6 +33,9 @@ export function NewArtifactForm({ collectionId, userId }: NewArtifactFormProps) 
   const [isProvenanceOpen, setIsProvenanceOpen] = useState(false)
   const [isAddMediaOpen, setIsAddMediaOpen] = useState(false)
   const [selectedThumbnailUrl, setSelectedThumbnailUrl] = useState<string | null>(null)
+  
+  const [uploadedMediaUrls, setUploadedMediaUrls] = useState<string[]>([])
+  const artifactCreatedRef = useRef(false)
 
   const form = useForm<FormData>({
     resolver: zodResolver(createArtifactSchema),
@@ -45,11 +49,32 @@ export function NewArtifactForm({ collectionId, userId }: NewArtifactFormProps) 
     },
   })
 
+  useEffect(() => {
+    return () => {
+      if (!artifactCreatedRef.current && uploadedMediaUrls.length > 0) {
+        console.log("[v0] Component unmounting with abandoned uploads, cleaning up", uploadedMediaUrls.length, "files")
+        
+        uploadedMediaUrls.forEach(async (url) => {
+          const publicId = await extractPublicIdFromUrl(url)
+          if (publicId) {
+            console.log("[v0] Deleting abandoned upload:", publicId)
+            await deleteCloudinaryMedia(publicId)
+          }
+        })
+      }
+    }
+  }, [uploadedMediaUrls])
+
   const handleMediaAdded = (newUrls: string[]) => {
     const currentUrls = form.getValues("media_urls") || []
     const combinedUrls = [...currentUrls, ...newUrls]
     const uniqueUrls = Array.from(new Set(combinedUrls))
     form.setValue("media_urls", normalizeMediaUrls(uniqueUrls))
+    
+    setUploadedMediaUrls((prev) => {
+      const allUrls = [...prev, ...newUrls]
+      return Array.from(new Set(allUrls))
+    })
     
     if (!selectedThumbnailUrl && newUrls.length > 0) {
       const firstVisual = newUrls.find(url => isImageUrl(url) || isVideoUrl(url))
@@ -63,6 +88,8 @@ export function NewArtifactForm({ collectionId, userId }: NewArtifactFormProps) 
     if (!confirm("Are you sure you want to delete this media item?")) return
     const currentUrls = form.getValues("media_urls") || []
     form.setValue("media_urls", normalizeMediaUrls(currentUrls.filter(url => url !== urlToDelete)))
+    
+    setUploadedMediaUrls((prev) => prev.filter(url => url !== urlToDelete))
     
     if (selectedThumbnailUrl === urlToDelete) {
       const remainingUrls = currentUrls.filter(url => url !== urlToDelete)
@@ -111,9 +138,12 @@ export function NewArtifactForm({ collectionId, userId }: NewArtifactFormProps) 
         } else {
           setError(result.error)
         }
+      } else {
+        artifactCreatedRef.current = true
       }
     } catch (error) {
       if (error instanceof Error && error.message === "NEXT_REDIRECT") {
+        artifactCreatedRef.current = true
         return
       }
       setError(error instanceof Error ? error.message : "An unexpected error occurred")
