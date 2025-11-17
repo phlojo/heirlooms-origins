@@ -10,15 +10,13 @@ import { Button } from "@/components/ui/button"
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import Link from "next/link"
-import { useState, useEffect, useRef } from "react"
-import { ChevronDown, Plus } from 'lucide-react'
+import { useState } from "react"
+import { ChevronDown, Upload, X, ImageIcon } from 'lucide-react'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
-import { AddMediaModal } from "@/components/add-media-modal"
-import { normalizeMediaUrls, isAudioUrl, isVideoUrl, isImageUrl } from "@/lib/media"
-import { deleteCloudinaryMedia, extractPublicIdFromUrl } from "@/lib/actions/cloudinary"
+import { normalizeMediaUrls, getFileSizeLimit, formatFileSize } from "@/lib/media"
 import MediaImage from "@/components/media-image"
 import { TranscriptionInput } from "@/components/transcription-input"
-import { useSupabase } from "@/lib/supabase/browser-context"
+import { generateCloudinarySignature } from "@/lib/actions/cloudinary"
 
 type FormData = z.infer<typeof createArtifactSchema>
 
@@ -30,9 +28,7 @@ interface NewArtifactFormProps {
 export function NewArtifactForm({ collectionId, userId }: NewArtifactFormProps) {
   const [error, setError] = useState<string | null>(null)
   const [isAttributesOpen, setIsAttributesOpen] = useState(false)
-  const [isAddMediaOpen, setIsAddMediaOpen] = useState(false)
-  const [uploadedMediaUrls, setUploadedMediaUrls] = useState<string[]>([])
-  const hasNavigatedRef = useRef(false)
+  const [isUploading, setIsUploading] = useState(false)
 
   const form = useForm<FormData>({
     resolver: zodResolver(createArtifactSchema),
@@ -46,44 +42,105 @@ export function NewArtifactForm({ collectionId, userId }: NewArtifactFormProps) 
     },
   })
 
-  useEffect(() => {
-    return () => {
-      if (!hasNavigatedRef.current && uploadedMediaUrls.length > 0) {
-        console.log("[v0] Cleaning up abandoned media:", uploadedMediaUrls.length, "files")
-        uploadedMediaUrls.forEach(async (url) => {
-          const publicId = await extractPublicIdFromUrl(url)
-          if (publicId) {
-            await deleteCloudinaryMedia(publicId)
-          }
-        })
-      }
-    }
-  }, [uploadedMediaUrls])
+  async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>): Promise<void> {
+    const files = e.target.files
+    if (!files || files.length === 0) return
 
-  const getMediaUrls = (): string[] => {
-    const urls = form.getValues("media_urls")
-    return Array.isArray(urls) ? urls : []
+    const oversizedFiles = Array.from(files).filter((file) => {
+      const limit = getFileSizeLimit(file)
+      return file.size > limit
+    })
+
+    if (oversizedFiles.length > 0) {
+      const fileErrors = oversizedFiles.map((f) => 
+        `${f.name} (${formatFileSize(f.size)}, max: ${formatFileSize(getFileSizeLimit(f))})`
+      ).join(", ")
+      setError(`The following files are too large: ${fileErrors}`)
+      e.target.value = ""
+      return
+    }
+
+    const totalSize = Array.from(files).reduce((sum, file) => sum + file.size, 0)
+    const MAX_TOTAL_SIZE = 1000 * 1024 * 1024
+
+    if (totalSize > MAX_TOTAL_SIZE) {
+      setError("Total file size exceeds 1GB. Please upload fewer or smaller files.")
+      e.target.value = ""
+      return
+    }
+
+    setIsUploading(true)
+    setError(null)
+
+    try {
+      const urls: string[] = []
+
+      for (const file of Array.from(files)) {
+        const signatureResult = await generateCloudinarySignature(userId, file.name)
+
+        if (signatureResult.error || !signatureResult.signature) {
+          throw new Error(signatureResult.error || "Failed to generate upload signature")
+        }
+
+        const formData = new FormData()
+        formData.append("file", file)
+        formData.append("api_key", signatureResult.apiKey!)
+        formData.append("timestamp", signatureResult.timestamp!.toString())
+        formData.append("signature", signatureResult.signature)
+        formData.append("public_id", signatureResult.publicId!)
+
+        if (signatureResult.eager) {
+          formData.append("eager", signatureResult.eager)
+        }
+
+        const uploadUrl = `https://api.cloudinary.com/v1_1/${signatureResult.cloudName}/image/upload`
+
+        const response = await fetch(uploadUrl, {
+          method: "POST",
+          body: formData,
+        })
+
+        if (!response.ok) {
+          const errorText = await response.text()
+
+          let errorData
+          try {
+            errorData = JSON.parse(errorText)
+          } catch {
+            throw new Error(`Upload failed (${response.status}): ${errorText.substring(0, 100)}`)
+          }
+
+          throw new Error(`Failed to upload ${file.name}: ${errorData.error?.message || "Unknown error"}`)
+        }
+
+        const data = await response.json()
+        urls.push(data.secure_url)
+      }
+
+      const currentUrls = form.getValues("media_urls") || []
+      const urlsArray = Array.isArray(currentUrls) ? currentUrls : []
+      form.setValue("media_urls", normalizeMediaUrls([...urlsArray, ...urls]))
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to upload images. Please try with smaller files or fewer images at once.",
+      )
+    } finally {
+      setIsUploading(false)
+      e.target.value = ""
+    }
   }
 
-  const getImageUrls = (): string[] => getMediaUrls().filter((url) => isImageUrl(url))
-  const getVideoUrls = (): string[] => getMediaUrls().filter((url) => isVideoUrl(url))
-  const getAudioUrls = (): string[] => getMediaUrls().filter((url) => isAudioUrl(url))
+  function removeImage(index: number): void {
+    const currentUrls = form.getValues("media_urls")
+    const urlsArray = Array.isArray(currentUrls) ? currentUrls : []
+    const newImages = urlsArray.filter((_, i) => i !== index)
+    form.setValue("media_urls", normalizeMediaUrls(newImages))
+  }
 
   async function onSubmit(data: FormData): Promise<void> {
-    console.log("[v0] NEW ARTIFACT FORM - Submitting with data:", {
-      title: data.title,
-      mediaCount: data.media_urls?.length || 0,
-      mediaUrls: data.media_urls,
-      collectionId: data.collectionId
-    })
-    
     const normalizedUrls = normalizeMediaUrls(data.media_urls || [])
-    
-    console.log("[v0] NEW ARTIFACT FORM - After normalization:", {
-      originalCount: data.media_urls?.length || 0,
-      normalizedCount: normalizedUrls.length,
-      normalizedUrls
-    })
 
     const submitData = {
       ...data,
@@ -93,13 +150,9 @@ export function NewArtifactForm({ collectionId, userId }: NewArtifactFormProps) 
     setError(null)
 
     try {
-      hasNavigatedRef.current = true
-      console.log("[v0] NEW ARTIFACT FORM - Calling createArtifact...")
       const result = await createArtifact(submitData)
 
       if (result?.error) {
-        hasNavigatedRef.current = false
-        console.error("[v0] NEW ARTIFACT FORM - Error from createArtifact:", result.error)
         if (result.fieldErrors) {
           Object.entries(result.fieldErrors).forEach(([field, messages]) => {
             if (messages && Array.isArray(messages) && messages.length > 0) {
@@ -116,24 +169,16 @@ export function NewArtifactForm({ collectionId, userId }: NewArtifactFormProps) 
         } else {
           setError(result.error)
         }
-      } else {
-        console.log("[v0] NEW ARTIFACT FORM - Success! Artifact created")
       }
     } catch (error) {
-      hasNavigatedRef.current = false
       if (error instanceof Error && error.message === "NEXT_REDIRECT") {
-        console.log("[v0] NEW ARTIFACT FORM - Redirecting...")
         return
       }
-      console.error("[v0] NEW ARTIFACT FORM - Exception:", error)
       setError(error instanceof Error ? error.message : "An unexpected error occurred")
     }
   }
 
-  const uploadedImages = getImageUrls()
-  const uploadedVideos = getVideoUrls()
-  const uploadedAudio = getAudioUrls()
-  const totalMediaCount = uploadedImages.length + uploadedVideos.length + uploadedAudio.length
+  const uploadedImages = form.watch("media_urls") || []
 
   return (
     <Form {...form}>
@@ -244,110 +289,57 @@ export function NewArtifactForm({ collectionId, userId }: NewArtifactFormProps) 
           </Collapsible>
         </div>
 
-        <div className="py-6 border-b">
-          <div className="px-6 lg:px-8 flex items-center justify-between mb-6">
-            <h2 className="text-xl font-semibold">Media Items</h2>
-            <Button
-              type="button"
-              className="bg-purple-600 hover:bg-purple-700 text-white"
-              size="sm"
-              onClick={() => setIsAddMediaOpen(true)}
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              Add Media
-            </Button>
-          </div>
+        <div className="px-6 lg:px-8 py-6 border-b">
+          <div className="space-y-3">
+            <FormLabel>Photos</FormLabel>
 
-          <AddMediaModal
-            open={isAddMediaOpen}
-            onOpenChange={setIsAddMediaOpen}
-            artifactId={null}
-            userId={userId}
-            onMediaAdded={(newUrls) => {
-              console.log("[v0] NEW ARTIFACT FORM - Media added callback:", {
-                newUrlsCount: newUrls.length,
-                newUrls
-              })
-              const currentUrls = getMediaUrls()
-              console.log("[v0] NEW ARTIFACT FORM - Current media URLs before merge:", {
-                currentCount: currentUrls.length,
-                currentUrls
-              })
-              const combined = normalizeMediaUrls([...currentUrls, ...newUrls])
-              console.log("[v0] NEW ARTIFACT FORM - After combining and normalizing:", {
-                combinedCount: combined.length,
-                combined
-              })
-              form.setValue("media_urls", combined, { shouldValidate: true, shouldDirty: true })
-              setUploadedMediaUrls(prev => [...prev, ...newUrls])
-              console.log("[v0] NEW ARTIFACT FORM - Form media_urls updated successfully")
-            }}
-          />
-
-          {totalMediaCount === 0 ? (
-            <div className="px-6 lg:px-8">
-              <div className="rounded-lg border-2 border-dashed border-muted-foreground/25 p-12 text-center">
-                <p className="text-sm text-muted-foreground">
-                  No media items yet. Click "Add Media" to upload photos, videos, or audio.
-                </p>
-              </div>
+            <div className="flex items-center gap-3">
+              <Button type="button" variant="outline" disabled={isUploading} asChild>
+                <label className="cursor-pointer">
+                  <Upload className="mr-2 h-4 w-4" />
+                  {isUploading ? "Uploading..." : "Upload Photos"}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleImageUpload}
+                    className="hidden"
+                    disabled={isUploading}
+                  />
+                </label>
+              </Button>
+              <FormDescription className="!mt-0">Upload photos (max 50MB per file, 1GB total)</FormDescription>
             </div>
-          ) : (
-            <div className="space-y-8">
-              {getMediaUrls().map((url) => {
-                const isImage = isImageUrl(url)
-                const isVideo = isVideoUrl(url)
-                const isAudio = isAudioUrl(url)
 
-                return (
-                  <div key={url}>
-                    {isImage && (
-                      <>
-                        <MediaImage
-                          src={url}
-                          alt="Photo"
-                          className="w-full h-auto"
-                        />
-                        <div className="px-6 lg:px-8 pt-3">
-                          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                            Photo
-                          </p>
-                        </div>
-                      </>
-                    )}
-                    {isVideo && (
-                      <>
-                        <video
-                          src={url}
-                          controls
-                          className="w-full h-auto bg-black"
-                          crossOrigin="anonymous"
-                        />
-                        <div className="px-6 lg:px-8 pt-3">
-                          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                            Video
-                          </p>
-                        </div>
-                      </>
-                    )}
-                    {isAudio && (
-                      <div className="px-6 lg:px-8">
-                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">
-                          Audio
-                        </p>
-                        <audio
-                          src={url}
-                          controls
-                          className="w-full"
-                          crossOrigin="anonymous"
-                        />
-                      </div>
-                    )}
+            {uploadedImages.length > 0 && (
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+                {uploadedImages.map((url, index) => (
+                  <div key={url} className="group relative aspect-square overflow-hidden rounded-lg border bg-muted">
+                    <MediaImage
+                      src={url}
+                      alt={`Upload ${index + 1}`}
+                      className="h-full w-full object-cover"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeImage(index)}
+                      className="absolute right-2 top-2 rounded-full bg-destructive p-1.5 text-destructive-foreground shadow-md transition-transform hover:scale-110"
+                      aria-label="Remove photo"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
                   </div>
-                )
-              })}
-            </div>
-          )}
+                ))}
+              </div>
+            )}
+
+            {uploadedImages.length === 0 && !isUploading && (
+              <div className="flex flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center">
+                <ImageIcon className="mb-2 h-8 w-8 text-muted-foreground" />
+                <p className="text-sm text-muted-foreground">No photos uploaded yet</p>
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="px-6 lg:px-8 py-6 border-b">
@@ -366,7 +358,7 @@ export function NewArtifactForm({ collectionId, userId }: NewArtifactFormProps) 
           )}
 
           <div className="flex gap-3">
-            <Button type="submit" disabled={form.formState.isSubmitting}>
+            <Button type="submit" disabled={form.formState.isSubmitting || isUploading}>
               {form.formState.isSubmitting ? "Creating..." : "Create Artifact"}
             </Button>
             <Button type="button" variant="outline" asChild>
