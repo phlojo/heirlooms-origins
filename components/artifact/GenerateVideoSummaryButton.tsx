@@ -10,10 +10,10 @@ import { fetchJson } from "@/lib/fetchJson"
 interface GenerateVideoSummaryButtonProps {
   artifactId: string
   videoUrl: string
-  onCaptionGenerated?: (url: string, caption: string) => void
+  onSummaryGenerated?: (url: string, summary: string) => void
 }
 
-export function GenerateVideoSummaryButton({ artifactId, videoUrl, onCaptionGenerated }: GenerateVideoSummaryButtonProps) {
+export function GenerateVideoSummaryButton({ artifactId, videoUrl, onSummaryGenerated }: GenerateVideoSummaryButtonProps) {
   const [isGenerating, setIsGenerating] = useState(false)
   const router = useRouter()
   const { toast } = useToast()
@@ -27,17 +27,17 @@ export function GenerateVideoSummaryButton({ artifactId, videoUrl, onCaptionGene
 
       toast({
         title: "Success",
-        description: "AI video caption generated successfully",
+        description: "AI video summary generated successfully",
       })
 
-      if (onCaptionGenerated && data.caption) {
-        onCaptionGenerated(videoUrl, data.caption)
+      if (onSummaryGenerated && data.summary) {
+        onSummaryGenerated(videoUrl, data.summary)
       } else {
         router.refresh()
       }
     } catch (err) {
-      console.error("[v0] Generate video caption error:", err)
-      const errorMessage = err instanceof Error ? err.message : "Failed to generate video caption"
+      console.error("[v0] Generate video summary error:", err)
+      const errorMessage = err instanceof Error ? err.message : "Failed to generate video summary"
       toast({
         title: "Error",
         description: errorMessage,
@@ -65,7 +65,7 @@ export function GenerateVideoSummaryButton({ artifactId, videoUrl, onCaptionGene
       ) : (
         <>
           <Sparkles className="h-4 w-4" />
-          Generate AI Caption
+          Generate AI Summary
         </>
       )}
     </Button>

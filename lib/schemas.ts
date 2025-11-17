@@ -42,6 +42,7 @@ export const updateArtifactSchema = z.object({
   origin: z.string().max(200, "Origin must be less than 200 characters").optional(),
   media_urls: z.array(z.string().url("Invalid media URL")).optional(),
   image_captions: z.record(z.string().url(), z.string()).optional(),
+  video_summaries: z.record(z.string().url(), z.string()).optional(),
   thumbnail_url: z.string().url("Invalid thumbnail URL").nullable().optional(),
 })
 

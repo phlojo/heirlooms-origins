@@ -70,6 +70,7 @@ export function ArtifactSwipeContent({
     description: artifact.description || "",
     media_urls: artifact.media_urls || [],
     image_captions: artifact.image_captions || {},
+    video_summaries: artifact.video_summaries || {},
     audio_transcripts: artifact.audio_transcripts || {},
     thumbnail_url: artifact.thumbnail_url || null, // Track original thumbnail
   })
@@ -92,6 +93,7 @@ export function ArtifactSwipeContent({
   const [editDescription, setEditDescription] = useState(artifact.description || "")
   const [editMediaUrls, setEditMediaUrls] = useState<string[]>(artifact.media_urls || [])
   const [editImageCaptions, setEditImageCaptions] = useState<Record<string, string>>(artifact.image_captions || {})
+  const [editVideoSummaries, setEditVideoSummaries] = useState<Record<string, string>>(artifact.video_summaries || {})
   const [editThumbnailUrl, setEditThumbnailUrl] = useState<string | null>(artifact.thumbnail_url || null) // Added state to track user's selected thumbnail in edit mode
   
   const [isSaving, setIsSaving] = useState(false)
@@ -120,6 +122,7 @@ export function ArtifactSwipeContent({
   const imageFiles = totalMedia - audioFiles - videoFiles
 
   const imageCaptions = isEditMode ? editImageCaptions : (artifact.image_captions || {})
+  const videoSummaries = isEditMode ? editVideoSummaries : (artifact.video_summaries || {})
   const audioTranscripts = artifact.audio_transcripts || {}
   const mediaUrls = isEditMode ? Array.from(new Set(editMediaUrls)) : Array.from(new Set(artifact.media_urls || []))
   
@@ -128,6 +131,7 @@ export function ArtifactSwipeContent({
     editDescription !== originalState.description ||
     JSON.stringify(editMediaUrls) !== JSON.stringify(originalState.media_urls) ||
     JSON.stringify(editImageCaptions) !== JSON.stringify(originalState.image_captions) ||
+    JSON.stringify(editVideoSummaries) !== JSON.stringify(originalState.video_summaries) ||
     editThumbnailUrl !== originalState.thumbnail_url // Include thumbnail in change detection
   )
 
@@ -153,6 +157,7 @@ export function ArtifactSwipeContent({
           description: editDescription,
           media_urls: editMediaUrls,
           image_captions: editImageCaptions,
+          video_summaries: editVideoSummaries,
           thumbnail_url: editThumbnailUrl, // User's selected thumbnail
         },
         originalState.media_urls
@@ -175,6 +180,11 @@ export function ArtifactSwipeContent({
       setEditMediaUrls(prev => prev.filter(url => url !== urlToDelete))
       // Remove caption if exists
       setEditImageCaptions(prev => {
+        const updated = { ...prev }
+        delete updated[urlToDelete]
+        return updated
+      })
+      setEditVideoSummaries(prev => {
         const updated = { ...prev }
         delete updated[urlToDelete]
         return updated
@@ -315,6 +325,7 @@ export function ArtifactSwipeContent({
     setEditDescription(originalState.description)
     setEditMediaUrls(originalState.media_urls)
     setEditImageCaptions(originalState.image_captions)
+    setEditVideoSummaries(originalState.video_summaries)
     setEditThumbnailUrl(originalState.thumbnail_url) // Reset thumbnail selection
     setCancelDialogOpen(false)
     router.push(`/artifacts/${artifact.slug}`)
@@ -325,6 +336,15 @@ export function ArtifactSwipeContent({
       setEditImageCaptions(prev => ({
         ...prev,
         [url]: newCaption
+      }))
+    }
+  }
+
+  const handleSummaryGenerated = (url: string, newSummary: string) => {
+    if (isEditMode) {
+      setEditVideoSummaries(prev => ({
+        ...prev,
+        [url]: newSummary
       }))
     }
   }
@@ -510,7 +530,7 @@ export function ArtifactSwipeContent({
                   </div>
                 )
               } else if (isVideoFile(url)) {
-                const caption = imageCaptions[url]
+                const summary = videoSummaries[url]
                 const isEditingThisCaption = editingCaption === url
                 const isSelectedThumbnail = isEditMode && editThumbnailUrl === url // Check if this video is the selected thumbnail
                 return (
@@ -551,16 +571,16 @@ export function ArtifactSwipeContent({
                       </video>
                     </div>
                     <div className="px-6 lg:px-8 space-y-3">
-                      {caption && (
+                      {summary && (
                         <div className="rounded-lg border bg-muted/30 p-3">
                           <div className="flex items-center justify-between mb-1">
-                            <h4 className="text-xs font-semibold text-purple-600">AI Caption</h4>
+                            <h4 className="text-xs font-semibold text-purple-600">AI Video Summary</h4>
                             {isEditMode && !isEditingThisCaption && (
                               <Button
                                 variant="ghost"
                                 size="sm"
                                 className="h-6 w-6 p-0"
-                                onClick={() => handleStartEditCaption(url, caption)}
+                                onClick={() => handleStartEditCaption(url, summary)}
                               >
                                 <Pencil className="h-3 w-3" />
                               </Button>
@@ -571,7 +591,7 @@ export function ArtifactSwipeContent({
                               <TranscriptionInput
                                 value={editCaptionText}
                                 onChange={setEditCaptionText}
-                                placeholder="Add caption..."
+                                placeholder="Add summary..."
                                 type="textarea"
                                 fieldType="description"
                                 userId={userId}
@@ -583,7 +603,16 @@ export function ArtifactSwipeContent({
                                   type="button"
                                   size="sm"
                                   variant="default"
-                                  onClick={() => handleSaveCaption(url)}
+                                  onClick={() => {
+                                    if (isEditMode) {
+                                      setEditVideoSummaries(prev => ({
+                                        ...prev,
+                                        [url]: editCaptionText
+                                      }))
+                                      setEditingCaption(null)
+                                      setEditCaptionText("")
+                                    }
+                                  }}
                                   disabled={isSavingCaption}
                                   className="bg-green-600 hover:bg-green-700"
                                 >
@@ -601,7 +630,7 @@ export function ArtifactSwipeContent({
                               </div>
                             </div>
                           ) : (
-                            <p className="text-sm text-foreground leading-relaxed">{caption}</p>
+                            <p className="text-sm text-foreground leading-relaxed">{summary}</p>
                           )}
                         </div>
                       )}
@@ -609,7 +638,7 @@ export function ArtifactSwipeContent({
                         <GenerateVideoSummaryButton 
                           artifactId={artifact.id} 
                           videoUrl={url}
-                          onCaptionGenerated={handleCaptionGenerated}
+                          onSummaryGenerated={handleSummaryGenerated}
                         />
                       )}
                     </div>
@@ -801,6 +830,13 @@ export function ArtifactSwipeContent({
                     <div className="flex justify-between">
                       <dt className="text-muted-foreground">AI Image Captions</dt>
                       <dd className="font-medium text-green-600">{Object.keys(imageCaptions).length}</dd>
+                    </div>
+                  )}
+                  {/* Display video summary count */}
+                  {videoSummaries && Object.keys(videoSummaries).length > 0 && (
+                    <div className="flex justify-between">
+                      <dt className="text-muted-foreground">AI Video Summaries</dt>
+                      <dd className="font-medium text-green-600">{Object.keys(videoSummaries).length}</dd>
                     </div>
                   )}
                 </dl>

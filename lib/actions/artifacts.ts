@@ -468,12 +468,16 @@ export async function updateArtifact(input: UpdateArtifactInput, oldMediaUrls: s
     origin: validatedFields.data.origin,
     media_urls: uniqueMediaUrls,
     slug: newSlug,
-    thumbnail_url: thumbnailUrl, // Use user's selection or auto-recomputed
+    thumbnail_url: thumbnailUrl,
     updated_at: new Date().toISOString(),
   }
 
   if (validatedFields.data.image_captions !== undefined) {
     updateData.image_captions = validatedFields.data.image_captions
+  }
+
+  if (validatedFields.data.video_summaries !== undefined) {
+    updateData.video_summaries = validatedFields.data.video_summaries
   }
 
   console.log("[v0] UPDATE ARTIFACT - Updating with validated data:", {
