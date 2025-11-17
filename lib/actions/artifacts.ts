@@ -632,7 +632,7 @@ export async function deleteArtifact(artifactId: string) {
 
   const { data: artifact, error: fetchError } = await supabase
     .from("artifacts")
-    .select("user_id, slug, media_urls, collection:collections(slug)")
+    .select("user_id, slug, media_urls, thumbnail_url, collection:collections(slug)")
     .eq("id", artifactId)
     .single()
 
@@ -645,10 +645,21 @@ export async function deleteArtifact(artifactId: string) {
   }
 
   const mediaUrls = artifact.media_urls || []
+  const deletedPublicIds = new Set<string>()
+  
   for (const url of mediaUrls) {
     const publicId = await extractPublicIdFromUrl(url)
     if (publicId) {
       await deleteCloudinaryMedia(publicId)
+      deletedPublicIds.add(publicId)
+    }
+  }
+
+  if (artifact.thumbnail_url) {
+    const thumbnailPublicId = await extractPublicIdFromUrl(artifact.thumbnail_url)
+    if (thumbnailPublicId && !deletedPublicIds.has(thumbnailPublicId)) {
+      await deleteCloudinaryMedia(thumbnailPublicId)
+      console.log("[v0] DELETE ARTIFACT - Deleted separate thumbnail:", thumbnailPublicId)
     }
   }
 
