@@ -498,9 +498,9 @@ export function ArtifactSwipeContent({
                 const transcript = audioTranscripts[url]
                 return (
                   <div key={url} className="space-y-3">
-                    <div className="flex items-center justify-between px-6 lg:px-8">
-                      <h3 className="text-sm font-semibold">Audio {audioFiles > 1 ? `${editMediaUrls.filter(isAudioFile).indexOf(url) + 1}` : ''}</h3>
-                      {isEditMode && (
+                    {isEditMode && (
+                      <div className="flex items-center justify-between px-6 lg:px-8">
+                        <h3 className="text-sm font-semibold">Audio {audioFiles > 1 ? `${editMediaUrls.filter(isAudioFile).indexOf(url) + 1}` : ''}</h3>
                         <Button
                           variant="ghost"
                           size="sm"
@@ -509,8 +509,8 @@ export function ArtifactSwipeContent({
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
-                      )}
-                    </div>
+                      </div>
+                    )}
                     <div className="px-6 lg:px-8 space-y-3">
                       <AudioPlayer src={url} title="Audio Recording" />
                       
