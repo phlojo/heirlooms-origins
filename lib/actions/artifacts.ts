@@ -79,7 +79,7 @@ export async function createArtifact(input: CreateArtifactInput): Promise<{ erro
   })
 
   const primaryVisualMedia = getPrimaryVisualMediaUrl(validMediaUrls)
-  console.log("[v0] CREATE ARTIFACT - Primary visual media selected:", primaryVisualMedia || "NONE")
+  console.log("[v0] CREATE ARTIFACT - Primary visual media selected for thumbnail:", primaryVisualMedia || "NONE")
 
   const insertData = {
     title: validatedFields.data.title,
@@ -90,13 +90,14 @@ export async function createArtifact(input: CreateArtifactInput): Promise<{ erro
     media_urls: validMediaUrls,
     user_id: user.id,
     slug,
-    // NOTE: When Phase 2 is implemented, add: thumbnail_url: primaryVisualMedia
+    thumbnail_url: primaryVisualMedia, // Phase 2: Store computed thumbnail
   }
 
   console.log("[v0] CREATE ARTIFACT - Inserting into DB:", {
     ...insertData,
     media_urls: `[${insertData.media_urls.length} URLs]`,
-    hasVisualMedia: !!primaryVisualMedia
+    hasVisualMedia: !!primaryVisualMedia,
+    thumbnail_url: primaryVisualMedia || "NULL"
   })
 
   const { data, error } = await supabase.from("artifacts").insert(insertData).select().single()
@@ -110,10 +111,10 @@ export async function createArtifact(input: CreateArtifactInput): Promise<{ erro
     id: data.id,
     slug: data.slug,
     mediaCount: data.media_urls?.length || 0,
-    hasThumbnail: hasVisualMedia(data.media_urls)
+    hasThumbnail: !!data.thumbnail_url
   })
 
-  if (!hasVisualMedia(data.media_urls)) {
+  if (!data.thumbnail_url) {
     console.log("[v0] CREATE ARTIFACT - Note: Artifact created without thumbnail (audio-only or no media)")
   }
 
@@ -139,6 +140,7 @@ export async function getArtifactsByCollection(collectionId: string) {
       year_acquired,
       origin,
       media_urls,
+      thumbnail_url,
       user_id,
       collection_id,
       created_at,
@@ -235,7 +237,6 @@ export async function getAllPublicArtifactsPaginated(
     query = query.neq("user_id", excludeUserId)
   }
 
-  // Cursor-based pagination using created_at and id for stable ordering
   if (cursor) {
     query = query.or(`created_at.lt.${cursor.createdAt},and(created_at.eq.${cursor.createdAt},id.lt.${cursor.id})`)
   }
@@ -243,7 +244,7 @@ export async function getAllPublicArtifactsPaginated(
   const { data, error } = await query
     .order("created_at", { ascending: false })
     .order("id", { ascending: false })
-    .limit(limit + 1) // Fetch one extra to determine if there are more
+    .limit(limit + 1)
 
   if (error) {
     console.error("Error fetching public artifacts:", error)
@@ -284,7 +285,6 @@ export async function getMyArtifactsPaginated(
     `)
     .eq("user_id", userId)
 
-  // Cursor-based pagination
   if (cursor) {
     query = query.or(`created_at.lt.${cursor.createdAt},and(created_at.eq.${cursor.createdAt},id.lt.${cursor.id})`)
   }
@@ -439,7 +439,7 @@ export async function updateArtifact(input: UpdateArtifactInput, oldMediaUrls: s
   }
 
   const primaryVisualMedia = getPrimaryVisualMediaUrl(uniqueMediaUrls)
-  console.log("[v0] UPDATE ARTIFACT - Primary visual media selected:", primaryVisualMedia || "NONE")
+  console.log("[v0] UPDATE ARTIFACT - Recomputed thumbnail_url:", primaryVisualMedia || "NONE")
 
   let newSlug = existingArtifact.slug
   if (validatedFields.data.title !== existingArtifact.title) {
@@ -458,8 +458,8 @@ export async function updateArtifact(input: UpdateArtifactInput, oldMediaUrls: s
     origin: validatedFields.data.origin,
     media_urls: uniqueMediaUrls,
     slug: newSlug,
+    thumbnail_url: primaryVisualMedia, // Phase 2: Store recomputed thumbnail
     updated_at: new Date().toISOString(),
-    // NOTE: When Phase 2 is implemented, add: thumbnail_url: primaryVisualMedia
   }
 
   if (validatedFields.data.image_captions !== undefined) {
@@ -469,8 +469,8 @@ export async function updateArtifact(input: UpdateArtifactInput, oldMediaUrls: s
   console.log("[v0] UPDATE ARTIFACT - Updating with validated data:", {
     artifactId: validatedFields.data.id,
     mediaCount: uniqueMediaUrls.length,
-    hasThumbnail: hasVisualMediaNow,
-    primaryVisualMedia: primaryVisualMedia || "NONE"
+    hasThumbnail: !!primaryVisualMedia,
+    thumbnail_url: primaryVisualMedia || "NULL"
   })
 
   const { data, error } = await supabase
@@ -489,7 +489,7 @@ export async function updateArtifact(input: UpdateArtifactInput, oldMediaUrls: s
     artifactId: data.id,
     slug: data.slug,
     mediaCount: data.media_urls?.length || 0,
-    hasThumbnail: hasVisualMedia(data.media_urls)
+    hasThumbnail: !!data.thumbnail_url
   })
 
   revalidatePath(`/artifacts/${existingArtifact.slug}`)
@@ -543,10 +543,13 @@ export async function deleteMediaFromArtifact(artifactId: string, mediaUrl: stri
   const updatedAudioSummaries = { ...(artifact.audio_summaries || {}) }
   delete updatedAudioSummaries[mediaUrl]
 
+  const newThumbnailUrl = getPrimaryVisualMediaUrl(updatedMediaUrls)
+
   const { error: updateError } = await supabase
     .from("artifacts")
     .update({
       media_urls: updatedMediaUrls,
+      thumbnail_url: newThumbnailUrl, // Phase 2: Update thumbnail
       image_captions: updatedImageCaptions,
       video_summaries: updatedVideoSummaries,
       audio_transcripts: updatedAudioTranscripts,
