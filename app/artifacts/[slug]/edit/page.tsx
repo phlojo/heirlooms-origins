@@ -4,6 +4,7 @@ import { getArtifactBySlug, getAdjacentArtifacts } from "@/lib/actions/artifacts
 import { AppLayout } from "@/components/app-layout"
 import { ArtifactSwipeContent } from "@/components/artifact-swipe-content"
 import { isCurrentUserAdmin } from "@/lib/utils/admin"
+import { ArtifactStickyNav } from "@/components/artifact-sticky-nav"
 
 export default async function EditArtifactPage({ params }: { params: Promise<{ slug: string }> }) {
   const user = await getCurrentUser()
@@ -33,6 +34,25 @@ export default async function EditArtifactPage({ params }: { params: Promise<{ s
 
   return (
     <AppLayout user={user}>
+      <ArtifactStickyNav
+        title={artifact.title}
+        backHref={collectionHref}
+        backLabel={`${artifact.collection?.title || "Uncategorized"} Collection`}
+        previousItem={previous}
+        nextItem={next}
+        editHref={`/artifacts/${artifact.slug}/edit`}
+        canEdit={true}
+        isEditMode={true}
+        collectionId={artifact.collection_id}
+        collectionSlug={artifact.collection?.slug}
+        collectionName={artifact.collection?.title}
+        currentPosition={currentPosition}
+        totalCount={totalCount}
+        currentUserId={user.id}
+        isCurrentUserAdmin={isAdmin}
+        contentOwnerId={artifact.user_id}
+      />
+      
       <ArtifactSwipeContent
         artifact={artifact}
         previous={previous}

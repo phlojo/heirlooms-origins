@@ -5,7 +5,6 @@ import Link from "next/link"
 import { getDetailUrl } from "@/lib/cloudinary"
 import { AudioPlayer } from "@/components/audio-player"
 import ReactMarkdown from "react-markdown"
-import { ArtifactStickyNav } from "@/components/artifact-sticky-nav"
 import { ArtifactSwipeWrapper } from "@/components/artifact-swipe-wrapper"
 import { ArtifactImageWithViewer } from "@/components/artifact-image-with-viewer"
 import { Button } from "@/components/ui/button"
@@ -313,26 +312,28 @@ export function ArtifactSwipeContent({
       nextUrl={isEditMode ? null : nextUrl} 
       disableSwipe={isImageFullscreen || isEditMode}
     >
-      <ArtifactStickyNav
-        title={isEditMode ? editTitle : artifact.title}
-        backHref={collectionHref}
-        backLabel={`${artifact.collection?.title || "Uncategorized"} Collection`}
-        previousItem={previous}
-        nextItem={next}
-        editHref={`/artifacts/${artifact.slug}/edit`}
-        canEdit={canEdit}
-        isEditMode={isEditMode}
-        authorUserId={isEditMode ? undefined : artifact.user_id}
-        authorName={isEditMode ? undefined : artifact.author_name}
-        collectionId={artifact.collection_id}
-        collectionSlug={artifact.collection?.slug}
-        collectionName={artifact.collection?.title}
-        currentPosition={currentPosition}
-        totalCount={totalCount}
-        currentUserId={userId}
-        isCurrentUserAdmin={isAdmin}
-        contentOwnerId={artifact.user_id}
-      />
+      {!isEditMode && (
+        <ArtifactStickyNav
+          title={artifact.title}
+          backHref={collectionHref}
+          backLabel={`${artifact.collection?.title || "Uncategorized"} Collection`}
+          previousItem={previous}
+          nextItem={next}
+          editHref={`/artifacts/${artifact.slug}/edit`}
+          canEdit={canEdit}
+          isEditMode={isEditMode}
+          authorUserId={artifact.user_id}
+          authorName={artifact.author_name}
+          collectionId={artifact.collection_id}
+          collectionSlug={artifact.collection?.slug}
+          collectionName={artifact.collection?.title}
+          currentPosition={currentPosition}
+          totalCount={totalCount}
+          currentUserId={userId}
+          isCurrentUserAdmin={isAdmin}
+          contentOwnerId={artifact.user_id}
+        />
+      )}
 
       <div className={`space-y-6 px-6 lg:px-8 ${isEditMode ? 'pt-4' : 'pt-2'}`}>
         {!isEditMode && canEdit && (
