@@ -161,18 +161,36 @@ export function FullscreenImageViewer({ src, alt, onClose }: FullscreenImageView
         size="icon"
         onClick={onClose}
         className="fixed top-4 right-4 z-[200] h-10 w-10 rounded-full bg-black/50 text-white hover:bg-black/70 hover:text-white"
+        aria-label="Close fullscreen viewer"
       >
         <X className="h-5 w-5" />
       </Button>
 
       <div className="hidden">
-        <Button variant="ghost" size="icon" onClick={handleZoomOut} disabled={scale <= 0.5}>
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          onClick={handleZoomOut} 
+          disabled={scale <= 0.5}
+          aria-label="Zoom out"
+        >
           <ZoomOut className="h-5 w-5" />
         </Button>
-        <Button variant="ghost" size="icon" onClick={handleReset}>
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          onClick={handleReset}
+          aria-label="Reset zoom"
+        >
           <RotateCcw className="h-5 w-5" />
         </Button>
-        <Button variant="ghost" size="icon" onClick={handleZoomIn} disabled={scale >= 5}>
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          onClick={handleZoomIn} 
+          disabled={scale >= 5}
+          aria-label="Zoom in"
+        >
           <ZoomIn className="h-5 w-5" />
         </Button>
       </div>

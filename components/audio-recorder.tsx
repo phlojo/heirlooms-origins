@@ -2,7 +2,7 @@
 
 import { useState, useRef } from "react"
 import { Button } from "@/components/ui/button"
-import { Mic, Square, Trash2 } from "lucide-react"
+import { Mic, Square, Trash2 } from 'lucide-react'
 
 interface AudioRecorderProps {
   onAudioRecorded: (audioBlob: Blob, fileName: string) => void
@@ -107,7 +107,13 @@ export function AudioRecorder({ onAudioRecorded, disabled }: AudioRecorderProps)
         {audioURL && !isRecording && (
           <div className="flex items-center gap-2 flex-1">
             <audio src={audioURL} controls className="flex-1" />
-            <Button type="button" variant="ghost" size="icon" onClick={clearRecording}>
+            <Button 
+              type="button" 
+              variant="ghost" 
+              size="icon" 
+              onClick={clearRecording}
+              aria-label="Clear recording"
+            >
               <Trash2 className="h-4 w-4" />
             </Button>
           </div>

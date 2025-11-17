@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
-import { Play, Pause, Volume2, VolumeX } from "lucide-react"
+import { Play, Pause, Volume2, VolumeX } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Slider } from "@/components/ui/slider"
 
@@ -127,12 +127,24 @@ export function AudioPlayer({ src, title }: AudioPlayerProps) {
 
         {/* Controls */}
         <div className="flex items-center gap-4">
-          <Button onClick={togglePlay} size="icon" variant="default" className="h-10 w-10 shrink-0">
+          <Button 
+            onClick={togglePlay} 
+            size="icon" 
+            variant="default" 
+            className="h-10 w-10 shrink-0"
+            aria-label={isPlaying ? "Pause audio" : "Play audio"}
+          >
             {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
           </Button>
 
           <div className="flex flex-1 items-center gap-2">
-            <Button onClick={toggleMute} size="icon" variant="ghost" className="h-8 w-8 shrink-0">
+            <Button 
+              onClick={toggleMute} 
+              size="icon" 
+              variant="ghost" 
+              className="h-8 w-8 shrink-0"
+              aria-label={isMuted ? "Unmute audio" : "Mute audio"}
+            >
               {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
             </Button>
             <Slider

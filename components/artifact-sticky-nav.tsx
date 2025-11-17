@@ -88,7 +88,13 @@ export function ArtifactStickyNav({
                 </Badge>
               )}
             </div>
-            <Button variant="ghost" size="sm" onClick={toggleFavorite} className="shrink-0 h-9 w-9 p-0">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={toggleFavorite} 
+              className="shrink-0 h-9 w-9 p-0"
+              aria-label={isFavorited ? "Remove from favorites" : "Add to favorites"}
+            >
               <Heart className={`h-5 w-5 ${isFavorited ? "fill-red-500 text-red-500" : "text-muted-foreground"}`} />
             </Button>
           </div>
