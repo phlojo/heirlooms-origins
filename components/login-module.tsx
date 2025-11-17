@@ -94,22 +94,20 @@ export function LoginModule({
     setError(null)
     setSuccess(null)
 
-    console.log("[v0] Starting password login...")
-
     try {
       const result = await signInWithPassword(email, password, returnTo)
-      console.log("[v0] Password login result:", result)
       
       if (result?.error) {
-        console.log("[v0] Login error detected:", result.error)
         setError(`Sign in failed: ${result.error}. Please verify your credentials and try again.`)
+        setIsLoading(false)
       }
     } catch (error: unknown) {
+      if (error instanceof Error && error.message.includes('NEXT_REDIRECT')) {
+        throw error
+      }
+      
       const errorMessage = error instanceof Error ? error.message : "An error occurred"
-      console.log("[v0] Password login exception:", errorMessage)
       setError(`Sign in failed: ${errorMessage}. Please verify your credentials and try again.`)
-    } finally {
-      console.log("[v0] Password login completed, setting loading to false")
       setIsLoading(false)
     }
   }
