@@ -22,10 +22,17 @@ export default async function NewArtifactPage({
   let effectiveCollectionId = collectionId
 
   if (!effectiveCollectionId) {
+    console.log("[v0] NewArtifactPage - No collectionId, getting uncategorized for user:", user.id)
     const result = await getOrCreateUncategorizedCollection(user.id)
-    if (result.success && result.data) {
-      effectiveCollectionId = result.data.id
+    
+    if (!result.success || !result.data) {
+      console.error("[v0] NewArtifactPage - Failed to get uncategorized collection:", result.error)
+      // Redirect to collections page with error
+      redirect("/collections?error=failed-to-create-collection")
     }
+    
+    effectiveCollectionId = result.data.id
+    console.log("[v0] NewArtifactPage - Using uncategorized collection:", effectiveCollectionId)
   }
 
   return (

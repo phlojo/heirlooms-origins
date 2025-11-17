@@ -234,18 +234,33 @@ export async function updateCollection(collectionId: string, input: CollectionIn
 }
 
 export async function getOrCreateUncategorizedCollection(userId: string) {
+  console.log("[v0] getOrCreateUncategorizedCollection - Starting for userId:", userId)
+  
   const supabase = await createClient()
 
-  const { data: existing } = await supabase
+  const { data: userCollections, error: fetchError } = await supabase
     .from("collections")
     .select("*")
     .eq("user_id", userId)
-    .eq("slug", "uncategorized")
-    .single()
+    .ilike("slug", "uncategorized%") // Match "uncategorized" or "uncategorized-{anything}"
+    .limit(1)
 
-  if (existing) {
-    return { success: true, data: existing }
+  console.log("[v0] getOrCreateUncategorizedCollection - Query result:", {
+    found: !!userCollections && userCollections.length > 0,
+    error: fetchError
+  })
+
+  if (fetchError) {
+    console.error("[v0] getOrCreateUncategorizedCollection - Fetch error:", fetchError)
   }
+
+  if (userCollections && userCollections.length > 0) {
+    console.log("[v0] getOrCreateUncategorizedCollection - Found existing:", userCollections[0].id)
+    return { success: true, data: userCollections[0] }
+  }
+
+  const uniqueSlug = `uncategorized-${userId.substring(0, 8)}`
+  console.log("[v0] getOrCreateUncategorizedCollection - Creating new with slug:", uniqueSlug)
 
   const { data, error } = await supabase
     .from("collections")
@@ -254,17 +269,18 @@ export async function getOrCreateUncategorizedCollection(userId: string) {
       title: "Uncategorized Artifacts",
       description:
         "This collection holds your uncategorized artifacts — items you've created without assigning a collection, or ones that remained after a collection was deleted.",
-      slug: "uncategorized",
+      slug: uniqueSlug, // Use unique slug per user
       is_public: false,
     })
     .select()
     .single()
 
   if (error) {
-    console.error("Failed to create uncategorized collection:", error)
+    console.error("[v0] getOrCreateUncategorizedCollection - Create error:", error)
     return { success: false, error: "Failed to create uncategorized collection" }
   }
 
+  console.log("[v0] getOrCreateUncategorizedCollection - Created successfully:", data.id)
   return { success: true, data }
 }
 
