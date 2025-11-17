@@ -2,10 +2,12 @@ import { AppLayout } from "@/components/app-layout"
 import { getCurrentUser, createClient } from "@/lib/supabase/server"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { redirect } from "next/navigation"
-import { Package, ImageIcon, Calendar, Mail, User, Settings } from "lucide-react"
+import { redirect } from 'next/navigation'
+import { Package, ImageIcon, Calendar, Mail, User, Settings, Lock } from 'lucide-react'
 import { ThemePreferenceToggle } from "@/components/theme-preference-toggle"
 import { LogoutButton } from "@/components/logout-button"
+import { PasswordForm } from "@/components/password-form"
+import { getUserAuthProvider } from "@/lib/actions/profile"
 
 async function getUserProfile(userId: string) {
   const supabase = await createClient()
@@ -43,6 +45,7 @@ export default async function ProfilePage() {
 
   const profile = await getUserProfile(user.id)
   const stats = await getUserStats(user.id)
+  const authProvider = await getUserAuthProvider()
 
   const displayName = profile?.display_name || user.email?.split("@")[0] || "User"
   const joinedDate = profile?.created_at
@@ -52,6 +55,9 @@ export default async function ProfilePage() {
         day: "numeric",
       })
     : "Unknown"
+
+  const showPasswordUI = authProvider !== "google"
+  const passwordMode: "change" | "set" = authProvider === "password" ? "change" : "set"
 
   return (
     <AppLayout user={user}>
@@ -171,6 +177,27 @@ export default async function ProfilePage() {
             </CardContent>
           </Card>
         </div>
+
+        {showPasswordUI && (
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <Lock className="h-5 w-5" />
+                <CardTitle>
+                  {passwordMode === "change" ? "Change Password" : "Set Password"}
+                </CardTitle>
+              </div>
+              <CardDescription>
+                {passwordMode === "change" 
+                  ? "Update your account password for enhanced security"
+                  : "Set a password to enable email/password login in addition to magic links"}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <PasswordForm mode={passwordMode} />
+            </CardContent>
+          </Card>
+        )}
 
         <Card>
           <CardHeader>
