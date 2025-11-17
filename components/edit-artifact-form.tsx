@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { updateArtifact } from "@/lib/actions/artifacts"
-import { generateCloudinarySignature } from "@/lib/actions/cloudinary"
+import { generateCloudinarySignature, deleteCloudinaryMedia, extractPublicIdFromUrl } from "@/lib/actions/cloudinary"
 import { updateArtifactSchema } from "@/lib/schemas"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button"
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { TranscriptionInput } from "@/components/transcription-input"
 import { useRouter } from 'next/navigation'
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { X, Upload, ImageIcon, Loader2 } from 'lucide-react'
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { CheckCircle2 } from 'lucide-react'
@@ -50,6 +50,10 @@ export function EditArtifactForm({ artifact, userId }: EditArtifactFormProps) {
   const [showUnsavedDialog, setShowUnsavedDialog] = useState(false)
   const [pendingNavigation, setPendingNavigation] = useState<string | null>(null)
 
+  const originalMediaUrlsRef = useRef<string[]>(artifact.media_urls || [])
+  const newlyUploadedUrlsRef = useRef<string[]>([])
+  const changesSavedRef = useRef(false)
+
   const form = useForm<FormData>({
     resolver: zodResolver(updateArtifactSchema),
     defaultValues: {
@@ -76,6 +80,31 @@ export function EditArtifactForm({ artifact, userId }: EditArtifactFormProps) {
       setHasUnsavedChanges(true)
     }
   }, [form.watch("media_urls"), artifact.media_urls])
+
+  useEffect(() => {
+    return () => {
+      if (!changesSavedRef.current && newlyUploadedUrlsRef.current.length > 0) {
+        console.log("[v0] EDIT ARTIFACT CLEANUP - Deleting abandoned uploads:", newlyUploadedUrlsRef.current.length)
+        
+        // Background cleanup - fire and forget
+        Promise.all(
+          newlyUploadedUrlsRef.current.map(async (url) => {
+            try {
+              const publicId = await extractPublicIdFromUrl(url)
+              if (publicId) {
+                await deleteCloudinaryMedia(publicId)
+                console.log("[v0] EDIT ARTIFACT CLEANUP - Deleted:", publicId)
+              }
+            } catch (err) {
+              console.error("[v0] EDIT ARTIFACT CLEANUP - Failed to delete:", url, err)
+            }
+          })
+        ).then(() => {
+          console.log("[v0] EDIT ARTIFACT CLEANUP - Completed")
+        })
+      }
+    }
+  }, [])
 
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
@@ -177,6 +206,7 @@ export function EditArtifactForm({ artifact, userId }: EditArtifactFormProps) {
 
         const data = await response.json()
         urls.push(data.secure_url)
+        newlyUploadedUrlsRef.current.push(data.secure_url)
       }
 
       const currentUrls = form.getValues("media_urls") || []
@@ -215,6 +245,7 @@ export function EditArtifactForm({ artifact, userId }: EditArtifactFormProps) {
     const result = await updateArtifact(submitData, artifact.media_urls || [])
 
     if (result?.success) {
+      changesSavedRef.current = true
       setSuccess(true)
       setHasUnsavedChanges(false)
       setTimeout(() => {
