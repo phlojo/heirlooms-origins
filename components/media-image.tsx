@@ -24,6 +24,7 @@ function MediaImage({
     <img
       src={imageSrc || "/placeholder.svg"}
       alt={alt}
+      crossOrigin="anonymous"
       onError={(e) => {
         const target = e.currentTarget
         if (target.src !== fallbackSrc) {
