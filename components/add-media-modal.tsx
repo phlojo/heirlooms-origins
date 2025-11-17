@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Camera, Video, Mic, Upload, X } from 'lucide-react'
@@ -24,6 +24,8 @@ export function AddMediaModal({ open, onOpenChange, artifactId, userId, onMediaA
   const [selectedMode, setSelectedMode] = useState<MediaMode>(null)
   const [isUploading, setIsUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  
+  const cameraInputRef = useRef<HTMLInputElement>(null)
 
   const handleReset = () => {
     setSelectedType(null)
@@ -211,6 +213,12 @@ export function AddMediaModal({ open, onOpenChange, artifactId, userId, onMediaA
     }
   }
 
+  const handleCameraCapture = () => {
+    if (cameraInputRef.current) {
+      cameraInputRef.current.click()
+    }
+  }
+
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-md">
@@ -297,19 +305,46 @@ export function AddMediaModal({ open, onOpenChange, artifactId, userId, onMediaA
                 </label>
               </Button>
 
-              <Button
-                variant="outline"
-                className="h-auto flex-col gap-2 py-6"
-                onClick={() => setSelectedMode("record")}
-              >
-                {selectedType === "photo" ? <Camera className="h-8 w-8" /> : selectedType === "video" ? <Video className="h-8 w-8" /> : <Mic className="h-8 w-8" />}
-                <div className="text-center">
-                  <div className="font-semibold">
-                    {selectedType === "photo" ? "Take Photo" : selectedType === "video" ? "Record Video" : "Record Audio"}
+              {selectedType === "photo" || selectedType === "video" ? (
+                <>
+                  <Button
+                    variant="outline"
+                    className="h-auto flex-col gap-2 py-6"
+                    onClick={handleCameraCapture}
+                    disabled={isUploading}
+                  >
+                    {selectedType === "photo" ? <Camera className="h-8 w-8" /> : <Video className="h-8 w-8" />}
+                    <div className="text-center">
+                      <div className="font-semibold">
+                        {selectedType === "photo" ? "Take Photo" : "Record Video"}
+                      </div>
+                      <div className="text-xs text-muted-foreground">Use your device camera</div>
+                    </div>
+                  </Button>
+                  {/* Hidden input for camera capture */}
+                  <input
+                    ref={cameraInputRef}
+                    type="file"
+                    accept={selectedType === "photo" ? "image/*" : "video/*"}
+                    capture="environment"
+                    onChange={handleMediaUpload}
+                    className="hidden"
+                    disabled={isUploading}
+                  />
+                </>
+              ) : (
+                <Button
+                  variant="outline"
+                  className="h-auto flex-col gap-2 py-6"
+                  onClick={() => setSelectedMode("record")}
+                >
+                  <Mic className="h-8 w-8" />
+                  <div className="text-center">
+                    <div className="font-semibold">Record Audio</div>
+                    <div className="text-xs text-muted-foreground">Use your device microphone</div>
                   </div>
-                  <div className="text-xs text-muted-foreground">Use your device camera/microphone</div>
-                </div>
-              </Button>
+                </Button>
+              )}
 
               <Button variant="ghost" onClick={handleBack}>
                 Back
@@ -321,20 +356,6 @@ export function AddMediaModal({ open, onOpenChange, artifactId, userId, onMediaA
           {selectedMode === "record" && selectedType === "audio" && (
             <div className="space-y-4">
               <AudioRecorder onAudioRecorded={handleAudioRecorded} disabled={isUploading} />
-              <Button variant="ghost" onClick={handleBack} className="w-full">
-                Back
-              </Button>
-            </div>
-          )}
-
-          {/* Coming Soon for Photo/Video Capture */}
-          {selectedMode === "record" && (selectedType === "photo" || selectedType === "video") && (
-            <div className="space-y-4">
-              <div className="rounded-lg border border-dashed p-8 text-center">
-                <p className="text-sm text-muted-foreground">
-                  Camera recording coming soon. Please use the upload option for now.
-                </p>
-              </div>
               <Button variant="ghost" onClick={handleBack} className="w-full">
                 Back
               </Button>
