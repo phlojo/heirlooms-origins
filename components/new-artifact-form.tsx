@@ -61,12 +61,22 @@ export function NewArtifactForm({ collectionId, userId }: NewArtifactFormProps) 
       if (!artifactCreatedRef.current && uploadedMediaUrls.length > 0) {
         console.log("[v0] Component unmounting with abandoned uploads, cleaning up", uploadedMediaUrls.length, "files")
         
-        uploadedMediaUrls.forEach(async (url) => {
-          const publicId = await extractPublicIdFromUrl(url)
-          if (publicId) {
-            console.log("[v0] Deleting abandoned upload:", publicId)
-            await deleteCloudinaryMedia(publicId)
-          }
+        // Fire-and-forget deletion - don't await in cleanup
+        uploadedMediaUrls.forEach((url) => {
+          extractPublicIdFromUrl(url).then((publicId) => {
+            if (publicId) {
+              console.log("[v0] Deleting abandoned upload:", publicId)
+              deleteCloudinaryMedia(publicId).then((result) => {
+                if (result.error) {
+                  console.error("[v0] Failed to delete abandoned upload:", publicId, result.error)
+                } else {
+                  console.log("[v0] Successfully deleted abandoned upload:", publicId)
+                }
+              })
+            }
+          }).catch((err) => {
+            console.error("[v0] Error extracting publicId from URL:", url, err)
+          })
         })
       }
     }

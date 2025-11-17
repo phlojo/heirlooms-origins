@@ -89,21 +89,22 @@ export function EditArtifactForm({ artifact, userId }: EditArtifactFormProps) {
       if (!changesSavedRef.current && newlyUploadedUrlsRef.current.length > 0) {
         console.log("[v0] EDIT ARTIFACT CLEANUP - Deleting abandoned uploads:", newlyUploadedUrlsRef.current.length)
         
-        // Background cleanup - fire and forget
-        Promise.all(
-          newlyUploadedUrlsRef.current.map(async (url) => {
-            try {
-              const publicId = await extractPublicIdFromUrl(url)
-              if (publicId) {
-                await deleteCloudinaryMedia(publicId)
-                console.log("[v0] EDIT ARTIFACT CLEANUP - Deleted:", publicId)
-              }
-            } catch (err) {
-              console.error("[v0] EDIT ARTIFACT CLEANUP - Failed to delete:", url, err)
+        // Fire-and-forget deletion - don't await in cleanup
+        newlyUploadedUrlsRef.current.forEach((url) => {
+          extractPublicIdFromUrl(url).then((publicId) => {
+            if (publicId) {
+              console.log("[v0] EDIT ARTIFACT CLEANUP - Deleting:", publicId)
+              deleteCloudinaryMedia(publicId).then((result) => {
+                if (result.error) {
+                  console.error("[v0] EDIT ARTIFACT CLEANUP - Failed:", publicId, result.error)
+                } else {
+                  console.log("[v0] EDIT ARTIFACT CLEANUP - Success:", publicId)
+                }
+              })
             }
+          }).catch((err) => {
+            console.error("[v0] EDIT ARTIFACT CLEANUP - Error extracting publicId:", url, err)
           })
-        ).then(() => {
-          console.log("[v0] EDIT ARTIFACT CLEANUP - Completed")
         })
       }
     }
