@@ -495,3 +495,34 @@ export async function getMyCollectionsPaginated(
     return { collections: [], hasMore: false }
   }
 }
+
+export async function getMyCollections(userId: string) {
+  const supabase = await createClient()
+
+  try {
+    const { data: collections, error } = await supabase
+      .from("collections")
+      .select("id, title, slug")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+
+    if (error) {
+      console.error("Error fetching user collections:", error)
+      return { collections: [], error: error.message }
+    }
+
+    // Sort to put uncategorized first
+    const sortedCollections = collections.sort((a, b) => {
+      const aIsUncategorized = a.slug.startsWith("uncategorized")
+      const bIsUncategorized = b.slug.startsWith("uncategorized")
+      if (aIsUncategorized) return -1
+      if (bIsUncategorized) return 1
+      return 0
+    })
+
+    return { collections: sortedCollections, error: null }
+  } catch (error) {
+    console.error("Unexpected error in getMyCollections:", error)
+    return { collections: [], error: "Failed to fetch collections" }
+  }
+}

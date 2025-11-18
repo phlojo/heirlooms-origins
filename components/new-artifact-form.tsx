@@ -24,6 +24,7 @@ import { GenerateImageCaptionButton } from "@/components/artifact/GenerateImageC
 import { GenerateVideoSummaryButton } from "@/components/artifact/GenerateVideoSummaryButton"
 import { TranscribeAudioButtonPerMedia } from "@/components/artifact/TranscribeAudioButtonPerMedia"
 import { useRouter } from 'next/navigation'
+import { CollectionSelector } from "@/components/collection-selector"
 
 type FormData = z.infer<typeof createArtifactSchema>
 
@@ -179,6 +180,27 @@ export function NewArtifactForm({ collectionId, userId }: NewArtifactFormProps) 
                     entityType="artifact"
                   />
                 </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </section>
+
+        <section className="space-y-2 px-6 lg:px-8">
+          <FormField
+            control={form.control}
+            name="collectionId"
+            render={({ field }) => (
+              <FormItem>
+                <CollectionSelector
+                  userId={userId}
+                  value={field.value}
+                  onChange={field.onChange}
+                  disabled={form.formState.isSubmitting}
+                />
+                <FormDescription>
+                  Choose which collection this artifact belongs to
+                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}

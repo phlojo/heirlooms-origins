@@ -27,8 +27,9 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { normalizeMediaUrls, getFileSizeLimit, formatFileSize, isImageUrl, isVideoUrl } from "@/lib/media"
+import { CollectionSelector } from "@/components/collection-selector"
 
-type FormData = z.infer<typeof updateArtifactSchema>
+type FormData = z.infer<typeof updateArtifactSchema> & { collectionId?: string }
 
 interface EditArtifactFormProps {
   artifact: {
@@ -39,6 +40,7 @@ interface EditArtifactFormProps {
     origin?: string
     media_urls?: string[]
     thumbnail_url?: string | null
+    collection_id: string
   }
   userId: string
 }
@@ -65,6 +67,7 @@ export function EditArtifactForm({ artifact, userId }: EditArtifactFormProps) {
       origin: artifact.origin || "",
       media_urls: artifact.media_urls || [],
       thumbnail_url: artifact.thumbnail_url || null,
+      collectionId: artifact.collection_id,
     },
   })
 
@@ -333,6 +336,25 @@ export function EditArtifactForm({ artifact, userId }: EditArtifactFormProps) {
                     entityType="artifact"
                   />
                 </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="collectionId"
+            render={({ field }) => (
+              <FormItem>
+                <CollectionSelector
+                  userId={userId}
+                  value={field.value || ""}
+                  onChange={field.onChange}
+                  disabled={form.formState.isSubmitting || isUploading}
+                />
+                <FormDescription>
+                  Move this artifact to a different collection
+                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}

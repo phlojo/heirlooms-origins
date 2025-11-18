@@ -441,7 +441,7 @@ export async function getMyArtifacts(userId: string) {
   }))
 }
 
-export async function updateArtifact(input: UpdateArtifactInput, oldMediaUrls: string[] = []) {
+export async function updateArtifact(input: UpdateArtifactInput & { collectionId?: string }, oldMediaUrls: string[] = []) {
   const validatedFields = updateArtifactSchema.safeParse(input)
 
   if (!validatedFields.success) {
@@ -539,6 +539,17 @@ export async function updateArtifact(input: UpdateArtifactInput, oldMediaUrls: s
     })
   }
 
+  const oldCollectionId = existingArtifact.collection_id
+  const newCollectionId = input.collectionId || oldCollectionId
+  const collectionChanged = newCollectionId !== oldCollectionId
+  
+  if (collectionChanged) {
+    console.log("[v0] UPDATE ARTIFACT - Collection change detected:", {
+      from: oldCollectionId,
+      to: newCollectionId
+    })
+  }
+
   const updateData: any = {
     title: validatedFields.data.title,
     description: validatedFields.data.description,
@@ -548,6 +559,10 @@ export async function updateArtifact(input: UpdateArtifactInput, oldMediaUrls: s
     slug: newSlug,
     thumbnail_url: thumbnailUrl,
     updated_at: new Date().toISOString(),
+  }
+
+  if (collectionChanged) {
+    updateData.collection_id = newCollectionId
   }
 
   if (validatedFields.data.image_captions !== undefined) {
@@ -566,7 +581,8 @@ export async function updateArtifact(input: UpdateArtifactInput, oldMediaUrls: s
     artifactId: validatedFields.data.id,
     mediaCount: uniqueMediaUrls.length,
     hasThumbnail: !!thumbnailUrl,
-    thumbnail_url: thumbnailUrl || "NULL"
+    thumbnail_url: thumbnailUrl || "NULL",
+    collectionChanged
   })
 
   const { data, error } = await supabase
@@ -606,8 +622,22 @@ export async function updateArtifact(input: UpdateArtifactInput, oldMediaUrls: s
   revalidatePath(`/artifacts/${existingArtifact.slug}`)
   revalidatePath(`/artifacts/${data.slug}`)
   revalidatePath("/collections")
+  
   if (existingArtifact.collection?.slug) {
     revalidatePath(`/collections/${existingArtifact.collection.slug}`)
+  }
+  
+  if (collectionChanged) {
+    // Fetch new collection slug for revalidation
+    const { data: newCollection } = await supabase
+      .from("collections")
+      .select("slug")
+      .eq("id", newCollectionId)
+      .single()
+    
+    if (newCollection?.slug) {
+      revalidatePath(`/collections/${newCollection.slug}`)
+    }
   }
 
   return { success: true, data, slug: data.slug }
