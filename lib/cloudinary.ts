@@ -57,7 +57,7 @@ export function getThumbnailUrl(url: string): string {
   console.log("[v0] getThumbnailUrl input:", url)
   
   const result = isVideoFile(url) 
-    ? getCloudinaryUrl(url, "w_400,h_400,c_fill,q_auto,f_auto,so_1.0")
+    ? getCloudinaryUrl(url, "w_400,h_400,c_fill,q_auto,f_jpg,so_1.0,du_0")
     : getCloudinaryUrl(url, "w_400,h_400,c_fill,q_auto,f_auto")
   
   console.log("[v0] getThumbnailUrl output:", result)
