@@ -2,6 +2,8 @@ import { AppLayout } from "@/components/app-layout"
 import { getCurrentUser } from "@/lib/supabase/server"
 import { ThemeToggle } from "@/components/theme-toggle"
 
+export const dynamic = 'force-dynamic'
+
 export default async function StoriesPage() {
   const user = await getCurrentUser()
 
