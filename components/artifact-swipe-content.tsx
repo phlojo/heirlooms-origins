@@ -12,9 +12,16 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible"
 import { AddMediaModal } from "@/components/add-media-modal"
-import { CollectionSelector } from "@/components/collection-selector"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { ChevronDown, Plus, Save, X, Trash2, Loader2, Pencil, Share2, BarChart3, MessageSquare, Star } from 'lucide-react'
 import { updateArtifact, deleteMediaFromArtifact, deleteArtifact } from "@/lib/actions/artifacts"
+import { getMyCollections } from "@/lib/actions/collections"
 import { cleanupPendingUploads } from "@/lib/actions/pending-uploads"
 import { useRouter } from 'next/navigation'
 import { isImageUrl, isVideoUrl } from "@/lib/media"
@@ -108,6 +115,9 @@ export function ArtifactSwipeContent({
   const [userId, setUserId] = useState<string>("")
   const [isAdmin, setIsAdmin] = useState(false)
 
+  const [collections, setCollections] = useState<Array<{ id: string; title: string }>>([])
+  const [loadingCollections, setLoadingCollections] = useState(false)
+
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (user) {
@@ -124,6 +134,22 @@ export function ArtifactSwipeContent({
       }
     })
   }, [supabase])
+
+  useEffect(() => {
+    if (isEditMode && userId) {
+      setLoadingCollections(true)
+      getMyCollections(userId)
+        .then((result) => {
+          if (result.success && result.collections) {
+            setCollections(result.collections)
+          }
+        })
+        .finally(() => {
+          setLoadingCollections(false)
+        })
+    }
+  }, [isEditMode, userId])
+
 
   const totalMedia = editMediaUrls.length
   const audioFiles = editMediaUrls.filter((url) => isAudioFile(url)).length
@@ -451,12 +477,26 @@ export function ArtifactSwipeContent({
 
         {isEditMode && (
           <section className="space-y-2">
-            <CollectionSelector
-              userId={userId}
-              value={editCollectionId}
-              onChange={setEditCollectionId}
-              disabled={isSaving}
-            />
+            <label htmlFor="collection" className="text-sm font-medium text-foreground">
+              Choose Collection
+            </label>
+            <Select 
+              value={editCollectionId} 
+              onValueChange={setEditCollectionId}
+              disabled={isSaving || loadingCollections}
+            >
+              <SelectTrigger id="collection" className="w-full">
+                <SelectValue placeholder="Select a collection..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="uncategorized">Uncategorized</SelectItem>
+                {collections.map((collection) => (
+                  <SelectItem key={collection.id} value={collection.id}>
+                    {collection.title}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <p className="text-sm text-muted-foreground">Move this artifact to a different collection</p>
           </section>
         )}
