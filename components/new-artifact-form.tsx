@@ -124,6 +124,9 @@ export function NewArtifactForm({ collectionId, userId }: NewArtifactFormProps) 
       ...data,
       media_urls: normalizedUrls,
       thumbnail_url: selectedThumbnailUrl,
+      image_captions: Object.keys(imageCaptions).length > 0 ? imageCaptions : undefined,
+      video_summaries: Object.keys(videoSummaries).length > 0 ? videoSummaries : undefined,
+      audio_transcripts: Object.keys(audioTranscripts).length > 0 ? audioTranscripts : undefined,
     }
 
     setError(null)
@@ -354,18 +357,20 @@ export function NewArtifactForm({ collectionId, userId }: NewArtifactFormProps) 
                           Your browser does not support the video tag.
                         </video>
                       </div>
-                      {videoSummaries[url] && (
-                        <div className="rounded-lg bg-muted/50 p-3 text-sm mx-6 lg:mx-8">
-                          <p className="font-medium text-muted-foreground mb-1">AI Video Summary:</p>
-                          <p>{videoSummaries[url]}</p>
+                      <div className="px-6 lg:px-8 space-y-3">
+                        {videoSummaries[url] && (
+                          <div className="rounded-lg bg-muted/50 p-3 text-sm">
+                            <p className="font-medium text-muted-foreground mb-1">AI Video Summary:</p>
+                            <p>{videoSummaries[url]}</p>
+                          </div>
+                        )}
+                        <div className="flex justify-start">
+                          <GenerateVideoSummaryButton
+                            artifactId="temp"
+                            videoUrl={url}
+                            onSummaryGenerated={(summary) => handleVideoSummaryGenerated(url, summary)}
+                          />
                         </div>
-                      )}
-                      <div className="flex justify-start px-6 lg:px-8">
-                        <GenerateVideoSummaryButton
-                          artifactId="temp"
-                          videoUrl={url}
-                          onSummaryGenerated={(summary) => handleVideoSummaryGenerated(url, summary)}
-                        />
                       </div>
                     </div>
                   )
@@ -405,18 +410,20 @@ export function NewArtifactForm({ collectionId, userId }: NewArtifactFormProps) 
                           crossOrigin="anonymous"
                         />
                       </div>
-                      {imageCaptions[url] && (
-                        <div className="rounded-lg bg-muted/50 p-3 text-sm mx-6 lg:mx-8">
-                          <p className="font-medium text-muted-foreground mb-1">AI Caption:</p>
-                          <p>{imageCaptions[url]}</p>
+                      <div className="px-6 lg:px-8 space-y-3">
+                        {imageCaptions[url] && (
+                          <div className="rounded-lg bg-muted/50 p-3 text-sm">
+                            <p className="font-medium text-muted-foreground mb-1">AI Caption:</p>
+                            <p>{imageCaptions[url]}</p>
+                          </div>
+                        )}
+                        <div className="flex justify-start">
+                          <GenerateImageCaptionButton
+                            artifactId="temp"
+                            imageUrl={url}
+                            onCaptionGenerated={handleCaptionGenerated}
+                          />
                         </div>
-                      )}
-                      <div className="flex justify-start px-6 lg:px-8">
-                        <GenerateImageCaptionButton
-                          artifactId="temp"
-                          imageUrl={url}
-                          onCaptionGenerated={handleCaptionGenerated}
-                        />
                       </div>
                     </div>
                   )

@@ -1,8 +1,8 @@
 "use client"
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import { Trash2, Loader2 } from "lucide-react"
+import { useState, useTransition } from "react"
+import { useRouter } from 'next/navigation'
+import { Trash2, Loader2 } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import {
   AlertDialog,
@@ -30,6 +30,7 @@ export function DeleteCollectionButton({ collectionId, collectionTitle }: Delete
   const [isOpen, setIsOpen] = useState(false)
   const [deleteArtifacts, setDeleteArtifacts] = useState<"delete" | "keep">("keep")
   const router = useRouter()
+  const [isPending, startTransition] = useTransition()
 
   const handleDelete = async () => {
     setIsDeleting(true)
@@ -43,8 +44,10 @@ export function DeleteCollectionButton({ collectionId, collectionTitle }: Delete
             ? "Collection and artifacts deleted successfully"
             : "Collection deleted. Artifacts moved to Unsorted",
         )
-        router.push("/collections")
-        router.refresh()
+        startTransition(() => {
+          router.push("/collections")
+          router.refresh()
+        })
       } else {
         toast.error(result.error || "Failed to delete collection")
         setIsDeleting(false)
@@ -61,7 +64,7 @@ export function DeleteCollectionButton({ collectionId, collectionTitle }: Delete
   return (
     <AlertDialog open={isOpen} onOpenChange={setIsOpen}>
       <AlertDialogTrigger asChild>
-        <Button variant="destructive" disabled={isDeleting}>
+        <Button variant="destructive" disabled={isDeleting || isPending}>
           <Trash2 className="mr-2 h-4 w-4" />
           Delete Collection
         </Button>
@@ -99,16 +102,16 @@ export function DeleteCollectionButton({ collectionId, collectionTitle }: Delete
         </div>
 
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+          <AlertDialogCancel disabled={isDeleting || isPending}>Cancel</AlertDialogCancel>
           <AlertDialogAction
             onClick={(e) => {
               e.preventDefault()
               handleDelete()
             }}
-            disabled={isDeleting}
+            disabled={isDeleting || isPending}
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
           >
-            {isDeleting ? (
+            {isDeleting || isPending ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Deleting...

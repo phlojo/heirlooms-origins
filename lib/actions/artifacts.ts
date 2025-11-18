@@ -19,7 +19,10 @@ export async function createArtifact(input: CreateArtifactInput): Promise<{ erro
     title: input.title,
     mediaCount: input.media_urls?.length || 0,
     collectionId: input.collectionId,
-    hasThumbnailUrl: !!input.thumbnail_url // Log if user selected thumbnail
+    hasThumbnailUrl: !!input.thumbnail_url,
+    hasImageCaptions: !!input.image_captions && Object.keys(input.image_captions).length > 0,
+    hasVideoSummaries: !!input.video_summaries && Object.keys(input.video_summaries).length > 0,
+    hasAudioTranscripts: !!input.audio_transcripts && Object.keys(input.audio_transcripts).length > 0,
   })
 
   const validatedFields = createArtifactSchema.safeParse(input)
@@ -73,11 +76,36 @@ export async function createArtifact(input: CreateArtifactInput): Promise<{ erro
     })
   }
 
-  const baseSlug = generateSlug(validatedFields.data.title)
-  const slug = await generateUniqueSlug(baseSlug, async (slug) => {
-    const { data } = await supabase.from("artifacts").select("id").eq("slug", slug).maybeSingle()
-    return !!data
-  })
+  const timestamp = Date.now()
+  const baseSlug = `${generateSlug(validatedFields.data.title)}-${timestamp}`
+  
+  let slug = baseSlug
+  let attempts = 0
+  const maxAttempts = 5
+  
+  // Retry logic to handle potential race conditions
+  while (attempts < maxAttempts) {
+    const { data: existingSlug } = await supabase
+      .from("artifacts")
+      .select("id")
+      .eq("slug", slug)
+      .maybeSingle()
+    
+    if (!existingSlug) {
+      // Slug is available, proceed
+      break
+    }
+    
+    // Collision detected, append counter
+    attempts++
+    slug = `${baseSlug}-${attempts}`
+    console.log(`[v0] CREATE ARTIFACT - Slug collision detected, trying: ${slug}`)
+  }
+  
+  if (attempts >= maxAttempts) {
+    console.error("[v0] CREATE ARTIFACT - Failed to generate unique slug after max attempts")
+    return { error: "Unable to create artifact. Please try again." }
+  }
 
   const thumbnailUrl = validatedFields.data.thumbnail_url || getPrimaryVisualMediaUrl(validMediaUrls)
   console.log("[v0] CREATE ARTIFACT - Thumbnail selection:", {
@@ -85,7 +113,7 @@ export async function createArtifact(input: CreateArtifactInput): Promise<{ erro
     thumbnailUrl: thumbnailUrl || "NONE"
   })
 
-  const insertData = {
+  const insertData: any = {
     title: validatedFields.data.title,
     description: validatedFields.data.description,
     collection_id: validatedFields.data.collectionId,
@@ -94,20 +122,43 @@ export async function createArtifact(input: CreateArtifactInput): Promise<{ erro
     media_urls: validMediaUrls,
     user_id: user.id,
     slug,
-    thumbnail_url: thumbnailUrl, // Use user's selection or auto-selected
+    thumbnail_url: thumbnailUrl,
+  }
+
+  if (validatedFields.data.image_captions && Object.keys(validatedFields.data.image_captions).length > 0) {
+    insertData.image_captions = validatedFields.data.image_captions
+    console.log("[v0] CREATE ARTIFACT - Including image captions:", Object.keys(validatedFields.data.image_captions).length)
+  }
+
+  if (validatedFields.data.video_summaries && Object.keys(validatedFields.data.video_summaries).length > 0) {
+    insertData.video_summaries = validatedFields.data.video_summaries
+    console.log("[v0] CREATE ARTIFACT - Including video summaries:", Object.keys(validatedFields.data.video_summaries).length)
+  }
+
+  if (validatedFields.data.audio_transcripts && Object.keys(validatedFields.data.audio_transcripts).length > 0) {
+    insertData.audio_transcripts = validatedFields.data.audio_transcripts
+    console.log("[v0] CREATE ARTIFACT - Including audio transcripts:", Object.keys(validatedFields.data.audio_transcripts).length)
   }
 
   console.log("[v0] CREATE ARTIFACT - Inserting into DB:", {
     ...insertData,
     media_urls: `[${insertData.media_urls.length} URLs]`,
     hasVisualMedia: !!thumbnailUrl,
-    thumbnail_url: thumbnailUrl || "NULL"
+    thumbnail_url: thumbnailUrl || "NULL",
+    slug,
+    hasAiData: !!(insertData.image_captions || insertData.video_summaries || insertData.audio_transcripts)
   })
 
   const { data, error } = await supabase.from("artifacts").insert(insertData).select().single()
 
   if (error) {
     console.error("[v0] CREATE ARTIFACT - Database error:", error)
+    
+    if (error.code === '23505' && error.message?.includes('artifacts_slug_key')) {
+      console.error("[v0] CREATE ARTIFACT - Slug collision occurred despite checks:", slug)
+      return { error: "Unable to create artifact due to a naming conflict. Please try again." }
+    }
+    
     return { error: "Failed to create artifact. Please try again." }
   }
 
@@ -115,7 +166,10 @@ export async function createArtifact(input: CreateArtifactInput): Promise<{ erro
     id: data.id,
     slug: data.slug,
     mediaCount: data.media_urls?.length || 0,
-    hasThumbnail: !!data.thumbnail_url
+    hasThumbnail: !!data.thumbnail_url,
+    savedImageCaptions: data.image_captions ? Object.keys(data.image_captions).length : 0,
+    savedVideoSummaries: data.video_summaries ? Object.keys(data.video_summaries).length : 0,
+    savedAudioTranscripts: data.audio_transcripts ? Object.keys(data.audio_transcripts).length : 0,
   })
 
   if (!data.thumbnail_url) {
@@ -478,6 +532,10 @@ export async function updateArtifact(input: UpdateArtifactInput, oldMediaUrls: s
 
   if (validatedFields.data.video_summaries !== undefined) {
     updateData.video_summaries = validatedFields.data.video_summaries
+  }
+
+  if (validatedFields.data.audio_transcripts !== undefined) {
+    updateData.audio_transcripts = validatedFields.data.audio_transcripts
   }
 
   console.log("[v0] UPDATE ARTIFACT - Updating with validated data:", {

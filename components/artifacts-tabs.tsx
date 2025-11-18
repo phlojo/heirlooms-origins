@@ -6,7 +6,7 @@ import { Plus, Loader2 } from 'lucide-react'
 import Link from "next/link"
 import { ArtifactCard } from "@/components/artifact-card"
 import { LoginModule } from "@/components/login-module"
-import { useEffect, useState } from "react"
+import { useEffect, useState, useTransition } from "react"
 import { usePathname } from 'next/navigation'
 import { getAllPublicArtifactsPaginated, getMyArtifactsPaginated } from "@/lib/actions/artifacts"
 
@@ -41,8 +41,8 @@ export function ArtifactsTabs({ user, myArtifacts, allArtifacts }: ArtifactsTabs
   const [myArtifactsList, setMyArtifactsList] = useState<Artifact[]>(myArtifacts)
   const [allHasMore, setAllHasMore] = useState(allArtifacts.length === PAGE_SIZE)
   const [myHasMore, setMyHasMore] = useState(myArtifacts.length === PAGE_SIZE)
-  const [isLoadingAll, setIsLoadingAll] = useState(false)
-  const [isLoadingMy, setIsLoadingMy] = useState(false)
+  const [isLoadingAll, startTransitionAll] = useTransition()
+  const [isLoadingMy, startTransitionMy] = useTransition()
 
   useEffect(() => {
     const savedTab = sessionStorage.getItem(STORAGE_KEY)
@@ -59,39 +59,35 @@ export function ArtifactsTabs({ user, myArtifacts, allArtifacts }: ArtifactsTabs
   const handleLoadMoreAll = async () => {
     if (isLoadingAll || !allHasMore) return
 
-    setIsLoadingAll(true)
-    try {
-      const lastArtifact = allArtifactsList[allArtifactsList.length - 1]
-      const cursor = lastArtifact ? { createdAt: lastArtifact.created_at, id: lastArtifact.id } : undefined
+    const lastArtifact = allArtifactsList[allArtifactsList.length - 1]
+    const cursor = lastArtifact ? { createdAt: lastArtifact.created_at, id: lastArtifact.id } : undefined
 
-      const result = await getAllPublicArtifactsPaginated(user?.id, PAGE_SIZE, cursor)
-      
-      setAllArtifactsList((prev) => [...prev, ...result.artifacts])
-      setAllHasMore(result.hasMore)
-    } catch (error) {
-      console.error("Error loading more artifacts:", error)
-    } finally {
-      setIsLoadingAll(false)
-    }
+    startTransitionAll(async () => {
+      try {
+        const result = await getAllPublicArtifactsPaginated(user?.id, PAGE_SIZE, cursor)
+        setAllArtifactsList((prev) => [...prev, ...result.artifacts])
+        setAllHasMore(result.hasMore)
+      } catch (error) {
+        console.error("Error loading more artifacts:", error)
+      }
+    })
   }
 
   const handleLoadMoreMy = async () => {
     if (isLoadingMy || !myHasMore || !user) return
 
-    setIsLoadingMy(true)
-    try {
-      const lastArtifact = myArtifactsList[myArtifactsList.length - 1]
-      const cursor = lastArtifact ? { createdAt: lastArtifact.created_at, id: lastArtifact.id } : undefined
+    const lastArtifact = myArtifactsList[myArtifactsList.length - 1]
+    const cursor = lastArtifact ? { createdAt: lastArtifact.created_at, id: lastArtifact.id } : undefined
 
-      const result = await getMyArtifactsPaginated(user.id, PAGE_SIZE, cursor)
-      
-      setMyArtifactsList((prev) => [...prev, ...result.artifacts])
-      setMyHasMore(result.hasMore)
-    } catch (error) {
-      console.error("Error loading more artifacts:", error)
-    } finally {
-      setIsLoadingMy(false)
-    }
+    startTransitionMy(async () => {
+      try {
+        const result = await getMyArtifactsPaginated(user.id, PAGE_SIZE, cursor)
+        setMyArtifactsList((prev) => [...prev, ...result.artifacts])
+        setMyHasMore(result.hasMore)
+      } catch (error) {
+        console.error("Error loading more artifacts:", error)
+      }
+    })
   }
 
   return (

@@ -1,10 +1,10 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useTransition } from "react"
 import { Button } from "@/components/ui/button"
-import { Sparkles, Loader2 } from "lucide-react"
+import { Sparkles, Loader2 } from 'lucide-react'
 import { useToast } from "@/hooks/use-toast"
-import { useRouter } from "next/navigation"
+import { useRouter } from 'next/navigation'
 
 interface TranscribeAudioButtonProps {
   artifactId: string
@@ -15,6 +15,7 @@ export function TranscribeAudioButton({ artifactId, audioUrl }: TranscribeAudioB
   const [isLoading, setIsLoading] = useState(false)
   const { toast } = useToast()
   const router = useRouter()
+  const [isPending, startTransition] = useTransition()
 
   const handleTranscribe = async () => {
     setIsLoading(true)
@@ -37,7 +38,9 @@ export function TranscribeAudioButton({ artifactId, audioUrl }: TranscribeAudioB
         description: "Audio transcribed successfully",
       })
 
-      router.refresh()
+      startTransition(() => {
+        router.refresh()
+      })
     } catch (error) {
       toast({
         title: "Error",
@@ -52,13 +55,13 @@ export function TranscribeAudioButton({ artifactId, audioUrl }: TranscribeAudioB
   return (
     <Button
       onClick={handleTranscribe}
-      disabled={isLoading}
+      disabled={isLoading || isPending}
       variant="outline"
       size="sm"
       className="gap-2 bg-transparent"
     >
-      {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-      {isLoading ? "Transcribing..." : "AI Transcribe Audio"}
+      {isLoading || isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+      {isLoading || isPending ? "Transcribing..." : "AI Transcribe Audio"}
     </Button>
   )
 }

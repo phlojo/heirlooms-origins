@@ -24,7 +24,8 @@ export async function generateCloudinarySignature(userId: string, fileName: stri
     const now = new Date()
     const yyyy = now.getUTCFullYear()
     const mm = String(now.getUTCMonth() + 1).padStart(2, "0")
-    const publicId = `users/${safeUser}/artifacts/${yyyy}/${mm}/${baseName}`
+    const uniqueTimestamp = now.getTime()
+    const publicId = `users/${safeUser}/artifacts/${yyyy}/${mm}/${baseName}_${uniqueTimestamp}`
 
     const eager = "c_fill,w_640,h_640,q_auto,f_auto|c_limit,w_1200,h_1200,q_auto,f_auto"
 
@@ -74,7 +75,8 @@ export async function generateCloudinaryAudioSignature(userId: string, fileName:
     const now = new Date()
     const yyyy = now.getUTCFullYear()
     const mm = String(now.getUTCMonth() + 1).padStart(2, "0")
-    const publicId = `users/${safeUser}/artifacts/audio/${yyyy}/${mm}/${baseName}`
+    const uniqueTimestamp = now.getTime()
+    const publicId = `users/${safeUser}/artifacts/audio/${yyyy}/${mm}/${baseName}_${uniqueTimestamp}`
 
     const crypto = await import("node:crypto")
     const toSign = `public_id=${publicId}&timestamp=${timestamp}`
@@ -196,7 +198,8 @@ export async function generateCloudinaryTranscriptionSignature(
     const now = new Date()
     const yyyy = now.getUTCFullYear()
     const mm = String(now.getUTCMonth() + 1).padStart(2, "0")
-    const publicId = `users/${safeUser}/transcriptions/${entityType}/${fieldType}/${yyyy}/${mm}/${baseName}`
+    const uniqueTimestamp = now.getTime()
+    const publicId = `users/${safeUser}/transcriptions/${entityType}/${fieldType}/${yyyy}/${mm}/${baseName}_${uniqueTimestamp}`
 
     const crypto = await import("node:crypto")
     const toSign = `public_id=${publicId}&timestamp=${timestamp}`

@@ -471,7 +471,7 @@ export async function getMyCollectionsPaginated(
 
         const thumbnailImages = artifacts?.map((artifact) => getPrimaryVisualMediaUrl(artifact.media_urls)).filter(Boolean) || []
 
-        const isUncategorized = collection.slug === "uncategorized"
+        const isUncategorized = collection.slug.startsWith("uncategorized")
 
         return {
           ...collection,

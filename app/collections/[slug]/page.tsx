@@ -42,7 +42,7 @@ export default async function CollectionDetailPage({
     notFound()
   }
   
-  const isUncategorized = collection.slug === "uncategorized"
+  const isUncategorized = collection.slug.startsWith("uncategorized")
 
   const isAdmin = await isCurrentUserAdmin()
   

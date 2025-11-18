@@ -1,9 +1,9 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { Sparkles, Loader2 } from "lucide-react"
-import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { Sparkles, Loader2 } from 'lucide-react'
+import { useState, useTransition } from "react"
+import { useRouter } from 'next/navigation'
 import { useToast } from "@/hooks/use-toast"
 import { fetchJson } from "@/lib/fetchJson"
 
@@ -15,6 +15,7 @@ export function GenerateDescriptionButton({ artifactId }: GenerateDescriptionBut
   const [isGenerating, setIsGenerating] = useState(false)
   const router = useRouter()
   const { toast } = useToast()
+  const [isPending, startTransition] = useTransition()
 
   async function handleGenerate() {
     setIsGenerating(true)
@@ -29,7 +30,9 @@ export function GenerateDescriptionButton({ artifactId }: GenerateDescriptionBut
         description: "AI description generated successfully",
       })
 
-      router.refresh()
+      startTransition(() => {
+        router.refresh()
+      })
     } catch (err) {
       console.error("[v0] Generate description error:", err)
       const errorMessage = err instanceof Error ? err.message : "Failed to generate description"
@@ -49,10 +52,10 @@ export function GenerateDescriptionButton({ artifactId }: GenerateDescriptionBut
       variant="outline"
       size="sm"
       onClick={handleGenerate}
-      disabled={isGenerating}
+      disabled={isGenerating || isPending}
       className="gap-2 bg-transparent"
     >
-      {isGenerating ? (
+      {isGenerating || isPending ? (
         <>
           <Loader2 className="h-4 w-4 animate-spin" />
           Generating...
