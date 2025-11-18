@@ -8,7 +8,7 @@ import { CollectionCard } from "@/components/collection-card"
 import { UncategorizedCollectionCard } from "@/components/uncategorized-collection-card"
 import { EmptyCollections } from "@/components/empty-collections"
 import { LoginModule } from "@/components/login-module"
-import { useEffect, useState } from "react"
+import { useEffect, useState, useTransition, useMemo } from "react"
 import { usePathname } from 'next/navigation'
 import { getAllPublicCollectionsPaginated, getMyCollectionsPaginated } from "@/lib/actions/collections"
 
@@ -44,6 +44,8 @@ export function CollectionsTabs({ user, myCollections, allCollections, myHasMore
   const [myHasMore, setMyHasMore] = useState(initialMyHasMore)
   const [isLoadingAll, setIsLoadingAll] = useState(false)
   const [isLoadingMy, setIsLoadingMy] = useState(false)
+  
+  const [isPending, startTransition] = useTransition()
 
   useEffect(() => {
     const savedTab = sessionStorage.getItem(STORAGE_KEY)
@@ -53,11 +55,13 @@ export function CollectionsTabs({ user, myCollections, allCollections, myHasMore
   }, [])
 
   const handleTabChange = (value: string) => {
-    setActiveTab(value)
-    sessionStorage.setItem(STORAGE_KEY, value)
+    startTransition(() => {
+      setActiveTab(value)
+      sessionStorage.setItem(STORAGE_KEY, value)
+    })
   }
 
-  const handleLoadMoreAll = async () => {
+  const handleLoadMoreAll = useMemo(() => async () => {
     if (isLoadingAll || !allHasMore) return
 
     setIsLoadingAll(true)
@@ -74,9 +78,9 @@ export function CollectionsTabs({ user, myCollections, allCollections, myHasMore
     } finally {
       setIsLoadingAll(false)
     }
-  }
+  }, [isLoadingAll, allHasMore, allCollectionsList, user?.id])
 
-  const handleLoadMoreMy = async () => {
+  const handleLoadMoreMy = useMemo(() => async () => {
     if (isLoadingMy || !myHasMore || !user) return
 
     setIsLoadingMy(true)
@@ -93,7 +97,7 @@ export function CollectionsTabs({ user, myCollections, allCollections, myHasMore
     } finally {
       setIsLoadingMy(false)
     }
-  }
+  }, [isLoadingMy, myHasMore, myCollectionsList, user])
 
   return (
     <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
@@ -116,7 +120,7 @@ export function CollectionsTabs({ user, myCollections, allCollections, myHasMore
         )}
       </div>
 
-      <TabsContent value="all" className="mt-6">
+      <TabsContent value="all" className={`mt-6 transition-opacity ${isPending ? 'opacity-50' : 'opacity-100'}`}>
         {allCollectionsList.length > 0 ? (
           <>
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -152,7 +156,7 @@ export function CollectionsTabs({ user, myCollections, allCollections, myHasMore
         )}
       </TabsContent>
 
-      <TabsContent value="mine" className="mt-6">
+      <TabsContent value="mine" className={`mt-6 transition-opacity ${isPending ? 'opacity-50' : 'opacity-100'}`}>
         {!user ? (
           <div className="mx-auto max-w-md">
             <LoginModule returnTo={pathname} title="Access Your Collections" showBackButton={false} />
