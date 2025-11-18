@@ -19,7 +19,10 @@ export async function createArtifact(input: CreateArtifactInput): Promise<{ erro
     title: input.title,
     mediaCount: input.media_urls?.length || 0,
     collectionId: input.collectionId,
-    hasThumbnailUrl: !!input.thumbnail_url // Log if user selected thumbnail
+    hasThumbnailUrl: !!input.thumbnail_url,
+    hasImageCaptions: !!input.image_captions && Object.keys(input.image_captions).length > 0,
+    hasVideoSummaries: !!input.video_summaries && Object.keys(input.video_summaries).length > 0,
+    hasAudioTranscripts: !!input.audio_transcripts && Object.keys(input.audio_transcripts).length > 0,
   })
 
   const validatedFields = createArtifactSchema.safeParse(input)
@@ -110,7 +113,7 @@ export async function createArtifact(input: CreateArtifactInput): Promise<{ erro
     thumbnailUrl: thumbnailUrl || "NONE"
   })
 
-  const insertData = {
+  const insertData: any = {
     title: validatedFields.data.title,
     description: validatedFields.data.description,
     collection_id: validatedFields.data.collectionId,
@@ -122,12 +125,28 @@ export async function createArtifact(input: CreateArtifactInput): Promise<{ erro
     thumbnail_url: thumbnailUrl,
   }
 
+  if (validatedFields.data.image_captions && Object.keys(validatedFields.data.image_captions).length > 0) {
+    insertData.image_captions = validatedFields.data.image_captions
+    console.log("[v0] CREATE ARTIFACT - Including image captions:", Object.keys(validatedFields.data.image_captions).length)
+  }
+
+  if (validatedFields.data.video_summaries && Object.keys(validatedFields.data.video_summaries).length > 0) {
+    insertData.video_summaries = validatedFields.data.video_summaries
+    console.log("[v0] CREATE ARTIFACT - Including video summaries:", Object.keys(validatedFields.data.video_summaries).length)
+  }
+
+  if (validatedFields.data.audio_transcripts && Object.keys(validatedFields.data.audio_transcripts).length > 0) {
+    insertData.audio_transcripts = validatedFields.data.audio_transcripts
+    console.log("[v0] CREATE ARTIFACT - Including audio transcripts:", Object.keys(validatedFields.data.audio_transcripts).length)
+  }
+
   console.log("[v0] CREATE ARTIFACT - Inserting into DB:", {
     ...insertData,
     media_urls: `[${insertData.media_urls.length} URLs]`,
     hasVisualMedia: !!thumbnailUrl,
     thumbnail_url: thumbnailUrl || "NULL",
-    slug
+    slug,
+    hasAiData: !!(insertData.image_captions || insertData.video_summaries || insertData.audio_transcripts)
   })
 
   const { data, error } = await supabase.from("artifacts").insert(insertData).select().single()
@@ -147,7 +166,10 @@ export async function createArtifact(input: CreateArtifactInput): Promise<{ erro
     id: data.id,
     slug: data.slug,
     mediaCount: data.media_urls?.length || 0,
-    hasThumbnail: !!data.thumbnail_url
+    hasThumbnail: !!data.thumbnail_url,
+    savedImageCaptions: data.image_captions ? Object.keys(data.image_captions).length : 0,
+    savedVideoSummaries: data.video_summaries ? Object.keys(data.video_summaries).length : 0,
+    savedAudioTranscripts: data.audio_transcripts ? Object.keys(data.audio_transcripts).length : 0,
   })
 
   if (!data.thumbnail_url) {
@@ -510,6 +532,10 @@ export async function updateArtifact(input: UpdateArtifactInput, oldMediaUrls: s
 
   if (validatedFields.data.video_summaries !== undefined) {
     updateData.video_summaries = validatedFields.data.video_summaries
+  }
+
+  if (validatedFields.data.audio_transcripts !== undefined) {
+    updateData.audio_transcripts = validatedFields.data.audio_transcripts
   }
 
   console.log("[v0] UPDATE ARTIFACT - Updating with validated data:", {
