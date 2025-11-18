@@ -3,7 +3,7 @@
 import type React from "react"
 import { createArtifact } from "@/lib/actions/artifacts"
 import { generateCloudinarySignature } from "@/lib/actions/cloudinary"
-import { trackPendingUpload, markUploadsAsSaved, cleanupPendingUploads } from "@/lib/actions/pending-uploads"
+import { trackPendingUpload, cleanupPendingUploads } from "@/lib/actions/pending-uploads"
 import { createArtifactSchema } from "@/lib/schemas"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
@@ -131,37 +131,25 @@ export function NewArtifactForm({ collectionId, userId }: NewArtifactFormProps) 
 
     setError(null)
 
-    try {
-      const result = await createArtifact(submitData)
+    const result = await createArtifact(submitData)
 
-      if (result?.error) {
-        if (result.fieldErrors) {
-          Object.entries(result.fieldErrors).forEach(([field, messages]) => {
-            if (messages && Array.isArray(messages) && messages.length > 0) {
-              form.setError(field as keyof FormData, {
-                type: "server",
-                message: messages[0],
-              })
-            }
-          })
-          const errorSummary = Object.entries(result.fieldErrors)
-            .map(([field, messages]) => `${field}: ${Array.isArray(messages) ? messages.join(", ") : messages}`)
-            .join("; ")
-          setError(`Validation errors: ${errorSummary}`)
-        } else {
-          setError(result.error)
-        }
+    if (result?.error) {
+      if (result.fieldErrors) {
+        Object.entries(result.fieldErrors).forEach(([field, messages]) => {
+          if (messages && Array.isArray(messages) && messages.length > 0) {
+            form.setError(field as keyof FormData, {
+              type: "server",
+              message: messages[0],
+            })
+          }
+        })
+        const errorSummary = Object.entries(result.fieldErrors)
+          .map(([field, messages]) => `${field}: ${Array.isArray(messages) ? messages.join(", ") : messages}`)
+          .join("; ")
+        setError(`Validation errors: ${errorSummary}`)
       } else {
-        console.log('[v0] Marking all uploaded URLs as saved:', normalizedUrls)
-        await markUploadsAsSaved(normalizedUrls)
+        setError(result.error)
       }
-    } catch (error) {
-      if (error instanceof Error && error.message === "NEXT_REDIRECT") {
-        console.log('[v0] Redirect detected - marking all URLs as saved:', normalizedUrls)
-        await markUploadsAsSaved(normalizedUrls)
-        return
-      }
-      setError(error instanceof Error ? error.message : "An unexpected error occurred")
     }
   }
 

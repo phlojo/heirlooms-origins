@@ -176,6 +176,20 @@ export async function createArtifact(input: CreateArtifactInput): Promise<{ erro
     console.log("[v0] CREATE ARTIFACT - Note: Artifact created without thumbnail (audio-only or no media)")
   }
 
+  console.log("[v0] CREATE ARTIFACT - Marking uploads as saved:", validMediaUrls.length, "URLs")
+  const { error: markError } = await supabase
+    .from("pending_uploads")
+    .delete()
+    .in("cloudinary_url", validMediaUrls)
+    .eq("user_id", user.id)
+
+  if (markError) {
+    console.error("[v0] CREATE ARTIFACT - Failed to mark uploads as saved (non-fatal):", markError)
+    // Don't fail the artifact creation, but log the error
+  } else {
+    console.log("[v0] CREATE ARTIFACT - Successfully removed pending uploads from tracking table")
+  }
+
   revalidatePath("/artifacts")
   revalidatePath("/collections")
   if (validatedFields.data.collectionId) {
