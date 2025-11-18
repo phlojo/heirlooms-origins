@@ -149,10 +149,12 @@ export function NewArtifactForm({ collectionId, userId }: NewArtifactFormProps) 
           setError(result.error)
         }
       } else {
+        console.log('[v0] Marking all uploaded URLs as saved:', normalizedUrls)
         await markUploadsAsSaved(normalizedUrls)
       }
     } catch (error) {
       if (error instanceof Error && error.message === "NEXT_REDIRECT") {
+        console.log('[v0] Redirect detected - marking all URLs as saved:', normalizedUrls)
         await markUploadsAsSaved(normalizedUrls)
         return
       }

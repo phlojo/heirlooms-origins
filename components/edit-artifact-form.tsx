@@ -276,7 +276,10 @@ export function EditArtifactForm({ artifact, userId }: EditArtifactFormProps) {
         setError(result.error)
       } else {
         const allUrls = values.media_urls || []
-        await markUploadsAsSaved(allUrls)
+        console.log('[v0] Marking newly uploaded URLs as saved:', newlyUploadedUrlsRef.current)
+        if (newlyUploadedUrlsRef.current.length > 0) {
+          await markUploadsAsSaved(newlyUploadedUrlsRef.current)
+        }
         
         setSuccess(true)
         setHasUnsavedChanges(false)

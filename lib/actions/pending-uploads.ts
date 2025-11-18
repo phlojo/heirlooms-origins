@@ -60,12 +60,17 @@ export async function trackPendingUpload(url: string, resourceType: 'image' | 'v
  * Remove URLs from pending uploads when they're successfully saved
  */
 export async function markUploadsAsSaved(urls: string[]) {
+  console.log('[v0] markUploadsAsSaved called with URLs:', urls)
+  
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   
   if (!user) {
+    console.error('[v0] markUploadsAsSaved: No user found')
     return { error: "Unauthorized" }
   }
+
+  console.log('[v0] markUploadsAsSaved: Deleting from pending_uploads for user:', user.id)
 
   const { error } = await supabase
     .from("pending_uploads")
@@ -78,6 +83,7 @@ export async function markUploadsAsSaved(urls: string[]) {
     return { error: error.message }
   }
 
+  console.log('[v0] markUploadsAsSaved: Successfully removed', urls.length, 'URLs from pending_uploads')
   return { success: true }
 }
 
