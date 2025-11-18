@@ -270,16 +270,17 @@ export function EditArtifactForm({ artifact, userId }: EditArtifactFormProps) {
     try {
       setError(null)
 
-      const result = await updateArtifact(values)
+      const submitValues = {
+        ...values,
+        thumbnail_url: selectedThumbnailUrl,
+      }
+
+      const result = await updateArtifact(submitValues, artifact.media_urls || [])
 
       if (result.error) {
         setError(result.error)
       } else {
-        const allUrls = values.media_urls || []
-        console.log('[v0] Marking newly uploaded URLs as saved:', newlyUploadedUrlsRef.current)
-        if (newlyUploadedUrlsRef.current.length > 0) {
-          await markUploadsAsSaved(newlyUploadedUrlsRef.current)
-        }
+        console.log('[v0] EDIT FORM: Artifact updated successfully, pending uploads cleaned up server-side')
         
         setSuccess(true)
         setHasUnsavedChanges(false)
