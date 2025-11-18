@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Camera, Video, Mic, Upload, X } from 'lucide-react'
 import { AudioRecorder } from "@/components/audio-recorder"
 import { generateCloudinarySignature, generateCloudinaryAudioSignature } from "@/lib/actions/cloudinary"
+import { trackPendingUpload } from "@/lib/actions/pending-uploads"
 import { normalizeMediaUrls, getFileSizeLimit, formatFileSize } from "@/lib/media"
 import { Progress } from "@/components/ui/progress"
 
@@ -214,6 +215,11 @@ export function AddMediaModal({ open, onOpenChange, artifactId, userId, onMediaA
 
         const secureUrl = await uploadPromise
         urls.push(secureUrl)
+        
+        const resourceType = selectedType === "audio" || file.type.startsWith("audio/") ? 'raw'
+          : selectedType === "video" || file.type.startsWith("video/") ? 'video'
+          : 'image'
+        await trackPendingUpload(secureUrl, resourceType)
       }
 
       console.log("[v0] All uploads complete, URLs:", urls)
@@ -282,6 +288,15 @@ export function AddMediaModal({ open, onOpenChange, artifactId, userId, onMediaA
           if (xhr.status >= 200 && xhr.status < 300) {
             try {
               const data = JSON.parse(xhr.responseText)
+              console.log("[v0] Upload successful!")
+              console.log("[v0] Response data:", {
+                public_id: data.public_id,
+                secure_url: data.secure_url,
+                format: data.format,
+                resource_type: data.resource_type,
+                width: data.width,
+                height: data.height
+              })
               resolve(data.secure_url)
             } catch (err) {
               reject(new Error("Failed to parse upload response"))
@@ -305,6 +320,9 @@ export function AddMediaModal({ open, onOpenChange, artifactId, userId, onMediaA
       })
 
       const secureUrl = await uploadPromise
+      
+      await trackPendingUpload(secureUrl, 'raw')
+      
       onMediaAdded([secureUrl])
       handleClose()
     } catch (err) {

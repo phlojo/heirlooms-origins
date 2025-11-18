@@ -2,7 +2,8 @@
 
 import type React from "react"
 import { updateArtifact } from "@/lib/actions/artifacts"
-import { generateCloudinarySignature, deleteCloudinaryMedia, extractPublicIdFromUrl } from "@/lib/actions/cloudinary"
+import { generateCloudinarySignature, extractPublicIdFromUrl } from "@/lib/actions/cloudinary"
+import { trackPendingUpload, markUploadsAsSaved, cleanupPendingUploads } from "@/lib/actions/pending-uploads"
 import { updateArtifactSchema } from "@/lib/schemas"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
@@ -11,7 +12,7 @@ import { Button } from "@/components/ui/button"
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { TranscriptionInput } from "@/components/transcription-input"
 import { useRouter } from 'next/navigation'
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect } from "react"
 import { X, Upload, ImageIcon, Loader2, Star } from 'lucide-react'
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { CheckCircle2 } from 'lucide-react'
@@ -51,10 +52,7 @@ export function EditArtifactForm({ artifact, userId }: EditArtifactFormProps) {
   const [showUnsavedDialog, setShowUnsavedDialog] = useState(false)
   const [pendingNavigation, setPendingNavigation] = useState<string | null>(null)
   const [selectedThumbnailUrl, setSelectedThumbnailUrl] = useState<string | null>(artifact.thumbnail_url || null)
-
-  const originalMediaUrlsRef = useRef<string[]>(artifact.media_urls || [])
-  const newlyUploadedUrlsRef = useRef<string[]>([])
-  const changesSavedRef = useRef(false)
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
 
   const form = useForm<FormData>({
     resolver: zodResolver(updateArtifactSchema),
@@ -85,69 +83,55 @@ export function EditArtifactForm({ artifact, userId }: EditArtifactFormProps) {
   }, [form.watch("media_urls"), artifact.media_urls])
 
   useEffect(() => {
-    return () => {
-      if (!changesSavedRef.current && newlyUploadedUrlsRef.current.length > 0) {
-        console.log("[v0] EDIT ARTIFACT CLEANUP - Starting cleanup for", newlyUploadedUrlsRef.current.length, "uploads")
-        console.log("[v0] EDIT ARTIFACT CLEANUP - URLs to delete:", newlyUploadedUrlsRef.current)
-        
-        // Fire-and-forget deletion - don't await in cleanup
-        newlyUploadedUrlsRef.current.forEach((url) => {
-          console.log("[v0] EDIT ARTIFACT CLEANUP - Processing URL:", url)
-          extractPublicIdFromUrl(url).then((publicId) => {
-            if (publicId) {
-              console.log("[v0] EDIT ARTIFACT CLEANUP - Extracted publicId:", publicId)
-              deleteCloudinaryMedia(publicId).then((result) => {
-                if (result.error) {
-                  console.error("[v0] EDIT ARTIFACT CLEANUP - Failed:", publicId, result.error)
-                } else {
-                  console.log("[v0] EDIT ARTIFACT CLEANUP - Success:", publicId)
-                }
-              })
-            } else {
-              console.error("[v0] EDIT ARTIFACT CLEANUP - Could not extract publicId from:", url)
-            }
-          }).catch((err) => {
-            console.error("[v0] EDIT ARTIFACT CLEANUP - Error extracting publicId:", url, err)
-          })
-        })
-      } else {
-        console.log("[v0] EDIT ARTIFACT CLEANUP - Skipped. changesSaved:", changesSavedRef.current, "uploads:", newlyUploadedUrlsRef.current.length)
-      }
-    }
-  }, [])
-
-  useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       if (hasUnsavedChanges && !success) {
         e.preventDefault()
-        e.returnValue = ""
+        e.returnValue = ''
       }
     }
 
-    window.addEventListener("beforeunload", handleBeforeUnload)
-    return () => window.removeEventListener("beforeunload", handleBeforeUnload)
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload)
   }, [hasUnsavedChanges, success])
 
-  const handleNavigation = (path: string): void => {
-    if (hasUnsavedChanges && !success) {
-      setPendingNavigation(path)
+  const handleCancel = async () => {
+    if (hasUnsavedChanges) {
       setShowUnsavedDialog(true)
+      setPendingNavigation('back')
     } else {
-      router.push(path)
+      router.back()
     }
   }
 
-  const confirmNavigation = (): void => {
-    if (pendingNavigation) {
+  const handleConfirmNavigation = async () => {
+    console.log("[v0] User confirmed cancel - cleaning up pending uploads")
+    
+    const result = await cleanupPendingUploads()
+    if (result.error) {
+      console.error("[v0] Cleanup failed:", result.error)
+    } else {
+      console.log(`[v0] Cleanup complete: ${result.deletedCount} files deleted`)
+    }
+    
+    setShowUnsavedDialog(false)
+    if (pendingNavigation === 'back') {
+      router.back()
+    } else if (pendingNavigation) {
       router.push(pendingNavigation)
     }
+    setPendingNavigation(null)
   }
 
-  async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>): Promise<void> {
-    const files = e.target.files
-    if (!files || files.length === 0) return
+  const handleCancelNavigation = () => {
+    setShowUnsavedDialog(false)
+    setPendingNavigation(null)
+  }
 
-    const oversizedFiles = Array.from(files).filter((file) => {
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || [])
+    if (files.length === 0) return
+
+    const oversizedFiles = files.filter((file) => {
       const limit = getFileSizeLimit(file)
       return file.size > limit
     })
@@ -157,16 +141,20 @@ export function EditArtifactForm({ artifact, userId }: EditArtifactFormProps) {
         `${f.name} (${formatFileSize(f.size)}, max: ${formatFileSize(getFileSizeLimit(f))})`
       ).join(", ")
       setError(`The following files are too large: ${fileErrors}`)
-      e.target.value = ""
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ""
+      }
       return
     }
 
-    const totalSize = Array.from(files).reduce((sum, file) => sum + file.size, 0)
+    const totalSize = files.reduce((sum, file) => sum + file.size, 0)
     const MAX_TOTAL_SIZE = 1000 * 1024 * 1024
 
     if (totalSize > MAX_TOTAL_SIZE) {
       setError("Total file size exceeds 1GB. Please upload fewer or smaller files.")
-      e.target.value = ""
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ""
+      }
       return
     }
 
@@ -174,9 +162,10 @@ export function EditArtifactForm({ artifact, userId }: EditArtifactFormProps) {
     setError(null)
 
     try {
-      const urls: string[] = []
+      const currentUrls = form.getValues("media_urls") || []
+      const newUrls: string[] = []
 
-      for (const file of Array.from(files)) {
+      for (const file of files) {
         const signatureResult = await generateCloudinarySignature(userId, file.name)
 
         if (signatureResult.error || !signatureResult.signature) {
@@ -215,20 +204,16 @@ export function EditArtifactForm({ artifact, userId }: EditArtifactFormProps) {
         }
 
         const data = await response.json()
-        urls.push(data.secure_url)
-        newlyUploadedUrlsRef.current.push(data.secure_url)
+        newUrls.push(data.secure_url)
+        
+        const resourceType = file.type.startsWith('image/') ? 'image' 
+          : file.type.startsWith('video/') ? 'video' 
+          : 'raw'
+        await trackPendingUpload(data.secure_url, resourceType)
       }
 
-      const currentUrls = form.getValues("media_urls") || []
-      const urlsArray = Array.isArray(currentUrls) ? currentUrls : []
-      form.setValue("media_urls", normalizeMediaUrls([...urlsArray, ...urls]))
-      
-      if (!selectedThumbnailUrl && urls.length > 0) {
-        const firstVisual = urls.find(url => isImageUrl(url) || isVideoUrl(url))
-        if (firstVisual) {
-          setSelectedThumbnailUrl(firstVisual)
-        }
-      }
+      form.setValue("media_urls", [...currentUrls, ...newUrls])
+      setHasUnsavedChanges(true)
     } catch (err) {
       setError(
         err instanceof Error
@@ -237,11 +222,13 @@ export function EditArtifactForm({ artifact, userId }: EditArtifactFormProps) {
       )
     } finally {
       setIsUploading(false)
-      e.target.value = ""
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ""
+      }
     }
   }
 
-  function removeImage(index: number): void {
+  const removeImage = (index: number): void => {
     const currentUrls = form.getValues("media_urls")
     const urlsArray = Array.isArray(currentUrls) ? currentUrls : []
     const urlToRemove = urlsArray[index]
@@ -259,41 +246,31 @@ export function EditArtifactForm({ artifact, userId }: EditArtifactFormProps) {
     setHasUnsavedChanges(true)
   }
 
-  async function onSubmit(data: FormData): Promise<void> {
-    setError(null)
+  const onSubmit = async (values: FormData) => {
+    try {
+      setError(null)
 
-    const normalizedUrls = normalizeMediaUrls(data.media_urls || [])
+      const result = await updateArtifact(values)
 
-    const submitData = {
-      ...data,
-      media_urls: normalizedUrls,
-      thumbnail_url: selectedThumbnailUrl,
-      year_acquired: data.year_acquired || undefined,
-    }
-
-    const result = await updateArtifact(submitData, artifact.media_urls || [])
-
-    if (result?.success) {
-      changesSavedRef.current = true
-      setSuccess(true)
-      setHasUnsavedChanges(false)
-      setTimeout(() => {
-        router.push(`/artifacts/${artifact.id}`)
-        router.refresh()
-      }, 1500)
-    } else if (result?.error) {
-      if (result.fieldErrors) {
-        Object.entries(result.fieldErrors).forEach(([field, messages]) => {
-          if (messages && messages.length > 0) {
-            form.setError(field as keyof FormData, {
-              type: "server",
-              message: messages[0],
-            })
-          }
-        })
-      } else {
+      if (result.error) {
         setError(result.error)
+      } else {
+        const allUrls = values.media_urls || []
+        await markUploadsAsSaved(allUrls)
+        
+        setSuccess(true)
+        setHasUnsavedChanges(false)
+        
+        setTimeout(() => {
+          router.push(`/artifacts/${result.slug}`)
+        }, 1500)
       }
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to update artifact. Please try again later.",
+      )
     }
   }
 
@@ -372,9 +349,10 @@ export function EditArtifactForm({ artifact, userId }: EditArtifactFormProps) {
                     type="file"
                     accept="image/*"
                     multiple
-                    onChange={handleImageUpload}
+                    onChange={handleUpload}
                     className="hidden"
                     disabled={isUploading}
+                    ref={fileInputRef}
                   />
                 </label>
               </Button>
@@ -450,8 +428,9 @@ export function EditArtifactForm({ artifact, userId }: EditArtifactFormProps) {
             <Button
               type="button"
               variant="outline"
-              onClick={() => handleNavigation(`/artifacts/${artifact.id}`)}
+              onClick={handleCancel}
               disabled={form.formState.isSubmitting || isUploading}
+              className="flex-1"
             >
               Cancel
             </Button>
@@ -468,8 +447,8 @@ export function EditArtifactForm({ artifact, userId }: EditArtifactFormProps) {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setPendingNavigation(null)}>Stay on Page</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmNavigation}>Leave Without Saving</AlertDialogAction>
+            <AlertDialogCancel onClick={handleCancelNavigation}>Stay on Page</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmNavigation}>Leave Without Saving</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

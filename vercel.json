@@ -1,4 +1,10 @@
 {
   "buildCommand": "pnpm run build",
-  "installCommand": "pnpm install --frozen-lockfile"
+  "installCommand": "pnpm install --frozen-lockfile",
+  "crons": [
+    {
+      "path": "/api/cleanup-expired-uploads",
+      "schedule": "0 * * * *"
+    }
+  ]
 }
