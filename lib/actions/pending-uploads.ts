@@ -116,36 +116,36 @@ export async function cleanupPendingUploads() {
 
   console.log(`[v0] Cleaning up ${uploads.length} pending uploads`)
 
-  // Delete from Cloudinary
-  const deletionResults = await Promise.allSettled(
-    uploads.map(upload => deleteCloudinaryMedia(upload.cloudinary_public_id))
-  )
-
   let successCount = 0
   let failCount = 0
+  const successfulIds: string[] = []
 
-  deletionResults.forEach((result, index) => {
-    if (result.status === 'fulfilled' && !result.value.error) {
+  // Process each upload individually to ensure transactionality
+  for (const upload of uploads) {
+    const result = await deleteCloudinaryMedia(upload.cloudinary_public_id)
+    
+    if (!result.error) {
       successCount++
+      successfulIds.push(upload.id)
     } else {
       failCount++
-      console.error(`[v0] Failed to delete ${uploads[index].cloudinary_url}:`, 
-        result.status === 'fulfilled' ? result.value.error : result.reason)
+      console.error(`[v0] Failed to delete ${upload.cloudinary_url}:`, result.error)
     }
-  })
-
-  // Remove from database regardless of Cloudinary deletion success
-  // (prevents accumulating stale records)
-  const { error: deleteError } = await supabase
-    .from("pending_uploads")
-    .delete()
-    .eq("user_id", user.id)
-
-  if (deleteError) {
-    console.error("[v0] Failed to remove pending uploads from DB:", deleteError)
   }
 
-  console.log(`[v0] Cleanup complete: ${successCount} deleted, ${failCount} failed`)
+  // Only remove successfully deleted uploads from database
+  if (successfulIds.length > 0) {
+    const { error: deleteError } = await supabase
+      .from("pending_uploads")
+      .delete()
+      .in("id", successfulIds)
+
+    if (deleteError) {
+      console.error("[v0] Failed to remove pending uploads from DB:", deleteError)
+    }
+  }
+
+  console.log(`[v0] Cleanup complete: ${successCount} deleted, ${failCount} failed (will retry later)`)
 
   return { 
     success: true, 
@@ -177,28 +177,31 @@ export async function cleanupExpiredUploads() {
 
   console.log(`[v0] Cleaning up ${uploads.length} expired uploads`)
 
-  // Delete from Cloudinary
-  const deletionResults = await Promise.allSettled(
-    uploads.map(upload => deleteCloudinaryMedia(upload.cloudinary_public_id))
-  )
-
   let successCount = 0
-  deletionResults.forEach((result, index) => {
-    if (result.status === 'fulfilled' && !result.value.error) {
+  const successfulIds: string[] = []
+
+  // Process each upload individually to ensure transactionality
+  for (const upload of uploads) {
+    const result = await deleteCloudinaryMedia(upload.cloudinary_public_id)
+    
+    if (!result.error) {
       successCount++
+      successfulIds.push(upload.id)
     } else {
-      console.error(`[v0] Failed to delete expired upload ${uploads[index].cloudinary_url}`)
+      console.error(`[v0] Failed to delete expired upload ${upload.cloudinary_url}:`, result.error)
     }
-  })
+  }
 
-  // Remove from database
-  const { error: deleteError } = await supabase
-    .from("pending_uploads")
-    .delete()
-    .lt("expires_at", new Date().toISOString())
+  // Only remove successfully deleted uploads from database
+  if (successfulIds.length > 0) {
+    const { error: deleteError } = await supabase
+      .from("pending_uploads")
+      .delete()
+      .in("id", successfulIds)
 
-  if (deleteError) {
-    console.error("[v0] Failed to remove expired uploads from DB:", deleteError)
+    if (deleteError) {
+      console.error("[v0] Failed to remove expired uploads from DB:", deleteError)
+    }
   }
 
   return { success: true, deletedCount: successCount }
