@@ -6,7 +6,7 @@ The media audit system provides **safe, read-only reporting** of pending uploads
 
 ## How It Works
 
-### Daily Audit Report
+### Scheduled Audit Report
 - Queries `pending_uploads` table
 - Checks each URL against `artifacts.media_urls`
 - Verifies existence in Cloudinary
@@ -28,8 +28,15 @@ In your Vercel project:
 2. Click **Create Cron Job**
 3. Configure:
    - **Path**: `/api/cron/audit-media`
-   - **Schedule**: `0 2 * * *` (daily at 2 AM UTC)
+   - **Schedule**: `0 0 */2 * *` (every 2 days at midnight UTC)
    - **Description**: Media audit - safe read-only report
+
+**Recommended Schedule Options:**
+- `0 0 */2 * *` - Every 2 days (48 hours) at midnight
+- `0 0 */3 * *` - Every 3 days (72 hours) at midnight
+- `0 0 * * 0` - Once a week (Sunday at midnight)
+
+**Note:** Run every 48 hours or less frequently. This is a monitoring tool, not time-sensitive.
 
 ### 2. Optional: Add Security
 Add environment variable:
