@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useTransition } from "react"
 import ReactMarkdown from "react-markdown"
 import { Loader2, Mic, ImageIcon, FileText, PlayCircle, RefreshCw, ChevronDown, ChevronUp, Sparkles } from 'lucide-react'
 import { Badge } from "@/components/ui/badge"
@@ -35,6 +35,7 @@ export function ArtifactAiPanel({
   const [descriptionOpen, setDescriptionOpen] = useState(true)
   const [captionsOpen, setCaptionsOpen] = useState(true)
   const { toast } = useToast()
+  const [isPending, startTransition] = useTransition()
 
   const handleAnalysis = async (endpoint: string, loadingKey: LoadingState, successMessage: string) => {
     console.log("[v0] Button clicked - Starting analysis", { endpoint, artifactId, loadingKey })
@@ -50,7 +51,9 @@ export function ArtifactAiPanel({
         description: successMessage,
       })
       console.log("[v0] Calling onRefresh to update UI")
-      await onRefresh()
+      startTransition(() => {
+        onRefresh()
+      })
       console.log("[v0] onRefresh complete")
     } catch (error) {
       console.error("[v0] Analysis error:", error)
@@ -128,7 +131,7 @@ export function ArtifactAiPanel({
           variant="outline"
           size="sm"
         >
-          {loading === "audio" ? <Loader2 className="animate-spin" /> : <Mic />}
+          {loading === "audio" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mic />}
           AI Transcribe Audio
         </Button>
 
