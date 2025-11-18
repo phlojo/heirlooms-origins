@@ -3,12 +3,16 @@ import { NextResponse } from "next/server"
 
 /**
  * Cron endpoint to clean up expired uploads
- * Configure in vercel.json to run hourly or as needed
+ * Configure in vercel.json to run hourly
+ * Vercel automatically authenticates cron requests via x-vercel-cron header
  */
 export async function GET(request: Request) {
-  // Verify cron secret to prevent unauthorized calls
-  const authHeader = request.headers.get("authorization")
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+  // Verify this request is from Vercel Cron
+  const cronHeader = request.headers.get("x-vercel-cron")
+  
+  // In production, Vercel adds this header automatically to cron requests
+  // In development, allow any request for testing
+  if (process.env.NODE_ENV === "production" && !cronHeader) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
