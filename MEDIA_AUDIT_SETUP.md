@@ -28,15 +28,8 @@ In your Vercel project:
 2. Click **Create Cron Job**
 3. Configure:
    - **Path**: `/api/cron/audit-media`
-   - **Schedule**: `0 0 */2 * *` (every 2 days at midnight UTC)
+   - **Schedule**: `0 2 * * *` (daily at 2 AM UTC)
    - **Description**: Media audit - safe read-only report
-
-**Recommended Schedule Options:**
-- `0 0 */2 * *` - Every 2 days (48 hours) at midnight
-- `0 0 */3 * *` - Every 3 days (72 hours) at midnight
-- `0 0 * * 0` - Once a week (Sunday at midnight)
-
-**Note:** Run every 48 hours or less frequently. This is a monitoring tool, not time-sensitive.
 
 ### 2. Optional: Add Security
 Add environment variable:
@@ -48,42 +41,16 @@ The cron job will verify this secret before running.
 
 ### 3. View Reports
 
-**Option A: Vercel Logs**
+**Option A: Vercel Logs (Recommended)**
 - Go to **Deployments → Your deployment → Functions**
 - Click on `/api/cron/audit-media`
-- View logs showing summary
+- View logs showing summary and details
 
 **Option B: Direct API Call**
 Visit: `https://yourdomain.com/api/cron/audit-media`
 (Add `?secret=your-cron-secret` if CRON_SECRET is set)
 
 Returns JSON report with full details.
-
-### 4. Email Notifications (Optional)
-
-To receive email reports, add email service:
-
-\`\`\`bash
-npm install resend
-\`\`\`
-
-Then update `/app/api/cron/audit-media/route.ts`:
-
-\`\`\`typescript
-import { Resend } from 'resend'
-
-const resend = new Resend(process.env.RESEND_API_KEY)
-
-// After generating report:
-if (report.summary.dangerous > 0 || report.summary.safeToDelete > 0) {
-  await resend.emails.send({
-    from: 'alerts@yourdomain.com',
-    to: 'your-email@example.com',
-    subject: `Media Audit Alert: ${report.summary.dangerous} dangerous items`,
-    html: generateEmailHTML(report)
-  })
-}
-\`\`\`
 
 ## Manual Cleanup Process
 
