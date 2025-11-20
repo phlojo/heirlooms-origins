@@ -482,17 +482,17 @@ export function ArtifactSwipeContent({
               onValueChange={setEditCollectionId}
               disabled={isSaving || loadingCollections}
             >
-              <SelectTrigger id="collection" className="w-full">
+              <SelectTrigger id="collection" className="w-full text-base md:text-sm">
                 <SelectValue placeholder="Select a collection..." />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="text-base md:text-sm">
                 {collections.map((collection) => (
-                  <SelectItem key={collection.id} value={collection.id}>
+                  <SelectItem key={collection.id} value={collection.id} className="text-base md:text-sm">
                     {collection.title}
                   </SelectItem>
                 ))}
                 {collections.length === 0 && !loadingCollections && (
-                  <SelectItem value="no-collections" disabled>
+                  <SelectItem value="no-collections" disabled className="text-base md:text-sm">
                     No collections found
                   </SelectItem>
                 )}

@@ -2,13 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { getMyCollections } from "@/lib/actions/collections"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { FormControl, FormLabel, FormMessage } from "@/components/ui/form"
 
 interface CollectionSelectorProps {
@@ -18,12 +12,7 @@ interface CollectionSelectorProps {
   disabled?: boolean
 }
 
-export function CollectionSelector({ 
-  userId, 
-  value, 
-  onChange, 
-  disabled 
-}: CollectionSelectorProps) {
+export function CollectionSelector({ userId, value, onChange, disabled }: CollectionSelectorProps) {
   const [collections, setCollections] = useState<Array<{ id: string; title: string; slug: string }>>([])
   const [isLoading, setIsLoading] = useState(true)
 
@@ -64,13 +53,13 @@ export function CollectionSelector({
       <FormLabel>Collection</FormLabel>
       <Select value={value} onValueChange={onChange} disabled={disabled}>
         <FormControl>
-          <SelectTrigger className="w-full">
+          <SelectTrigger className="w-full text-base md:text-sm">
             <SelectValue placeholder="Choose a collection" />
           </SelectTrigger>
         </FormControl>
-        <SelectContent>
+        <SelectContent className="text-base md:text-sm">
           {collections.map((collection) => (
-            <SelectItem key={collection.id} value={collection.id}>
+            <SelectItem key={collection.id} value={collection.id} className="text-base md:text-sm">
               {collection.title}
             </SelectItem>
           ))}
