@@ -30,7 +30,7 @@ import { updateArtifact, deleteMediaFromArtifact, deleteArtifact } from "@/lib/a
 import { getMyCollections } from "@/lib/actions/collections"
 import { cleanupPendingUploads } from "@/lib/actions/pending-uploads"
 import { useRouter } from "next/navigation"
-import { isImageUrl, isVideoUrl } from "@/lib/media"
+import { isImageUrl, isVideoUrl, isAudioUrl } from "@/lib/media"
 import { GenerateImageCaptionButton } from "@/components/artifact/GenerateImageCaptionButton"
 import { GenerateVideoSummaryButton } from "@/components/artifact/GenerateVideoSummaryButton"
 import { TranscribeAudioButtonPerMedia } from "@/components/artifact/TranscribeAudioButtonPerMedia"
@@ -158,8 +158,8 @@ export function ArtifactDetailView({
   }, [isEditMode, userId])
 
   const totalMedia = editMediaUrls.length
-  const audioFiles = editMediaUrls.filter((url) => isAudioFile(url)).length
-  const videoFiles = editMediaUrls.filter((url) => isVideoFile(url)).length
+  const audioFiles = editMediaUrls.filter((url) => isAudioUrl(url)).length
+  const videoFiles = editMediaUrls.filter((url) => isVideoUrl(url)).length
   const imageFiles = totalMedia - audioFiles - videoFiles
 
   const imageCaptions = isEditMode ? editImageCaptions : artifact.image_captions || {}
@@ -167,9 +167,9 @@ export function ArtifactDetailView({
   const audioTranscripts = artifact.audio_transcripts || {}
   const mediaUrls = isEditMode ? Array.from(new Set(editMediaUrls)) : Array.from(new Set(artifact.media_urls || []))
 
-  const audioUrlsFiltered = mediaUrls.filter(isAudioFile)
-  const videoUrlsFiltered = mediaUrls.filter(isVideoFile)
-  const imageUrlsFiltered = mediaUrls.filter((url) => !isAudioFile(url) && !isVideoFile(url))
+  const audioUrlsFiltered = mediaUrls.filter(isAudioUrl)
+  const videoUrlsFiltered = mediaUrls.filter(isVideoUrl)
+  const imageUrlsFiltered = mediaUrls.filter((url) => isImageUrl(url))
 
   const hasUnsavedChanges =
     isEditMode &&
@@ -571,7 +571,7 @@ export function ArtifactDetailView({
         {mediaUrls.length > 0 ? (
           <div className="space-y-6">
             {mediaUrls.map((url) => {
-              if (isAudioFile(url)) {
+              if (isAudioUrl(url)) {
                 const transcript = audioTranscripts[url]
                 return (
                   <div key={url} className="space-y-3">
@@ -610,7 +610,7 @@ export function ArtifactDetailView({
                     </div>
                   </div>
                 )
-              } else if (isVideoFile(url)) {
+              } else if (isVideoUrl(url)) {
                 const summary = videoSummaries[url]
                 const isEditingThisCaption = editingCaption === url
                 const isSelectedThumbnail = isEditMode && editThumbnailUrl === url
@@ -1052,18 +1052,5 @@ export function ArtifactDetailView({
   )
 }
 
-function isAudioFile(url: string): boolean {
-  return (
-    url.includes("/video/upload/") &&
-    (url.includes(".webm") || url.includes(".mp3") || url.includes(".wav") || url.includes(".m4a"))
-  )
-}
-
-function isVideoFile(url: string): boolean {
-  const lower = url.toLowerCase()
-  return (
-    url.includes("/video/upload/") &&
-    (lower.includes(".mp4") || lower.includes(".mov") || lower.includes(".avi")) &&
-    !isAudioFile(url)
-  )
-}
+// Removed the redundant isAudioFile, isVideoFile, isImageUrl, isVideoUrl functions
+// as they are now imported from "@/lib/media" and replaced with isAudioUrl, isVideoUrl, isImageUrl respectively

@@ -1,8 +1,8 @@
 import { AppLayout } from "@/components/app-layout"
 import { Button } from "@/components/ui/button"
-import { Plus, Edit } from 'lucide-react'
+import { Plus, Edit } from "lucide-react"
 import Link from "next/link"
-import { notFound, redirect } from 'next/navigation'
+import { notFound, redirect } from "next/navigation"
 import { getCurrentUser, createClient } from "@/lib/supabase/server"
 import { getCollectionBySlug } from "@/lib/actions/collections"
 import { getArtifactsByCollection } from "@/lib/actions/artifacts"
@@ -41,11 +41,12 @@ export default async function CollectionDetailPage({
   if (!collection) {
     notFound()
   }
-  
+
+  // This is a system collection that cannot be deleted and holds artifacts without a user-assigned collection
   const isUncategorized = collection.slug.startsWith("uncategorized")
 
   const isAdmin = await isCurrentUserAdmin()
-  
+
   const canView = collection.is_public || (user && collection.user_id === user.id) || isAdmin
   const canEdit = user && (collection.user_id === user.id || isAdmin) && !isUncategorized
   const isOwnCollection = user && collection.user_id === user.id
@@ -77,8 +78,7 @@ export default async function CollectionDetailPage({
         .eq("collection_id", collection.id)
         .eq("user_id", user.id)
         .order("created_at", { ascending: false })
-      
-      console.log("[v0] Uncategorized artifacts with slugs:", data?.map(a => ({ id: a.id, slug: a.slug, title: a.title })))
+
       artifacts = data || []
     } else {
       artifacts = await getArtifactsByCollection(collection.id)
@@ -135,7 +135,9 @@ export default async function CollectionDetailPage({
         )}
 
         <div className={isUncategorized ? "space-y-2 -mt-4" : "space-y-4"}>
-          {!isUncategorized && collection.description && <p className="text-muted-foreground pb-2">{collection.description}</p>}
+          {!isUncategorized && collection.description && (
+            <p className="text-muted-foreground pb-2">{collection.description}</p>
+          )}
 
           {isUncategorized && (
             <div className="rounded-lg border border-dashed bg-muted/20 p-4">

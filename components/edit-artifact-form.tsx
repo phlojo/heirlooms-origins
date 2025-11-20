@@ -26,8 +26,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { normalizeMediaUrls, getFileSizeLimit, formatFileSize, isImageUrl, isVideoUrl } from "@/lib/media"
+import { normalizeMediaUrls, getFileSizeLimit, formatFileSize, isImageUrl, isVideoUrl, isAudioUrl } from "@/lib/media"
 import { CollectionSelector } from "@/components/collection-selector"
+import { TranscribeAudioButtonPerMedia } from "@/components/artifact/TranscribeAudioButtonPerMedia"
+import { AudioPlayer } from "@/components/audio-player"
 
 type FormData = z.infer<typeof updateArtifactSchema> & { collectionId?: string }
 
@@ -41,6 +43,7 @@ interface EditArtifactFormProps {
     media_urls?: string[]
     thumbnail_url?: string | null
     collection_id: string
+    audio_transcripts?: Record<string, string>
   }
   userId: string
 }
@@ -56,6 +59,7 @@ export function EditArtifactForm({ artifact, userId }: EditArtifactFormProps) {
   const [selectedThumbnailUrl, setSelectedThumbnailUrl] = useState<string | null>(artifact.thumbnail_url || null)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const newlyUploadedUrlsRef = useRef<string[]>([])
+  const [audioTranscripts, setAudioTranscripts] = useState<Record<string, string>>(artifact.audio_transcripts || {})
 
   const form = useForm<FormData>({
     resolver: zodResolver(updateArtifactSchema),
@@ -264,10 +268,20 @@ export function EditArtifactForm({ artifact, userId }: EditArtifactFormProps) {
       const newThumbnail = newImages.find((url) => isImageUrl(url) || isVideoUrl(url))
       setSelectedThumbnailUrl(newThumbnail || null)
     }
+
+    setAudioTranscripts((prev) => {
+      const { [urlToRemove]: _, ...rest } = prev
+      return rest
+    })
   }
 
   const handleSelectThumbnail = (url: string) => {
     setSelectedThumbnailUrl(url)
+    setHasUnsavedChanges(true)
+  }
+
+  const handleAudioTranscriptGenerated = (url: string, transcript: string) => {
+    setAudioTranscripts((prev) => ({ ...prev, [url]: transcript }))
     setHasUnsavedChanges(true)
   }
 
@@ -278,6 +292,7 @@ export function EditArtifactForm({ artifact, userId }: EditArtifactFormProps) {
       const submitValues = {
         ...values,
         thumbnail_url: selectedThumbnailUrl,
+        audio_transcripts: Object.keys(audioTranscripts).length > 0 ? audioTranscripts : undefined,
       }
 
       const result = await updateArtifact(submitValues, artifact.media_urls || [])
@@ -406,14 +421,30 @@ export function EditArtifactForm({ artifact, userId }: EditArtifactFormProps) {
                 {uploadedImages.map((url) => {
                   const canBeThumbnail = isImageUrl(url) || isVideoUrl(url)
                   const isSelectedThumbnail = selectedThumbnailUrl === url
+                  const isAudio = isAudioUrl(url)
+                  const isVideo = isVideoUrl(url)
 
                   return (
                     <div key={url} className="group relative aspect-square overflow-hidden rounded-lg border bg-muted">
-                      <img
-                        src={url || "/placeholder.svg"}
-                        alt={`Upload ${url}`}
-                        className="h-full w-full object-cover"
-                      />
+                      {isAudio ? (
+                        <div className="h-full w-full flex flex-col items-center justify-center p-3 space-y-2">
+                          <AudioPlayer src={url} title="Audio" />
+                          {audioTranscripts[url] && (
+                            <div className="text-xs text-muted-foreground text-center">Transcript available</div>
+                          )}
+                          <TranscribeAudioButtonPerMedia
+                            artifactId={artifact.id}
+                            audioUrl={url}
+                            onTranscriptGenerated={(transcript) => handleAudioTranscriptGenerated(url, transcript)}
+                          />
+                        </div>
+                      ) : (
+                        <img
+                          src={url || "/placeholder.svg"}
+                          alt={`Upload ${url}`}
+                          className="h-full w-full object-cover"
+                        />
+                      )}
                       {canBeThumbnail && (
                         <button
                           type="button"

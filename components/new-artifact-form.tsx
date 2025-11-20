@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input"
 import { useState } from "react"
 import { ChevronDown, Plus, Trash2, Star } from "lucide-react"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
-import { normalizeMediaUrls, isImageUrl, isVideoUrl } from "@/lib/media"
+import { normalizeMediaUrls, isImageUrl, isVideoUrl, isAudioUrl } from "@/lib/media"
 import { TranscriptionInput } from "@/components/transcription-input"
 import { AddMediaModal } from "@/components/add-media-modal"
 import { AudioPlayer } from "@/components/audio-player"
@@ -152,9 +152,9 @@ export function NewArtifactForm({ collectionId, userId }: NewArtifactFormProps) 
   }
 
   const uploadedMedia = form.watch("media_urls") || []
-  const audioFiles = uploadedMedia.filter((url) => isAudioFile(url))
-  const videoFiles = uploadedMedia.filter((url) => isVideoFile(url))
-  const imageFiles = uploadedMedia.filter((url) => !isAudioFile(url) && !isVideoFile(url))
+  const audioFiles = uploadedMedia.filter((url) => isAudioUrl(url))
+  const videoFiles = uploadedMedia.filter((url) => isVideoUrl(url))
+  const imageFiles = uploadedMedia.filter((url) => isImageUrl(url))
 
   return (
     <Form {...form}>
@@ -293,7 +293,7 @@ export function NewArtifactForm({ collectionId, userId }: NewArtifactFormProps) 
           {uploadedMedia.length > 0 ? (
             <div className="space-y-6">
               {uploadedMedia.map((url, idx) => {
-                if (isAudioFile(url)) {
+                if (isAudioUrl(url)) {
                   return (
                     <div key={url} className="space-y-3">
                       <div className="flex items-center justify-between px-6 lg:px-8">
@@ -330,7 +330,7 @@ export function NewArtifactForm({ collectionId, userId }: NewArtifactFormProps) 
                       </div>
                     </div>
                   )
-                } else if (isVideoFile(url)) {
+                } else if (isVideoUrl(url)) {
                   const isSelectedThumbnail = selectedThumbnailUrl === url
                   return (
                     <div key={url} className="space-y-3">
@@ -493,21 +493,5 @@ export function NewArtifactForm({ collectionId, userId }: NewArtifactFormProps) 
         onMediaAdded={handleMediaAdded}
       />
     </Form>
-  )
-}
-
-function isAudioFile(url: string): boolean {
-  return (
-    url.includes("/video/upload/") &&
-    (url.includes(".webm") || url.includes(".mp3") || url.includes(".wav") || url.includes(".m4a"))
-  )
-}
-
-function isVideoFile(url: string): boolean {
-  const lower = url.toLowerCase()
-  return (
-    url.includes("/video/upload/") &&
-    (lower.includes(".mp4") || lower.includes(".mov") || lower.includes(".avi")) &&
-    !isAudioFile(url)
   )
 }
