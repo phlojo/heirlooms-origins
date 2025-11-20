@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { Plus } from 'lucide-react'
+import { Plus } from "lucide-react"
 import MediaImage from "@/components/media-image"
 
 interface HomeCardProps {
@@ -13,7 +13,7 @@ interface HomeCardProps {
 
 export function HomeCard({ title, description, href, backgroundImage }: HomeCardProps) {
   const content = (
-    <div className="relative h-full overflow-hidden p-8 bg-black">
+    <div className="relative h-full overflow-hidden p-4 bg-black">
       {backgroundImage && (
         <>
           <div className="absolute inset-0">
@@ -29,13 +29,13 @@ export function HomeCard({ title, description, href, backgroundImage }: HomeCard
         </>
       )}
 
-      <div className="relative z-10 pr-20">
+      <div className="relative z-10 pr-10">
         <h2 className={`font-semibold text-2xl ${backgroundImage ? "text-white" : ""}`}>{title}</h2>
         <p className={`mt-2 text-sm ${backgroundImage ? "text-white/90" : "text-muted-foreground"}`}>{description}</p>
       </div>
 
       <div
-        className={`absolute bottom-8 right-8 z-10 flex h-16 w-16 items-center justify-center rounded-sm ${
+        className={`absolute bottom-4 right-4 z-10 flex h-16 w-16 items-center justify-center rounded-sm ${
           backgroundImage ? "bg-white/20 text-white backdrop-blur-sm" : "text-primary-foreground bg-primary"
         }`}
       >
