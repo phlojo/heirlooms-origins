@@ -2,12 +2,12 @@
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
-import { Plus, Loader2 } from 'lucide-react'
+import { Plus, Loader2 } from "lucide-react"
 import Link from "next/link"
 import { ArtifactCard } from "@/components/artifact-card"
 import { LoginModule } from "@/components/login-module"
 import { useEffect, useState, useTransition } from "react"
-import { usePathname } from 'next/navigation'
+import { usePathname } from "next/navigation"
 import { getAllPublicArtifactsPaginated, getMyArtifactsPaginated } from "@/lib/actions/artifacts"
 
 interface Artifact {
@@ -114,9 +114,14 @@ export function ArtifactsTabs({ user, myArtifacts, allArtifacts }: ArtifactsTabs
       <TabsContent value="all" className="mt-6">
         {allArtifactsList.length > 0 ? (
           <>
-            <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
+            <div className="grid gap-2 grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
               {allArtifactsList.map((artifact) => (
-                <ArtifactCard key={artifact.id} artifact={artifact} showAuthor={true} authorName={artifact.author_name} />
+                <ArtifactCard
+                  key={artifact.id}
+                  artifact={artifact}
+                  showAuthor={true}
+                  authorName={artifact.author_name}
+                />
               ))}
             </div>
             {allHasMore && (
@@ -126,7 +131,7 @@ export function ArtifactsTabs({ user, myArtifacts, allArtifacts }: ArtifactsTabs
                   disabled={isLoadingAll}
                   size="lg"
                   variant="outline"
-                  className="min-w-[200px]"
+                  className="min-w-[200px] bg-transparent"
                 >
                   {isLoadingAll ? (
                     <>
@@ -154,7 +159,7 @@ export function ArtifactsTabs({ user, myArtifacts, allArtifacts }: ArtifactsTabs
           </div>
         ) : myArtifactsList.length > 0 ? (
           <>
-            <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
+            <div className="grid gap-2 grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
               {myArtifactsList.map((artifact) => (
                 <ArtifactCard key={artifact.id} artifact={artifact} showAuthor={false} />
               ))}
@@ -166,7 +171,7 @@ export function ArtifactsTabs({ user, myArtifacts, allArtifacts }: ArtifactsTabs
                   disabled={isLoadingMy}
                   size="lg"
                   variant="outline"
-                  className="min-w-[200px]"
+                  className="min-w-[200px] bg-transparent"
                 >
                   {isLoadingMy ? (
                     <>

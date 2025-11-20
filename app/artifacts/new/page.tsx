@@ -1,9 +1,11 @@
+export const dynamic = "force-dynamic"
+
 import { AppLayout } from "@/components/app-layout"
 import { Button } from "@/components/ui/button"
 import { NewArtifactForm } from "@/components/new-artifact-form"
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft } from "lucide-react"
 import Link from "next/link"
-import { redirect } from 'next/navigation'
+import { redirect } from "next/navigation"
 import { getCurrentUser } from "@/lib/supabase/server"
 import { getOrCreateUncategorizedCollection } from "@/lib/actions/collections"
 
@@ -22,17 +24,13 @@ export default async function NewArtifactPage({
   let effectiveCollectionId = collectionId
 
   if (!effectiveCollectionId) {
-    console.log("[v0] NewArtifactPage - No collectionId, getting uncategorized for user:", user.id)
     const result = await getOrCreateUncategorizedCollection(user.id)
-    
+
     if (!result.success || !result.data) {
-      console.error("[v0] NewArtifactPage - Failed to get uncategorized collection:", result.error)
-      // Redirect to collections page with error
       redirect("/collections?error=failed-to-create-collection")
     }
-    
+
     effectiveCollectionId = result.data.id
-    console.log("[v0] NewArtifactPage - Using uncategorized collection:", effectiveCollectionId)
   }
 
   return (

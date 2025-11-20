@@ -1,9 +1,9 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { ArrowLeft, Heart, Settings } from 'lucide-react'
+import { ArrowLeft, Heart, Settings } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
-import { useRouter } from 'next/navigation'
+import { useRouter } from "next/navigation"
 import { useState } from "react"
 
 interface CollectionsStickyNavProps {
@@ -19,7 +19,7 @@ interface CollectionsStickyNavProps {
     title: string
   } | null
   editHref?: string
-  canEdit?: boolean
+  canEdit: boolean
   itemType?: "artifact" | "collection"
   mode?: "all" | "mine"
   authorUserId?: string
@@ -83,9 +83,9 @@ export function CollectionsStickyNav({
   const showSuperUserBadge = isCurrentUserAdmin && contentOwnerId && currentUserId && contentOwnerId !== currentUserId
 
   return (
-    <div className="sticky top-3 lg:top-16 z-50 bg-background/90 border-b border rounded-lg">
-      <div className="container max-w-7xl mx-auto lg:px-8 rounded-lg px-1 py-1">
-        <div className="flex justify-between items-center gap-0">
+    <div className="sticky top-3 lg:top-16 z-50 bg-background/90 border-b border rounded-lg mb-4 py-2">
+      <div className="container max-w-7xl mx-auto">
+        <div className="flex justify-between items-center gap-0 px-3.5">
           {/* Left: Back button */}
           {showBackButton && (
             <Button variant="ghost" size="sm" onClick={handleBack} className="gap-2 shrink-0 h-9">
@@ -116,10 +116,10 @@ export function CollectionsStickyNav({
             </div>
           </div>
 
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={toggleFavorite} 
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={toggleFavorite}
             className="shrink-0 h-9 w-9 p-0"
             aria-label={isFavorited ? "Remove from favorites" : "Add to favorites"}
           >

@@ -3,7 +3,7 @@ import type { Metadata, Viewport } from "next"
 
 import "./globals.css"
 
-import { Geist, Geist_Mono, Source_Serif_4 } from 'next/font/google'
+import { Geist, Geist_Mono, Source_Serif_4 } from "next/font/google"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Analytics } from "@vercel/analytics/react"
 import { SupabaseProvider } from "@/lib/supabase/browser-context"
@@ -27,9 +27,7 @@ export const metadata: Metadata = {
   title: "Heirlooms - Preserve the things that matter to you",
   description: "Document your life's artifacts and stories with structure, context, and connection",
   generator: "v0.app",
-  robots: allowIndexing
-    ? { index: true, follow: true }
-    : { index: false, follow: false, nocache: true },
+  robots: allowIndexing ? { index: true, follow: true } : { index: false, follow: false, nocache: true },
   icons: {
     icon: [
       { url: "/favicon.svg", type: "image/svg+xml" },
@@ -41,12 +39,12 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
-  width: 'device-width',
+  width: "device-width",
   initialScale: 1,
-  viewportFit: 'cover',
+  viewportFit: "cover",
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: 'oklch(0.99 0.005 280)' },
-    { media: '(prefers-color-scheme: dark)', color: 'oklch(0.15 0.01 280)' },
+    { media: "(prefers-color-scheme: light)", color: "oklch(0.99 0.005 280)" },
+    { media: "(prefers-color-scheme: dark)", color: "oklch(0.15 0.01 280)" },
   ],
 }
 
@@ -57,7 +55,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`font-sans antialiased`}>
+      <body className={`font-sans antialiased overflow-x-hidden`}>
         <SupabaseProvider>
           <ThemeProvider>
             {children}

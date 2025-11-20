@@ -16,23 +16,13 @@ export function createClient() {
     return globalClient
   }
 
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-
-  if (!supabaseUrl || !supabaseAnonKey) {
-    throw new Error("Supabase configuration is missing. Please check your environment variables.")
-  }
-
-  // Validate URL format
-  try {
-    new URL(supabaseUrl)
-  } catch (error) {
-    throw new Error("Invalid Supabase URL configuration")
-  }
-
-  globalClient = createSupabaseBrowserClient(supabaseUrl, supabaseAnonKey, {
-    isSingleton: true,
-  })
+  globalClient = createSupabaseBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      isSingleton: true,
+    },
+  )
 
   return globalClient
 }

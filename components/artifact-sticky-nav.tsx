@@ -1,7 +1,7 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { ArrowRight, ArrowLeft, Heart } from 'lucide-react'
+import { ArrowRight, ArrowLeft, Heart } from "lucide-react"
 import Link from "next/link"
 import { CollectionLabel } from "@/components/collection-label"
 import { useState } from "react"
@@ -58,7 +58,7 @@ export function ArtifactStickyNav({
 }: ArtifactStickyNavProps) {
   const [isFavorited, setIsFavorited] = useState(false)
 
-  const getNavUrl = (slug: string) => isEditMode ? `/artifacts/${slug}/edit` : `/artifacts/${slug}`
+  const getNavUrl = (slug: string) => (isEditMode ? `/artifacts/${slug}/edit` : `/artifacts/${slug}`)
 
   const truncateBackLabel = (label: string) => {
     const withoutSuffix = label.endsWith(" Collection") ? label.slice(0, -11) : label
@@ -75,8 +75,8 @@ export function ArtifactStickyNav({
   const showSuperUserBadge = isCurrentUserAdmin && contentOwnerId && currentUserId && contentOwnerId !== currentUserId
 
   return (
-    <div className="sticky top-3 lg:top-16 z-50 bg-background/90 border rounded-lg">
-      <div className="container max-w-7xl mx-auto lg:px-8 rounded-lg border-none px-[4] py-[4]">
+    <div className="sticky top-3 lg:top-16 z-50 bg-background/90 border rounded-lg mb-4 py-2">
+      <div className="container max-w-7xl mx-auto">
         <div className="flex flex-col gap-0">
           {/* First row: Title and Heart icon */}
           <div className="flex items-center justify-between border-b gap-0 pb-0">
@@ -88,11 +88,11 @@ export function ArtifactStickyNav({
                 </Badge>
               )}
             </div>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={toggleFavorite} 
-              className="shrink-0 h-9 w-9 p-0"
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={toggleFavorite}
+              className="shrink-0 h-9 w-9 p-0 mr-3.5"
               aria-label={isFavorited ? "Remove from favorites" : "Add to favorites"}
             >
               <Heart className={`h-5 w-5 ${isFavorited ? "fill-red-500 text-red-500" : "text-muted-foreground"}`} />
@@ -100,7 +100,7 @@ export function ArtifactStickyNav({
           </div>
 
           {/* Second row: Navigation with left arrow, collection info, right arrow */}
-          <div className="flex items-center justify-between gap-0 my-0 pt-0">
+          <div className="flex items-center justify-between gap-0 my-0 pt-0 px-3.5">
             {/* Left: Previous button */}
             <Button
               variant="ghost"

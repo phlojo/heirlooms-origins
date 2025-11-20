@@ -40,19 +40,19 @@ export function AppLayout({ children, user, noBottomPadding = false }: AppLayout
   }
 
   return (
-    <div className="min-h-[100dvh] bg-background">
+    <div className="min-h-[100dvh] bg-background overflow-x-hidden">
       <TopNav onMenuClick={() => handleSidebarToggle(!sidebarOpen)} user={user} />
 
       <div className="flex">
         <SideNav isOpen={sidebarOpen} onClose={() => handleSidebarToggle(false)} isMobile={isMobile} />
 
         <main
-          className={`flex-1 p-6 transition-all duration-200 lg:p-8 ${
+          className={`flex-1 p-6 transition-all duration-200 lg:p-8 px-3.5 pt-4 pb-4 pr-4 pl-4 overflow-x-hidden max-w-full ${
             noBottomPadding ? "" : "pb-[var(--bottom-nav-height,80px)] lg:pb-8"
           }`}
           data-bottom-padding={!noBottomPadding}
         >
-          <div className="mx-auto max-w-7xl">
+          <div className="mx-auto max-w-7xl overflow-x-hidden max-w-full">
             <PageTransition>{children}</PageTransition>
           </div>
         </main>

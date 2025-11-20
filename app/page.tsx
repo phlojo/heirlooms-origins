@@ -66,12 +66,12 @@ export default async function HomePage() {
               <ThemeToggle />
             </div>
           </h1>
-          <p className="text-muted-foreground text-base mt-6">
+          <p className="text-muted-foreground text-base mt-2">
             Preserve what matters to you and discover artifacts and collections from the community.
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-2">
           <HomeCard
             title="Artifacts"
             description="Capture your artifacts and browse those shared by the community."

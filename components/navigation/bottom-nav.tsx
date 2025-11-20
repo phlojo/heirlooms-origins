@@ -1,9 +1,9 @@
 "use client"
 
 import Link from "next/link"
-import { usePathname } from 'next/navigation'
+import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
-import { Home, FolderOpen, BookOpen, User } from 'lucide-react'
+import { Home, FolderOpen, BookOpen, User } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 import { AnimatedArtifactsIcon } from "./animated-artifacts-icon"
 
@@ -81,7 +81,8 @@ export default function BottomNav() {
     >
       <div className="flex h-20 items-center justify-around px-2">
         {navItems.map((item) => {
-          const isActive = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href)
+          const isActive =
+            item.href === "/" ? pathname === "/" : pathname === item.href || pathname.startsWith(item.href + "/")
 
           return (
             <Link

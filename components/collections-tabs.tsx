@@ -164,7 +164,7 @@ export function CollectionsTabs({
         {allCollectionsList.length > 0 ? (
           <>
             <div
-              className={viewType === "gallery" ? "grid gap-6 md:grid-cols-2 lg:grid-cols-3" : "flex flex-col gap-4"}
+              className={viewType === "gallery" ? "grid gap-2 md:grid-cols-2 lg:grid-cols-3" : "flex flex-col gap-4"}
             >
               {allCollectionsList.map((collection) =>
                 viewType === "gallery" ? (
@@ -210,7 +210,7 @@ export function CollectionsTabs({
         ) : myCollectionsList.length > 0 ? (
           <>
             <div
-              className={viewType === "gallery" ? "grid gap-6 md:grid-cols-2 lg:grid-cols-3" : "flex flex-col gap-4"}
+              className={viewType === "gallery" ? "grid gap-2 md:grid-cols-2 lg:grid-cols-3" : "flex flex-col gap-4"}
             >
               {myCollectionsList.map((collection) =>
                 viewType === "gallery" ? (

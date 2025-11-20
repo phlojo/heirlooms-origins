@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic"
+
 import { AppLayout } from "@/components/app-layout"
 import { getCurrentUser } from "@/lib/supabase/server"
 import { CollectionsTabs } from "@/components/collections-tabs"
@@ -14,7 +16,7 @@ export default async function CollectionsPage() {
 
   return (
     <AppLayout user={user}>
-      <div className="space-y-0">
+      <div className="space-y-4">
         <div>
           <h1 className="flex items-center gap-3 text-3xl font-bold tracking-tight">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center bg-gradient-to-br from-primary to-chart-2 text-primary-foreground shadow-sm rounded-sm">

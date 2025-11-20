@@ -1,9 +1,11 @@
+export const dynamic = "force-dynamic"
+
 import { AppLayout } from "@/components/app-layout"
 import { getCurrentUser, createClient } from "@/lib/supabase/server"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { redirect } from 'next/navigation'
-import { Package, ImageIcon, Calendar, Mail, User, Settings, Lock } from 'lucide-react'
+import { redirect } from "next/navigation"
+import { Package, ImageIcon, Calendar, Mail, User, Settings, Lock } from "lucide-react"
 import { ThemePreferenceToggle } from "@/components/theme-preference-toggle"
 import { LogoutButton } from "@/components/logout-button"
 import { PasswordForm } from "@/components/password-form"
@@ -179,12 +181,10 @@ export default async function ProfilePage() {
             <CardHeader>
               <div className="flex items-center gap-2">
                 <Lock className="h-5 w-5" />
-                <CardTitle>
-                  {passwordMode === "change" ? "Change Password" : "Set Password"}
-                </CardTitle>
+                <CardTitle>{passwordMode === "change" ? "Change Password" : "Set Password"}</CardTitle>
               </div>
               <CardDescription>
-                {passwordMode === "change" 
+                {passwordMode === "change"
                   ? "Update your account password for enhanced security"
                   : "Set a password to enable email/password login in addition to magic links"}
               </CardDescription>

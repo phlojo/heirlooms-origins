@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic"
+
 import { AppLayout } from "@/components/app-layout"
 import { NewCollectionForm } from "@/components/new-collection-form"
 import { redirect } from "next/navigation"
