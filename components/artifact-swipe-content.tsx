@@ -12,18 +12,24 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible"
 import { AddMediaModal } from "@/components/add-media-modal"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import { ChevronDown, Plus, Save, X, Trash2, Loader2, Pencil, Share2, BarChart3, MessageSquare, Star } from 'lucide-react'
+  ChevronDown,
+  Plus,
+  Save,
+  X,
+  Trash2,
+  Loader2,
+  Pencil,
+  Share2,
+  BarChart3,
+  MessageSquare,
+  Star,
+} from "lucide-react"
 import { updateArtifact, deleteMediaFromArtifact, deleteArtifact } from "@/lib/actions/artifacts"
 import { getMyCollections } from "@/lib/actions/collections"
 import { cleanupPendingUploads } from "@/lib/actions/pending-uploads"
-import { useRouter } from 'next/navigation'
+import { useRouter } from "next/navigation"
 import { isImageUrl, isVideoUrl } from "@/lib/media"
 import { GenerateImageCaptionButton } from "@/components/artifact/GenerateImageCaptionButton"
 import { GenerateVideoSummaryButton } from "@/components/artifact/GenerateVideoSummaryButton"
@@ -41,13 +47,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 
 interface ArtifactSwipeContentProps {
   artifact: any
@@ -84,7 +84,7 @@ export function ArtifactSwipeContent({
     thumbnail_url: artifact.thumbnail_url || null,
     collection_id: artifact.collection_id,
   })
-  
+
   const [isImageFullscreen, setIsImageFullscreen] = useState(false)
   const [isAttributesOpen, setIsAttributesOpen] = useState(false)
   const [isProvenanceOpen, setIsProvenanceOpen] = useState(false)
@@ -92,24 +92,24 @@ export function ArtifactSwipeContent({
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [comingSoonOpen, setComingSoonOpen] = useState(false)
   const [comingSoonFeature, setComingSoonFeature] = useState("")
-  
+
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false)
-  
+
   const [editingCaption, setEditingCaption] = useState<string | null>(null)
   const [editCaptionText, setEditCaptionText] = useState<string>("")
   const [isSavingCaption, setIsSavingCaption] = useState(false)
-  
+
   const [editTitle, setEditTitle] = useState(artifact.title)
   const [editDescription, setEditDescription] = useState(artifact.description || "")
   const [editMediaUrls, setEditMediaUrls] = useState<string[]>(artifact.media_urls || [])
   const [editImageCaptions, setEditImageCaptions] = useState<Record<string, string>>(artifact.image_captions || {})
   const [editVideoSummaries, setEditVideoSummaries] = useState<Record<string, string>>(artifact.video_summaries || {})
-  const [editThumbnailUrl, setEditThumbnailUrl] = useState<string | null>(artifact.thumbnail_url || null) 
+  const [editThumbnailUrl, setEditThumbnailUrl] = useState<string | null>(artifact.thumbnail_url || null)
   const [editCollectionId, setEditCollectionId] = useState<string>(artifact.collection_id)
-  
+
   const [isSaving, setIsSaving] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
-  
+
   const router = useRouter()
   const supabase = useSupabase()
   const [userId, setUserId] = useState<string>("")
@@ -137,11 +137,18 @@ export function ArtifactSwipeContent({
 
   useEffect(() => {
     if (isEditMode && userId) {
+      console.log("[v0] Fetching collections for userId:", userId)
+      console.log("[v0] Current artifact collection_id:", artifact.collection_id)
       setLoadingCollections(true)
       getMyCollections(userId)
         .then((result) => {
-          if (result.success && result.collections) {
+          console.log("[v0] Collections fetched:", result)
+          if (result.collections) {
             setCollections(result.collections)
+            // If editCollectionId is not yet set or empty, set it to the artifact's current collection
+            if (!editCollectionId || editCollectionId === "") {
+              setEditCollectionId(artifact.collection_id)
+            }
           }
         })
         .finally(() => {
@@ -150,43 +157,42 @@ export function ArtifactSwipeContent({
     }
   }, [isEditMode, userId])
 
-
   const totalMedia = editMediaUrls.length
   const audioFiles = editMediaUrls.filter((url) => isAudioFile(url)).length
   const videoFiles = editMediaUrls.filter((url) => isVideoFile(url)).length
   const imageFiles = totalMedia - audioFiles - videoFiles
 
-  const imageCaptions = isEditMode ? editImageCaptions : (artifact.image_captions || {})
-  const videoSummaries = isEditMode ? editVideoSummaries : (artifact.video_summaries || {})
+  const imageCaptions = isEditMode ? editImageCaptions : artifact.image_captions || {}
+  const videoSummaries = isEditMode ? editVideoSummaries : artifact.video_summaries || {}
   const audioTranscripts = artifact.audio_transcripts || {}
   const mediaUrls = isEditMode ? Array.from(new Set(editMediaUrls)) : Array.from(new Set(artifact.media_urls || []))
-  
+
   const audioUrlsFiltered = mediaUrls.filter(isAudioFile)
   const videoUrlsFiltered = mediaUrls.filter(isVideoFile)
-  const imageUrlsFiltered = mediaUrls.filter(url => !isAudioFile(url) && !isVideoFile(url))
-  
-  const hasUnsavedChanges = isEditMode && (
-    editTitle !== originalState.title ||
-    editDescription !== originalState.description ||
-    JSON.stringify(editMediaUrls) !== JSON.stringify(originalState.media_urls) ||
-    JSON.stringify(editImageCaptions) !== JSON.stringify(originalState.image_captions) ||
-    JSON.stringify(editVideoSummaries) !== JSON.stringify(originalState.video_summaries) ||
-    editThumbnailUrl !== originalState.thumbnail_url ||
-    editCollectionId !== originalState.collection_id
-  )
+  const imageUrlsFiltered = mediaUrls.filter((url) => !isAudioFile(url) && !isVideoFile(url))
+
+  const hasUnsavedChanges =
+    isEditMode &&
+    (editTitle !== originalState.title ||
+      editDescription !== originalState.description ||
+      JSON.stringify(editMediaUrls) !== JSON.stringify(originalState.media_urls) ||
+      JSON.stringify(editImageCaptions) !== JSON.stringify(originalState.image_captions) ||
+      JSON.stringify(editVideoSummaries) !== JSON.stringify(originalState.video_summaries) ||
+      editThumbnailUrl !== originalState.thumbnail_url ||
+      editCollectionId !== originalState.collection_id)
 
   useEffect(() => {
     if (!isEditMode || !hasUnsavedChanges) return
 
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       e.preventDefault()
-      e.returnValue = ''
+      e.returnValue = ""
     }
 
-    window.addEventListener('beforeunload', handleBeforeUnload)
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload)
+    window.addEventListener("beforeunload", handleBeforeUnload)
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload)
   }, [isEditMode, hasUnsavedChanges])
-  
+
   const handleSave = async () => {
     setIsSaving(true)
     try {
@@ -198,10 +204,10 @@ export function ArtifactSwipeContent({
           media_urls: editMediaUrls,
           image_captions: editImageCaptions,
           video_summaries: editVideoSummaries,
-          thumbnail_url: editThumbnailUrl, 
+          thumbnail_url: editThumbnailUrl,
           collectionId: editCollectionId,
         },
-        originalState.media_urls
+        originalState.media_urls,
       )
       router.push(`/artifacts/${artifact.slug}`)
       router.refresh()
@@ -215,22 +221,22 @@ export function ArtifactSwipeContent({
 
   const handleDeleteMedia = async (urlToDelete: string) => {
     if (!confirm("Are you sure you want to delete this media item?")) return
-    
+
     if (isEditMode) {
-      setEditMediaUrls(prev => prev.filter(url => url !== urlToDelete))
-      setEditImageCaptions(prev => {
+      setEditMediaUrls((prev) => prev.filter((url) => url !== urlToDelete))
+      setEditImageCaptions((prev) => {
         const updated = { ...prev }
         delete updated[urlToDelete]
         return updated
       })
-      setEditVideoSummaries(prev => {
+      setEditVideoSummaries((prev) => {
         const updated = { ...prev }
         delete updated[urlToDelete]
         return updated
       })
       if (editThumbnailUrl === urlToDelete) {
-        const remainingUrls = editMediaUrls.filter(url => url !== urlToDelete)
-        const newThumbnail = remainingUrls.find(url => isImageUrl(url) || isVideoUrl(url))
+        const remainingUrls = editMediaUrls.filter((url) => url !== urlToDelete)
+        const newThumbnail = remainingUrls.find((url) => isImageUrl(url) || isVideoUrl(url))
         setEditThumbnailUrl(newThumbnail || null)
       }
     } else {
@@ -269,9 +275,9 @@ export function ArtifactSwipeContent({
       const combinedUrls = [...editMediaUrls, ...newUrls]
       const uniqueUrls = Array.from(new Set(combinedUrls))
       setEditMediaUrls(uniqueUrls)
-      
+
       if (!editThumbnailUrl && newUrls.length > 0) {
-        const firstVisual = newUrls.find(url => isImageUrl(url) || isVideoUrl(url))
+        const firstVisual = newUrls.find((url) => isImageUrl(url) || isVideoUrl(url))
         if (firstVisual) {
           setEditThumbnailUrl(firstVisual)
         }
@@ -289,7 +295,7 @@ export function ArtifactSwipeContent({
             description: artifact.description,
             media_urls: uniqueUrls,
           },
-          artifact.media_urls || []
+          artifact.media_urls || [],
         )
 
         router.refresh()
@@ -311,9 +317,9 @@ export function ArtifactSwipeContent({
 
   const handleSaveCaption = async (url: string) => {
     if (isEditMode) {
-      setEditImageCaptions(prev => ({
+      setEditImageCaptions((prev) => ({
         ...prev,
-        [url]: editCaptionText
+        [url]: editCaptionText,
       }))
       setEditingCaption(null)
       setEditCaptionText("")
@@ -356,7 +362,7 @@ export function ArtifactSwipeContent({
 
   const handleConfirmCancel = () => {
     console.log("[v0] User confirmed discard - cleaning up pending uploads")
-    
+
     cleanupPendingUploads().then((result) => {
       if (result.error) {
         console.error("[v0] Cleanup failed:", result.error)
@@ -364,13 +370,13 @@ export function ArtifactSwipeContent({
         console.log(`[v0] Cleanup complete: ${result.deletedCount} files deleted from Cloudinary`)
       }
     })
-    
+
     setEditTitle(originalState.title)
     setEditDescription(originalState.description)
     setEditMediaUrls(originalState.media_urls)
     setEditImageCaptions(originalState.image_captions)
     setEditVideoSummaries(originalState.video_summaries)
-    setEditThumbnailUrl(originalState.thumbnail_url) 
+    setEditThumbnailUrl(originalState.thumbnail_url)
     setEditCollectionId(originalState.collection_id)
     setCancelDialogOpen(false)
     router.push(`/artifacts/${artifact.slug}`)
@@ -378,26 +384,26 @@ export function ArtifactSwipeContent({
 
   const handleCaptionGenerated = (url: string, newCaption: string) => {
     if (isEditMode) {
-      setEditImageCaptions(prev => ({
+      setEditImageCaptions((prev) => ({
         ...prev,
-        [url]: newCaption
+        [url]: newCaption,
       }))
     }
   }
 
   const handleSummaryGenerated = (url: string, newSummary: string) => {
     if (isEditMode) {
-      setEditVideoSummaries(prev => ({
+      setEditVideoSummaries((prev) => ({
         ...prev,
-        [url]: newSummary
+        [url]: newSummary,
       }))
     }
   }
 
   return (
-    <ArtifactSwipeWrapper 
-      previousUrl={isEditMode ? null : previousUrl} 
-      nextUrl={isEditMode ? null : nextUrl} 
+    <ArtifactSwipeWrapper
+      previousUrl={isEditMode ? null : previousUrl}
+      nextUrl={isEditMode ? null : nextUrl}
       disableSwipe={isImageFullscreen || isEditMode}
     >
       {!isEditMode && (
@@ -423,7 +429,7 @@ export function ArtifactSwipeContent({
         />
       )}
 
-      <div className={`space-y-6 px-6 lg:px-8 ${isEditMode ? 'pt-4' : 'pt-2'}`}>
+      <div className={`space-y-6 px-6 lg:px-8 ${isEditMode ? "pt-4" : "pt-2"}`}>
         {!isEditMode && canEdit && (
           <div className="flex items-center justify-between gap-3">
             <Button asChild className="bg-purple-600 hover:bg-purple-700 text-white">
@@ -432,14 +438,9 @@ export function ArtifactSwipeContent({
                 Edit Artifact
               </Link>
             </Button>
-            
+
             <div className="flex items-center gap-2">
-              <Button
-                onClick={() => handleComingSoon("Share")}
-                variant="outline"
-                size="icon"
-                className="rounded-lg"
-              >
+              <Button onClick={() => handleComingSoon("Share")} variant="outline" size="icon" className="rounded-lg">
                 <Share2 className="h-4 w-4" />
               </Button>
               <Button
@@ -450,12 +451,7 @@ export function ArtifactSwipeContent({
               >
                 <BarChart3 className="h-4 w-4" />
               </Button>
-              <Button
-                onClick={() => handleComingSoon("Comments")}
-                variant="outline"
-                size="icon"
-                className="rounded-lg"
-              >
+              <Button onClick={() => handleComingSoon("Comments")} variant="outline" size="icon" className="rounded-lg">
                 <MessageSquare className="h-4 w-4" />
               </Button>
             </div>
@@ -464,7 +460,9 @@ export function ArtifactSwipeContent({
 
         {isEditMode && (
           <section className="space-y-2">
-            <label htmlFor="title" className="text-lg font-semibold text-foreground">Title</label>
+            <label htmlFor="title" className="text-lg font-semibold text-foreground">
+              Title
+            </label>
             <Input
               id="title"
               value={editTitle}
@@ -480,8 +478,8 @@ export function ArtifactSwipeContent({
             <label htmlFor="collection" className="text-sm font-medium text-foreground">
               Choose Collection
             </label>
-            <Select 
-              value={editCollectionId} 
+            <Select
+              value={editCollectionId}
               onValueChange={setEditCollectionId}
               disabled={isSaving || loadingCollections}
             >
@@ -489,12 +487,16 @@ export function ArtifactSwipeContent({
                 <SelectValue placeholder="Select a collection..." />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="uncategorized">Uncategorized</SelectItem>
                 {collections.map((collection) => (
                   <SelectItem key={collection.id} value={collection.id}>
                     {collection.title}
                   </SelectItem>
                 ))}
+                {collections.length === 0 && !loadingCollections && (
+                  <SelectItem value="no-collections" disabled>
+                    No collections found
+                  </SelectItem>
+                )}
               </SelectContent>
             </Select>
             <p className="text-sm text-muted-foreground">Move this artifact to a different collection</p>
@@ -513,9 +515,7 @@ export function ArtifactSwipeContent({
             />
           ) : (
             <div className="text-pretty text-muted-foreground prose prose-sm max-w-none dark:prose-invert">
-              <ReactMarkdown>
-                {artifact.description || "No description provided"}
-              </ReactMarkdown>
+              <ReactMarkdown>{artifact.description || "No description provided"}</ReactMarkdown>
               {artifact.ai_description && (
                 <div className="mt-4 pt-4 border-t">
                   <p className="text-xs font-semibold text-purple-600 mb-2">AI-Enhanced Description</p>
@@ -531,12 +531,15 @@ export function ArtifactSwipeContent({
           <Collapsible open={isAttributesOpen} onOpenChange={setIsAttributesOpen}>
             <CollapsibleTrigger className="flex w-full items-center justify-between hover:opacity-80 transition-opacity">
               <h2 className="text-lg font-semibold text-foreground">Attributes</h2>
-              <ChevronDown className={`h-5 w-5 text-muted-foreground transition-transform ${isAttributesOpen ? 'rotate-180' : ''}`} />
+              <ChevronDown
+                className={`h-5 w-5 text-muted-foreground transition-transform ${isAttributesOpen ? "rotate-180" : ""}`}
+              />
             </CollapsibleTrigger>
             <CollapsibleContent>
               <div className="mt-2 rounded-lg border bg-card p-4">
                 <p className="text-sm text-muted-foreground italic">
-                  No attributes added yet. Future updates will include fields for make, model, year, measurements, materials, and condition.
+                  No attributes added yet. Future updates will include fields for make, model, year, measurements,
+                  materials, and condition.
                 </p>
               </div>
             </CollapsibleContent>
@@ -561,7 +564,7 @@ export function ArtifactSwipeContent({
             )}
           </div>
         )}
-        
+
         {mediaUrls.length > 0 ? (
           <div className="space-y-6">
             {mediaUrls.map((url) => {
@@ -571,7 +574,9 @@ export function ArtifactSwipeContent({
                   <div key={url} className="space-y-3">
                     {isEditMode && (
                       <div className="flex items-center justify-between px-6 lg:px-8">
-                        <h3 className="text-sm font-semibold">Audio{audioUrlsFiltered.length > 1 ? ` ${audioUrlsFiltered.indexOf(url) + 1}` : ''}</h3>
+                        <h3 className="text-sm font-semibold">
+                          Audio{audioUrlsFiltered.length > 1 ? ` ${audioUrlsFiltered.indexOf(url) + 1}` : ""}
+                        </h3>
                         <Button
                           variant="ghost"
                           size="sm"
@@ -584,7 +589,7 @@ export function ArtifactSwipeContent({
                     )}
                     <div className="px-6 lg:px-8 space-y-3">
                       <AudioPlayer src={url} title="Audio Recording" />
-                      
+
                       {isEditMode && (
                         <div className="mt-3">
                           <TranscribeAudioButtonPerMedia artifactId={artifact.id} audioUrl={url} />
@@ -610,14 +615,18 @@ export function ArtifactSwipeContent({
                   <div key={url} className="space-y-3">
                     {isEditMode && (
                       <div className="flex items-center justify-between px-6 lg:px-8">
-                        <h3 className="text-sm font-semibold">Video{videoUrlsFiltered.length > 1 ? ` ${videoUrlsFiltered.indexOf(url) + 1}` : ''}</h3>
+                        <h3 className="text-sm font-semibold">
+                          Video{videoUrlsFiltered.length > 1 ? ` ${videoUrlsFiltered.indexOf(url) + 1}` : ""}
+                        </h3>
                         <div className="flex items-center gap-2">
                           <Button
                             type="button"
                             variant="ghost"
                             size="sm"
                             onClick={() => handleSelectThumbnail(url)}
-                            className={isSelectedThumbnail ? "text-yellow-500" : "text-muted-foreground hover:text-yellow-500"}
+                            className={
+                              isSelectedThumbnail ? "text-yellow-500" : "text-muted-foreground hover:text-yellow-500"
+                            }
                             title="Set as thumbnail"
                           >
                             <Star className={`h-4 w-4 ${isSelectedThumbnail ? "fill-current" : ""}`} />
@@ -634,12 +643,7 @@ export function ArtifactSwipeContent({
                       </div>
                     )}
                     <div className="w-full max-w-full overflow-hidden">
-                      <video 
-                        src={url} 
-                        controls 
-                        className="w-full max-w-full h-auto"
-                        style={{ maxHeight: '70vh' }}
-                      >
+                      <video src={url} controls className="w-full max-w-full h-auto" style={{ maxHeight: "70vh" }}>
                         Your browser does not support the video tag.
                       </video>
                     </div>
@@ -678,9 +682,9 @@ export function ArtifactSwipeContent({
                                   variant="default"
                                   onClick={() => {
                                     if (isEditMode) {
-                                      setEditVideoSummaries(prev => ({
+                                      setEditVideoSummaries((prev) => ({
                                         ...prev,
-                                        [url]: editCaptionText
+                                        [url]: editCaptionText,
                                       }))
                                       setEditingCaption(null)
                                       setEditCaptionText("")
@@ -708,8 +712,8 @@ export function ArtifactSwipeContent({
                         </div>
                       )}
                       {isEditMode && (
-                        <GenerateVideoSummaryButton 
-                          artifactId={artifact.id} 
+                        <GenerateVideoSummaryButton
+                          artifactId={artifact.id}
                           videoUrl={url}
                           onSummaryGenerated={handleSummaryGenerated}
                         />
@@ -725,14 +729,18 @@ export function ArtifactSwipeContent({
                   <div key={url} className="space-y-3">
                     {isEditMode && (
                       <div className="flex items-center justify-between px-6 lg:px-8">
-                        <h3 className="text-sm font-semibold">Photo{imageUrlsFiltered.length > 1 ? ` ${imageUrlsFiltered.indexOf(url) + 1}` : ''}</h3>
+                        <h3 className="text-sm font-semibold">
+                          Photo{imageUrlsFiltered.length > 1 ? ` ${imageUrlsFiltered.indexOf(url) + 1}` : ""}
+                        </h3>
                         <div className="flex items-center gap-2">
                           <Button
                             type="button"
                             variant="ghost"
                             size="sm"
                             onClick={() => handleSelectThumbnail(url)}
-                            className={isSelectedThumbnail ? "text-yellow-500" : "text-muted-foreground hover:text-yellow-500"}
+                            className={
+                              isSelectedThumbnail ? "text-yellow-500" : "text-muted-foreground hover:text-yellow-500"
+                            }
                             title="Set as thumbnail"
                           >
                             <Star className={`h-4 w-4 ${isSelectedThumbnail ? "fill-current" : ""}`} />
@@ -809,8 +817,8 @@ export function ArtifactSwipeContent({
                         </div>
                       )}
                       {isEditMode && (
-                        <GenerateImageCaptionButton 
-                          artifactId={artifact.id} 
+                        <GenerateImageCaptionButton
+                          artifactId={artifact.id}
                           imageUrl={url}
                           onCaptionGenerated={handleCaptionGenerated}
                         />
@@ -834,7 +842,9 @@ export function ArtifactSwipeContent({
           <Collapsible open={isProvenanceOpen} onOpenChange={setIsProvenanceOpen}>
             <CollapsibleTrigger className="flex w-full items-center justify-between hover:opacity-80 transition-opacity">
               <h2 className="text-lg font-semibold text-foreground">Provenance</h2>
-              <ChevronDown className={`h-5 w-5 text-muted-foreground transition-transform ${isProvenanceOpen ? 'rotate-180' : ''}`} />
+              <ChevronDown
+                className={`h-5 w-5 text-muted-foreground transition-transform ${isProvenanceOpen ? "rotate-180" : ""}`}
+              />
             </CollapsibleTrigger>
             <CollapsibleContent>
               <div className="mt-2 rounded-lg border bg-card p-4">
@@ -942,7 +952,8 @@ export function ArtifactSwipeContent({
                         You are about to permanently delete <strong>"{artifact.title}"</strong>.
                       </p>
                       <p className="text-destructive font-medium">
-                        All media files ({totalMedia} {totalMedia === 1 ? 'file' : 'files'}) will be permanently deleted from storage.
+                        All media files ({totalMedia} {totalMedia === 1 ? "file" : "files"}) will be permanently deleted
+                        from storage.
                       </p>
                       <p className="text-xs text-muted-foreground">This action cannot be undone.</p>
                     </AlertDialogDescription>
@@ -990,7 +1001,8 @@ export function ArtifactSwipeContent({
           <DialogHeader>
             <DialogTitle>{comingSoonFeature}</DialogTitle>
             <DialogDescription>
-              This feature is coming soon! We're working hard to bring you the ability to {comingSoonFeature.toLowerCase()} your artifacts.
+              This feature is coming soon! We're working hard to bring you the ability to{" "}
+              {comingSoonFeature.toLowerCase()} your artifacts.
             </DialogDescription>
           </DialogHeader>
         </DialogContent>
@@ -1001,19 +1013,11 @@ export function ArtifactSwipeContent({
         <div className="fixed bottom-[calc(120px+env(safe-area-inset-bottom))] left-0 right-0 flex justify-center pointer-events-none z-40">
           <div className="pointer-events-auto bg-card/95 backdrop-blur-sm border rounded-3xl shadow-lg p-4 mx-4 w-auto">
             <div className="flex items-center gap-3">
-              <Button 
-                onClick={handleSave} 
-                disabled={isSaving}
-                className="bg-green-600 hover:bg-green-700 text-white"
-              >
+              <Button onClick={handleSave} disabled={isSaving} className="bg-green-600 hover:bg-green-700 text-white">
                 <Save className="mr-2 h-4 w-4" />
                 {isSaving ? "Saving..." : "Save Changes"}
               </Button>
-              <Button 
-                onClick={handleCancel}
-                variant="outline"
-                disabled={isSaving}
-              >
+              <Button onClick={handleCancel} variant="outline" disabled={isSaving}>
                 <X className="mr-2 h-4 w-4" />
                 Cancel
               </Button>
