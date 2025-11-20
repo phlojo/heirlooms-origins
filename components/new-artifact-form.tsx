@@ -313,9 +313,11 @@ export function NewArtifactForm({ collectionId, userId }: NewArtifactFormProps) 
                       <div className="px-6 lg:px-8 space-y-3">
                         <AudioPlayer src={url} title="Audio Recording" />
                         {audioTranscripts[url] && (
-                          <div className="rounded-lg bg-muted/50 p-3 text-sm">
-                            <p className="font-medium text-muted-foreground mb-1">AI Transcript:</p>
-                            <p className="whitespace-pre-wrap">{audioTranscripts[url]}</p>
+                          <div className="rounded-lg border bg-muted/30 p-4">
+                            <h4 className="text-sm font-semibold mb-2">Transcript</h4>
+                            <div className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
+                              {audioTranscripts[url]}
+                            </div>
                           </div>
                         )}
                         <div className="flex justify-start">
@@ -367,9 +369,9 @@ export function NewArtifactForm({ collectionId, userId }: NewArtifactFormProps) 
                       </div>
                       <div className="px-6 lg:px-8 space-y-3">
                         {videoSummaries[url] && (
-                          <div className="rounded-lg bg-muted/50 p-3 text-sm">
-                            <p className="font-medium text-muted-foreground mb-1">AI Video Summary:</p>
-                            <p>{videoSummaries[url]}</p>
+                          <div className="rounded-lg border bg-muted/30 p-3">
+                            <h4 className="text-xs font-semibold text-purple-600 mb-1">AI Video Summary</h4>
+                            <p className="text-sm text-foreground leading-relaxed">{videoSummaries[url]}</p>
                           </div>
                         )}
                         <div className="flex justify-start">
@@ -424,9 +426,9 @@ export function NewArtifactForm({ collectionId, userId }: NewArtifactFormProps) 
                       </div>
                       <div className="px-6 lg:px-8 space-y-3">
                         {imageCaptions[url] && (
-                          <div className="rounded-lg bg-muted/50 p-3 text-sm">
-                            <p className="font-medium text-muted-foreground mb-1">AI Caption:</p>
-                            <p>{imageCaptions[url]}</p>
+                          <div className="rounded-lg border bg-muted/30 p-3">
+                            <h4 className="text-xs font-semibold text-purple-600 mb-1">AI Caption</h4>
+                            <p className="text-sm text-foreground leading-relaxed">{imageCaptions[url]}</p>
                           </div>
                         )}
                         <div className="flex justify-start">
