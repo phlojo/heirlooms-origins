@@ -2,15 +2,17 @@
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
-import { Plus, Loader2 } from 'lucide-react'
+import { Plus, Loader2, LayoutGrid, List } from "lucide-react"
 import Link from "next/link"
 import { CollectionCard } from "@/components/collection-card"
+import { CollectionCardHorizontal } from "@/components/collection-card-horizontal"
 import { UncategorizedCollectionCard } from "@/components/uncategorized-collection-card"
 import { EmptyCollections } from "@/components/empty-collections"
 import { LoginModule } from "@/components/login-module"
 import { useEffect, useState, useTransition, useMemo } from "react"
-import { usePathname } from 'next/navigation'
+import { usePathname } from "next/navigation"
 import { getAllPublicCollectionsPaginated, getMyCollectionsPaginated } from "@/lib/actions/collections"
+import { updateViewPreference } from "@/lib/actions/profile"
 
 interface Collection {
   id: string
@@ -29,13 +31,24 @@ interface CollectionsTabsProps {
   allCollections: Collection[]
   myHasMore: boolean
   allHasMore: boolean
+  initialViewPreference?: "gallery" | "list"
 }
 
 const STORAGE_KEY = "heirloom-collections-tab"
 const PAGE_SIZE = 24
 
-export function CollectionsTabs({ user, myCollections, allCollections, myHasMore: initialMyHasMore, allHasMore: initialAllHasMore }: CollectionsTabsProps) {
+type ViewType = "gallery" | "list"
+
+export function CollectionsTabs({
+  user,
+  myCollections,
+  allCollections,
+  myHasMore: initialMyHasMore,
+  allHasMore: initialAllHasMore,
+  initialViewPreference = "gallery",
+}: CollectionsTabsProps) {
   const [activeTab, setActiveTab] = useState<string>("all")
+  const [viewType, setViewType] = useState<ViewType>(initialViewPreference)
   const pathname = usePathname()
 
   const [allCollectionsList, setAllCollectionsList] = useState<Collection[]>(allCollections)
@@ -44,7 +57,7 @@ export function CollectionsTabs({ user, myCollections, allCollections, myHasMore
   const [myHasMore, setMyHasMore] = useState(initialMyHasMore)
   const [isLoadingAll, setIsLoadingAll] = useState(false)
   const [isLoadingMy, setIsLoadingMy] = useState(false)
-  
+
   const [isPending, startTransition] = useTransition()
 
   useEffect(() => {
@@ -61,51 +74,78 @@ export function CollectionsTabs({ user, myCollections, allCollections, myHasMore
     })
   }
 
-  const handleLoadMoreAll = useMemo(() => async () => {
-    if (isLoadingAll || !allHasMore) return
+  const handleViewToggle = async () => {
+    const newView: ViewType = viewType === "gallery" ? "list" : "gallery"
+    setViewType(newView)
 
-    setIsLoadingAll(true)
-    try {
-      const lastCollection = allCollectionsList[allCollectionsList.length - 1]
-      const cursor = lastCollection ? { createdAt: lastCollection.created_at, id: lastCollection.id } : undefined
-
-      const result = await getAllPublicCollectionsPaginated(user?.id, PAGE_SIZE, cursor)
-      
-      setAllCollectionsList((prev) => [...prev, ...result.collections])
-      setAllHasMore(result.hasMore)
-    } catch (error) {
-      console.error("Error loading more collections:", error)
-    } finally {
-      setIsLoadingAll(false)
+    // Save to database if user is logged in
+    if (user) {
+      await updateViewPreference(newView)
     }
-  }, [isLoadingAll, allHasMore, allCollectionsList, user?.id])
+  }
 
-  const handleLoadMoreMy = useMemo(() => async () => {
-    if (isLoadingMy || !myHasMore || !user) return
+  const handleLoadMoreAll = useMemo(
+    () => async () => {
+      if (isLoadingAll || !allHasMore) return
 
-    setIsLoadingMy(true)
-    try {
-      const lastCollection = myCollectionsList[myCollectionsList.length - 1]
-      const cursor = lastCollection ? { createdAt: lastCollection.created_at, id: lastCollection.id } : undefined
+      setIsLoadingAll(true)
+      try {
+        const lastCollection = allCollectionsList[allCollectionsList.length - 1]
+        const cursor = lastCollection ? { createdAt: lastCollection.created_at, id: lastCollection.id } : undefined
 
-      const result = await getMyCollectionsPaginated(user.id, PAGE_SIZE, cursor)
-      
-      setMyCollectionsList((prev) => [...prev, ...result.collections])
-      setMyHasMore(result.hasMore)
-    } catch (error) {
-      console.error("Error loading more collections:", error)
-    } finally {
-      setIsLoadingMy(false)
-    }
-  }, [isLoadingMy, myHasMore, myCollectionsList, user])
+        const result = await getAllPublicCollectionsPaginated(user?.id, PAGE_SIZE, cursor)
+
+        setAllCollectionsList((prev) => [...prev, ...result.collections])
+        setAllHasMore(result.hasMore)
+      } catch (error) {
+        console.error("Error loading more collections:", error)
+      } finally {
+        setIsLoadingAll(false)
+      }
+    },
+    [isLoadingAll, allHasMore, allCollectionsList, user?.id],
+  )
+
+  const handleLoadMoreMy = useMemo(
+    () => async () => {
+      if (isLoadingMy || !myHasMore || !user) return
+
+      setIsLoadingMy(true)
+      try {
+        const lastCollection = myCollectionsList[myCollectionsList.length - 1]
+        const cursor = lastCollection ? { createdAt: lastCollection.created_at, id: lastCollection.id } : undefined
+
+        const result = await getMyCollectionsPaginated(user.id, PAGE_SIZE, cursor)
+
+        setMyCollectionsList((prev) => [...prev, ...result.collections])
+        setMyHasMore(result.hasMore)
+      } catch (error) {
+        console.error("Error loading more collections:", error)
+      } finally {
+        setIsLoadingMy(false)
+      }
+    },
+    [isLoadingMy, myHasMore, myCollectionsList, user],
+  )
 
   return (
     <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
       <div className="sticky top-0 lg:top-16 z-10 -mx-6 bg-background px-6 py-4 flex items-center justify-between border-b lg:-mx-8 lg:px-8 opacity-95">
-        <TabsList>
-          <TabsTrigger value="all">Community</TabsTrigger>
-          <TabsTrigger value="mine">My Collections</TabsTrigger>
-        </TabsList>
+        <div className="flex items-center gap-2">
+          <TabsList>
+            <TabsTrigger value="all">Community</TabsTrigger>
+            <TabsTrigger value="mine">My Collections</TabsTrigger>
+          </TabsList>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={handleViewToggle}
+            className="h-9 w-9 shrink-0 bg-transparent"
+            aria-label={`Switch to ${viewType === "gallery" ? "list" : "gallery"} view`}
+          >
+            {viewType === "gallery" ? <List className="h-4 w-4" /> : <LayoutGrid className="h-4 w-4" />}
+          </Button>
+        </div>
         {user ? (
           <Button asChild>
             <Link href="/collections/new">
@@ -120,13 +160,19 @@ export function CollectionsTabs({ user, myCollections, allCollections, myHasMore
         )}
       </div>
 
-      <TabsContent value="all" className={`mt-6 transition-opacity ${isPending ? 'opacity-50' : 'opacity-100'}`}>
+      <TabsContent value="all" className={`mt-6 transition-opacity ${isPending ? "opacity-50" : "opacity-100"}`}>
         {allCollectionsList.length > 0 ? (
           <>
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {allCollectionsList.map((collection) => (
-                <CollectionCard key={collection.id} collection={collection} mode="all" />
-              ))}
+            <div
+              className={viewType === "gallery" ? "grid gap-6 md:grid-cols-2 lg:grid-cols-3" : "flex flex-col gap-4"}
+            >
+              {allCollectionsList.map((collection) =>
+                viewType === "gallery" ? (
+                  <CollectionCard key={collection.id} collection={collection} mode="all" />
+                ) : (
+                  <CollectionCardHorizontal key={collection.id} collection={collection} mode="all" />
+                ),
+              )}
             </div>
             {allHasMore && (
               <div className="mt-8 pb-12 flex justify-center">
@@ -135,7 +181,7 @@ export function CollectionsTabs({ user, myCollections, allCollections, myHasMore
                   disabled={isLoadingAll}
                   size="lg"
                   variant="outline"
-                  className="min-w-[200px]"
+                  className="min-w-[200px] bg-transparent"
                 >
                   {isLoadingAll ? (
                     <>
@@ -156,19 +202,25 @@ export function CollectionsTabs({ user, myCollections, allCollections, myHasMore
         )}
       </TabsContent>
 
-      <TabsContent value="mine" className={`mt-6 transition-opacity ${isPending ? 'opacity-50' : 'opacity-100'}`}>
+      <TabsContent value="mine" className={`mt-6 transition-opacity ${isPending ? "opacity-50" : "opacity-100"}`}>
         {!user ? (
           <div className="mx-auto max-w-md">
             <LoginModule returnTo={pathname} title="Access Your Collections" showBackButton={false} />
           </div>
         ) : myCollectionsList.length > 0 ? (
           <>
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <div
+              className={viewType === "gallery" ? "grid gap-6 md:grid-cols-2 lg:grid-cols-3" : "flex flex-col gap-4"}
+            >
               {myCollectionsList.map((collection) =>
-                collection.isUnsorted ? (
-                  <UncategorizedCollectionCard key={collection.id} collection={collection} mode="mine" />
+                viewType === "gallery" ? (
+                  collection.isUnsorted ? (
+                    <UncategorizedCollectionCard key={collection.id} collection={collection} mode="mine" />
+                  ) : (
+                    <CollectionCard key={collection.id} collection={collection} mode="mine" />
+                  )
                 ) : (
-                  <CollectionCard key={collection.id} collection={collection} mode="mine" />
+                  <CollectionCardHorizontal key={collection.id} collection={collection} mode="mine" />
                 ),
               )}
             </div>
@@ -179,7 +231,7 @@ export function CollectionsTabs({ user, myCollections, allCollections, myHasMore
                   disabled={isLoadingMy}
                   size="lg"
                   variant="outline"
-                  className="min-w-[200px]"
+                  className="min-w-[200px] bg-transparent"
                 >
                   {isLoadingMy ? (
                     <>

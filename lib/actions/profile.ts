@@ -184,7 +184,7 @@ export async function getUserAuthProvider() {
 
   // Check user identities to determine auth provider
   const identities = user.identities || []
-  
+
   // If user has google identity, they used OAuth
   if (identities.some((identity) => identity.provider === "google")) {
     return "google"
@@ -197,11 +197,11 @@ export async function getUserAuthProvider() {
     // For simplicity, we'll check if the identity has identity_data with a password indicator
     // In Supabase, magic link users don't have password until they set one
     // We'll assume if they're using email provider, they might have password or be magic link
-    
+
     // A more reliable way: check user's last_sign_in_at and app_metadata
     // For now, we'll default to checking if there's any password-related metadata
     const hasPassword = user.app_metadata?.providers?.includes("email") || false
-    
+
     // If email provider exists, assume password auth (they can set password if magic link)
     return "password"
   }
@@ -230,7 +230,7 @@ export async function userHasPassword() {
   // For simplicity, we'll check the identities
   const identities = user.identities || []
   const emailIdentity = identities.find((identity) => identity.provider === "email")
-  
+
   // If they signed up with Google, they don't have a password
   if (identities.some((identity) => identity.provider === "google")) {
     return false
@@ -240,4 +240,63 @@ export async function userHasPassword() {
   // We'll use a heuristic: if user's email is confirmed and they have email identity,
   // we'll allow them to set/change password
   return emailIdentity !== undefined
+}
+
+// Server action to update user's view preference
+/**
+ * Server action to update user's view preference
+ */
+export async function updateViewPreference(view: "gallery" | "list") {
+  const supabase = await createClient()
+
+  // Check authentication
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    return { success: false, error: "Unauthorized" }
+  }
+
+  // Update or insert profile with view preference
+  const { error } = await supabase
+    .from("profiles")
+    .upsert(
+      {
+        id: user.id,
+        view_preference: view,
+        updated_at: new Date().toISOString(),
+      },
+      {
+        onConflict: "id",
+      },
+    )
+    .select()
+    .single()
+
+  if (error) {
+    console.error("[v0] View preference update error:", error)
+    return { success: false, error: "Failed to save view preference" }
+  }
+
+  return { success: true }
+}
+
+/**
+ * Get user's view preference from database
+ */
+export async function getViewPreference() {
+  const supabase = await createClient()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    return "gallery" as const
+  }
+
+  const { data: profile } = await supabase.from("profiles").select("view_preference").eq("id", user.id).single()
+
+  return (profile?.view_preference || "gallery") as "gallery" | "list"
 }

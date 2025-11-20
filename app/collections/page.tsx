@@ -1,15 +1,16 @@
 import { AppLayout } from "@/components/app-layout"
-import { getCurrentUser, createClient } from "@/lib/supabase/server"
+import { getCurrentUser } from "@/lib/supabase/server"
 import { CollectionsTabs } from "@/components/collections-tabs"
 import { ThemeToggle } from "@/components/theme-toggle"
-import { getPrimaryVisualMediaUrl } from "@/lib/media"
 import { getAllPublicCollectionsPaginated, getMyCollectionsPaginated } from "@/lib/actions/collections"
+import { getViewPreference } from "@/lib/actions/profile"
 
 export default async function CollectionsPage() {
   const user = await getCurrentUser()
 
   const myCollectionsResult = user ? await getMyCollectionsPaginated(user.id, 24) : { collections: [], hasMore: false }
   const allCollectionsResult = await getAllPublicCollectionsPaginated(user?.id, 24)
+  const viewPreference = await getViewPreference()
 
   return (
     <AppLayout user={user}>
@@ -49,12 +50,13 @@ export default async function CollectionsPage() {
           </h1>
         </div>
 
-        <CollectionsTabs 
-          user={user} 
-          myCollections={myCollectionsResult.collections} 
+        <CollectionsTabs
+          user={user}
+          myCollections={myCollectionsResult.collections}
           allCollections={allCollectionsResult.collections}
           myHasMore={myCollectionsResult.hasMore}
           allHasMore={allCollectionsResult.hasMore}
+          initialViewPreference={viewPreference}
         />
       </div>
     </AppLayout>
