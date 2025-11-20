@@ -8,13 +8,15 @@ import {
   type UpdateArtifactInput,
 } from "@/lib/schemas"
 import { revalidatePath } from "next/cache"
-import { redirect } from 'next/navigation'
+import { redirect } from "next/navigation"
 import { deleteCloudinaryMedia, extractPublicIdFromUrl } from "./cloudinary"
 import { generateSlug, generateUniqueSlug } from "@/lib/utils/slug"
 import { isCurrentUserAdmin } from "@/lib/utils/admin"
 import { hasVisualMedia, getPrimaryVisualMediaUrl } from "@/lib/media"
 
-export async function createArtifact(input: CreateArtifactInput): Promise<{ error: string; fieldErrors?: any } | never> {
+export async function createArtifact(
+  input: CreateArtifactInput,
+): Promise<{ error: string; fieldErrors?: any } | never> {
   console.log("[v0] CREATE ARTIFACT - Received input:", {
     title: input.title,
     mediaCount: input.media_urls?.length || 0,
@@ -47,22 +49,25 @@ export async function createArtifact(input: CreateArtifactInput): Promise<{ erro
   }
 
   const uniqueMediaUrls = Array.from(new Set(validatedFields.data.media_urls || []))
-  
+
   console.log("[v0] CREATE ARTIFACT - Media URLs processed:", {
     original: validatedFields.data.media_urls?.length || 0,
     unique: uniqueMediaUrls.length,
-    urls: uniqueMediaUrls
+    urls: uniqueMediaUrls,
   })
 
   if (!hasVisualMedia(uniqueMediaUrls)) {
-    console.warn("[v0] CREATE ARTIFACT - WARNING: No visual media (image/video) found. Artifact will not have a thumbnail.", {
-      title: validatedFields.data.title,
-      mediaCount: uniqueMediaUrls.length
-    })
+    console.warn(
+      "[v0] CREATE ARTIFACT - WARNING: No visual media (image/video) found. Artifact will not have a thumbnail.",
+      {
+        title: validatedFields.data.title,
+        mediaCount: uniqueMediaUrls.length,
+      },
+    )
   }
 
-  const validMediaUrls = uniqueMediaUrls.filter(url => {
-    if (!url || typeof url !== 'string' || url.trim() === '') {
+  const validMediaUrls = uniqueMediaUrls.filter((url) => {
+    if (!url || typeof url !== "string" || url.trim() === "") {
       console.warn("[v0] CREATE ARTIFACT - Invalid media URL detected and removed:", url)
       return false
     }
@@ -72,36 +77,32 @@ export async function createArtifact(input: CreateArtifactInput): Promise<{ erro
   if (validMediaUrls.length !== uniqueMediaUrls.length) {
     console.warn("[v0] CREATE ARTIFACT - Some invalid media URLs were filtered out", {
       original: uniqueMediaUrls.length,
-      valid: validMediaUrls.length
+      valid: validMediaUrls.length,
     })
   }
 
   const timestamp = Date.now()
   const baseSlug = `${generateSlug(validatedFields.data.title)}-${timestamp}`
-  
+
   let slug = baseSlug
   let attempts = 0
   const maxAttempts = 5
-  
+
   // Retry logic to handle potential race conditions
   while (attempts < maxAttempts) {
-    const { data: existingSlug } = await supabase
-      .from("artifacts")
-      .select("id")
-      .eq("slug", slug)
-      .maybeSingle()
-    
+    const { data: existingSlug } = await supabase.from("artifacts").select("id").eq("slug", slug).maybeSingle()
+
     if (!existingSlug) {
       // Slug is available, proceed
       break
     }
-    
+
     // Collision detected, append counter
     attempts++
     slug = `${baseSlug}-${attempts}`
     console.log(`[v0] CREATE ARTIFACT - Slug collision detected, trying: ${slug}`)
   }
-  
+
   if (attempts >= maxAttempts) {
     console.error("[v0] CREATE ARTIFACT - Failed to generate unique slug after max attempts")
     return { error: "Unable to create artifact. Please try again." }
@@ -110,7 +111,7 @@ export async function createArtifact(input: CreateArtifactInput): Promise<{ erro
   const thumbnailUrl = validatedFields.data.thumbnail_url || getPrimaryVisualMediaUrl(validMediaUrls)
   console.log("[v0] CREATE ARTIFACT - Thumbnail selection:", {
     userSelected: !!validatedFields.data.thumbnail_url,
-    thumbnailUrl: thumbnailUrl || "NONE"
+    thumbnailUrl: thumbnailUrl || "NONE",
   })
 
   const insertData: any = {
@@ -127,17 +128,26 @@ export async function createArtifact(input: CreateArtifactInput): Promise<{ erro
 
   if (validatedFields.data.image_captions && Object.keys(validatedFields.data.image_captions).length > 0) {
     insertData.image_captions = validatedFields.data.image_captions
-    console.log("[v0] CREATE ARTIFACT - Including image captions:", Object.keys(validatedFields.data.image_captions).length)
+    console.log(
+      "[v0] CREATE ARTIFACT - Including image captions:",
+      Object.keys(validatedFields.data.image_captions).length,
+    )
   }
 
   if (validatedFields.data.video_summaries && Object.keys(validatedFields.data.video_summaries).length > 0) {
     insertData.video_summaries = validatedFields.data.video_summaries
-    console.log("[v0] CREATE ARTIFACT - Including video summaries:", Object.keys(validatedFields.data.video_summaries).length)
+    console.log(
+      "[v0] CREATE ARTIFACT - Including video summaries:",
+      Object.keys(validatedFields.data.video_summaries).length,
+    )
   }
 
   if (validatedFields.data.audio_transcripts && Object.keys(validatedFields.data.audio_transcripts).length > 0) {
     insertData.audio_transcripts = validatedFields.data.audio_transcripts
-    console.log("[v0] CREATE ARTIFACT - Including audio transcripts:", Object.keys(validatedFields.data.audio_transcripts).length)
+    console.log(
+      "[v0] CREATE ARTIFACT - Including audio transcripts:",
+      Object.keys(validatedFields.data.audio_transcripts).length,
+    )
   }
 
   console.log("[v0] CREATE ARTIFACT - Inserting into DB:", {
@@ -146,19 +156,19 @@ export async function createArtifact(input: CreateArtifactInput): Promise<{ erro
     hasVisualMedia: !!thumbnailUrl,
     thumbnail_url: thumbnailUrl || "NULL",
     slug,
-    hasAiData: !!(insertData.image_captions || insertData.video_summaries || insertData.audio_transcripts)
+    hasAiData: !!(insertData.image_captions || insertData.video_summaries || insertData.audio_transcripts),
   })
 
   const { data, error } = await supabase.from("artifacts").insert(insertData).select().single()
 
   if (error) {
     console.error("[v0] CREATE ARTIFACT - Database error:", error)
-    
-    if (error.code === '23505' && error.message?.includes('artifacts_slug_key')) {
+
+    if (error.code === "23505" && error.message?.includes("artifacts_slug_key")) {
       console.error("[v0] CREATE ARTIFACT - Slug collision occurred despite checks:", slug)
       return { error: "Unable to create artifact due to a naming conflict. Please try again." }
     }
-    
+
     return { error: "Failed to create artifact. Please try again." }
   }
 
@@ -292,8 +302,8 @@ export async function getAdjacentArtifacts(artifactId: string, collectionId: str
 
 export async function getAllPublicArtifactsPaginated(
   excludeUserId?: string,
-  limit: number = 24,
-  cursor?: { createdAt: string; id: string }
+  limit = 24,
+  cursor?: { createdAt: string; id: string },
 ) {
   const supabase = await createClient()
 
@@ -342,11 +352,7 @@ export async function getAllPublicArtifactsPaginated(
   }
 }
 
-export async function getMyArtifactsPaginated(
-  userId: string,
-  limit: number = 24,
-  cursor?: { createdAt: string; id: string }
-) {
+export async function getMyArtifactsPaginated(userId: string, limit = 24, cursor?: { createdAt: string; id: string }) {
   const supabase = await createClient()
 
   let query = supabase
@@ -441,7 +447,10 @@ export async function getMyArtifacts(userId: string) {
   }))
 }
 
-export async function updateArtifact(input: UpdateArtifactInput & { collectionId?: string }, oldMediaUrls: string[] = []) {
+export async function updateArtifact(
+  input: UpdateArtifactInput & { collectionId?: string },
+  oldMediaUrls: string[] = [],
+) {
   const validatedFields = updateArtifactSchema.safeParse(input)
 
   if (!validatedFields.success) {
@@ -466,7 +475,9 @@ export async function updateArtifact(input: UpdateArtifactInput & { collectionId
 
   const { data: existingArtifact } = await supabase
     .from("artifacts")
-    .select("user_id, collection_id, slug, title, media_urls, collection:collections(slug)")
+    .select(
+      "user_id, collection_id, slug, title, media_urls, collection:collections(slug), image_captions, video_summaries, audio_transcripts, audio_summaries",
+    )
     .eq("id", validatedFields.data.id)
     .single()
 
@@ -479,9 +490,9 @@ export async function updateArtifact(input: UpdateArtifactInput & { collectionId
   }
 
   const newMediaUrls = validatedFields.data.media_urls || []
-  
-  const validNewMediaUrls = newMediaUrls.filter(url => {
-    if (!url || typeof url !== 'string' || url.trim() === '') {
+
+  const validNewMediaUrls = newMediaUrls.filter((url) => {
+    if (!url || typeof url !== "string" || url.trim() === "") {
       console.warn("[v0] UPDATE ARTIFACT - Invalid media URL detected and removed:", url)
       return false
     }
@@ -490,12 +501,12 @@ export async function updateArtifact(input: UpdateArtifactInput & { collectionId
 
   const originalUrls = existingArtifact.media_urls || []
   const newlyUploadedUrls = validNewMediaUrls.filter((url) => !originalUrls.includes(url))
-  
+
   console.log("[v0] UPDATE ARTIFACT - Media analysis:", {
     originalCount: originalUrls.length,
     newCount: validNewMediaUrls.length,
     newlyUploaded: newlyUploadedUrls.length,
-    newlyUploadedUrls
+    newlyUploadedUrls,
   })
 
   const removedUrls = oldMediaUrls.filter((url) => !validNewMediaUrls.includes(url))
@@ -507,26 +518,64 @@ export async function updateArtifact(input: UpdateArtifactInput & { collectionId
     }
   }
 
+  const updatedImageCaptions =
+    validatedFields.data.image_captions !== undefined
+      ? validatedFields.data.image_captions
+      : { ...(existingArtifact.image_captions || {}) }
+
+  const updatedVideoSummaries =
+    validatedFields.data.video_summaries !== undefined
+      ? validatedFields.data.video_summaries
+      : { ...(existingArtifact.video_summaries || {}) }
+
+  const updatedAudioTranscripts =
+    validatedFields.data.audio_transcripts !== undefined
+      ? validatedFields.data.audio_transcripts
+      : { ...(existingArtifact.audio_transcripts || {}) }
+
+  const updatedAudioSummaries = existingArtifact.audio_summaries ? { ...existingArtifact.audio_summaries } : {}
+
+  // Remove AI data for deleted media URLs
+  for (const removedUrl of removedUrls) {
+    delete updatedImageCaptions[removedUrl]
+    delete updatedVideoSummaries[removedUrl]
+    delete updatedAudioTranscripts[removedUrl]
+    delete updatedAudioSummaries[removedUrl]
+  }
+
   const uniqueMediaUrls = Array.from(new Set(validNewMediaUrls))
 
   const hadVisualMedia = hasVisualMedia(oldMediaUrls)
   const hasVisualMediaNow = hasVisualMedia(uniqueMediaUrls)
-  
+
   if (hadVisualMedia && !hasVisualMediaNow) {
     console.warn("[v0] UPDATE ARTIFACT - WARNING: Removing all visual media. Artifact will lose its thumbnail.", {
       artifactId: validatedFields.data.id,
       oldMediaCount: oldMediaUrls.length,
-      newMediaCount: uniqueMediaUrls.length
+      newMediaCount: uniqueMediaUrls.length,
     })
   }
 
-  const thumbnailUrl = validatedFields.data.thumbnail_url !== undefined 
-    ? validatedFields.data.thumbnail_url 
-    : getPrimaryVisualMediaUrl(uniqueMediaUrls)
-    
+  let thumbnailUrl: string | null
+  if (validatedFields.data.thumbnail_url !== undefined) {
+    // User explicitly set a thumbnail
+    thumbnailUrl = validatedFields.data.thumbnail_url
+  } else {
+    // Check if current thumbnail was deleted
+    const currentThumbnail = existingArtifact.thumbnail_url
+    if (currentThumbnail && removedUrls.includes(currentThumbnail)) {
+      // Thumbnail was deleted, auto-select new one
+      thumbnailUrl = getPrimaryVisualMediaUrl(uniqueMediaUrls)
+      console.log("[v0] UPDATE ARTIFACT - Thumbnail was deleted, auto-selecting new thumbnail:", thumbnailUrl || "NONE")
+    } else {
+      // Keep existing thumbnail or auto-select if none
+      thumbnailUrl = currentThumbnail || getPrimaryVisualMediaUrl(uniqueMediaUrls)
+    }
+  }
+
   console.log("[v0] UPDATE ARTIFACT - Thumbnail update:", {
     userProvided: validatedFields.data.thumbnail_url !== undefined,
-    thumbnailUrl: thumbnailUrl || "NONE"
+    thumbnailUrl: thumbnailUrl || "NONE",
   })
 
   let newSlug = existingArtifact.slug
@@ -542,11 +591,11 @@ export async function updateArtifact(input: UpdateArtifactInput & { collectionId
   const oldCollectionId = existingArtifact.collection_id
   const newCollectionId = input.collectionId || oldCollectionId
   const collectionChanged = newCollectionId !== oldCollectionId
-  
+
   if (collectionChanged) {
     console.log("[v0] UPDATE ARTIFACT - Collection change detected:", {
       from: oldCollectionId,
-      to: newCollectionId
+      to: newCollectionId,
     })
   }
 
@@ -559,22 +608,14 @@ export async function updateArtifact(input: UpdateArtifactInput & { collectionId
     slug: newSlug,
     thumbnail_url: thumbnailUrl,
     updated_at: new Date().toISOString(),
+    image_captions: updatedImageCaptions,
+    video_summaries: updatedVideoSummaries,
+    audio_transcripts: updatedAudioTranscripts,
+    audio_summaries: updatedAudioSummaries,
   }
 
   if (collectionChanged) {
     updateData.collection_id = newCollectionId
-  }
-
-  if (validatedFields.data.image_captions !== undefined) {
-    updateData.image_captions = validatedFields.data.image_captions
-  }
-
-  if (validatedFields.data.video_summaries !== undefined) {
-    updateData.video_summaries = validatedFields.data.video_summaries
-  }
-
-  if (validatedFields.data.audio_transcripts !== undefined) {
-    updateData.audio_transcripts = validatedFields.data.audio_transcripts
   }
 
   console.log("[v0] UPDATE ARTIFACT - Updating with validated data:", {
@@ -582,7 +623,9 @@ export async function updateArtifact(input: UpdateArtifactInput & { collectionId
     mediaCount: uniqueMediaUrls.length,
     hasThumbnail: !!thumbnailUrl,
     thumbnail_url: thumbnailUrl || "NULL",
-    collectionChanged
+    collectionChanged,
+    removedMediaCount: removedUrls.length,
+    cleanedAiData: removedUrls.length > 0,
   })
 
   const { data, error } = await supabase
@@ -601,7 +644,7 @@ export async function updateArtifact(input: UpdateArtifactInput & { collectionId
     artifactId: data.id,
     slug: data.slug,
     mediaCount: data.media_urls?.length || 0,
-    hasThumbnail: !!data.thumbnail_url
+    hasThumbnail: !!data.thumbnail_url,
   })
 
   if (newlyUploadedUrls.length > 0) {
@@ -622,19 +665,15 @@ export async function updateArtifact(input: UpdateArtifactInput & { collectionId
   revalidatePath(`/artifacts/${existingArtifact.slug}`)
   revalidatePath(`/artifacts/${data.slug}`)
   revalidatePath("/collections")
-  
+
   if (existingArtifact.collection?.slug) {
     revalidatePath(`/collections/${existingArtifact.collection.slug}`)
   }
-  
+
   if (collectionChanged) {
     // Fetch new collection slug for revalidation
-    const { data: newCollection } = await supabase
-      .from("collections")
-      .select("slug")
-      .eq("id", newCollectionId)
-      .single()
-    
+    const { data: newCollection } = await supabase.from("collections").select("slug").eq("id", newCollectionId).single()
+
     if (newCollection?.slug) {
       revalidatePath(`/collections/${newCollection.slug}`)
     }
@@ -658,7 +697,9 @@ export async function deleteMediaFromArtifact(artifactId: string, mediaUrl: stri
 
   const { data: artifact, error: fetchError } = await supabase
     .from("artifacts")
-    .select("user_id, slug, media_urls, image_captions, video_summaries, audio_transcripts, audio_summaries, collection:collections(slug)")
+    .select(
+      "user_id, slug, media_urls, image_captions, video_summaries, audio_transcripts, audio_summaries, collection:collections(slug)",
+    )
     .eq("id", artifactId)
     .single()
 
@@ -777,7 +818,7 @@ export async function deleteArtifact(artifactId: string) {
 
   const mediaUrls = artifact.media_urls || []
   const deletedPublicIds = new Set<string>()
-  
+
   for (const url of mediaUrls) {
     const publicId = await extractPublicIdFromUrl(url)
     if (publicId) {
