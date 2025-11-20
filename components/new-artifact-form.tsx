@@ -315,7 +315,7 @@ export function NewArtifactForm({ collectionId, userId }: NewArtifactFormProps) 
                         {audioTranscripts[url] && (
                           <div className="rounded-lg border bg-muted/30 p-4">
                             <h4 className="text-sm font-semibold mb-2">Transcript</h4>
-                            <div className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
+                            <div className="text-sm text-foreground leading-relaxed whitespace-pre-wrap italic">
                               {audioTranscripts[url]}
                             </div>
                           </div>
@@ -371,7 +371,7 @@ export function NewArtifactForm({ collectionId, userId }: NewArtifactFormProps) 
                         {videoSummaries[url] && (
                           <div className="rounded-lg border bg-muted/30 p-3">
                             <h4 className="text-xs font-semibold text-purple-600 mb-1">AI Video Summary</h4>
-                            <p className="text-sm text-foreground leading-relaxed">{videoSummaries[url]}</p>
+                            <p className="text-sm text-foreground leading-relaxed italic">{videoSummaries[url]}</p>
                           </div>
                         )}
                         <div className="flex justify-start">
@@ -428,7 +428,7 @@ export function NewArtifactForm({ collectionId, userId }: NewArtifactFormProps) 
                         {imageCaptions[url] && (
                           <div className="rounded-lg border bg-muted/30 p-3">
                             <h4 className="text-xs font-semibold text-purple-600 mb-1">AI Caption</h4>
-                            <p className="text-sm text-foreground leading-relaxed">{imageCaptions[url]}</p>
+                            <p className="text-sm text-foreground leading-relaxed italic">{imageCaptions[url]}</p>
                           </div>
                         )}
                         <div className="flex justify-start">

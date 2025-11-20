@@ -602,7 +602,7 @@ export function ArtifactSwipeContent({
                       {transcript && (
                         <div className="rounded-lg border bg-muted/30 p-4 mt-3">
                           <h4 className="text-sm font-semibold mb-2">Transcript</h4>
-                          <div className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
+                          <div className="text-sm text-foreground leading-relaxed whitespace-pre-wrap italic">
                             {transcript}
                           </div>
                         </div>
@@ -710,7 +710,7 @@ export function ArtifactSwipeContent({
                               </div>
                             </div>
                           ) : (
-                            <p className="text-sm text-foreground leading-relaxed">{summary}</p>
+                            <p className="text-sm text-foreground leading-relaxed italic">{summary}</p>
                           )}
                         </div>
                       )}
@@ -815,7 +815,7 @@ export function ArtifactSwipeContent({
                               </div>
                             </div>
                           ) : (
-                            <p className="text-sm text-foreground leading-relaxed">{caption}</p>
+                            <p className="text-sm text-foreground leading-relaxed italic">{caption}</p>
                           )}
                         </div>
                       )}
