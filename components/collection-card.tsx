@@ -89,7 +89,7 @@ export function CollectionCard({ collection, mode }: CollectionCardProps) {
             <p className="text-sm text-muted-foreground line-clamp-3">{collection.description}</p>
           )}
 
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between mt-2">
             <p className="text-sm text-muted-foreground">
               {collection.itemCount} {collection.itemCount === 1 ? "artifact" : "artifacts"}
             </p>
