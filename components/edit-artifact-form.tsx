@@ -375,55 +375,57 @@ export function EditArtifactForm({ artifact, userId }: EditArtifactFormProps) {
             )}
           />
 
-          <FormField
-            control={form.control}
-            name="collectionId"
-            render={({ field }) => (
-              <FormItem>
-                <CollectionSelector
-                  userId={userId}
-                  value={field.value || ""}
-                  onChange={field.onChange}
-                  disabled={form.formState.isSubmitting || isUploading}
-                />
-                <FormDescription>Move this artifact to a different collection</FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          {artifactTypes.length > 0 && (
-            <ArtifactTypeSelector
-              types={artifactTypes}
-              selectedTypeId={selectedTypeId}
-              onSelectType={handleTypeChange}
-              required={false}
-              defaultOpen={false}
-            />
-          )}
-
-          <FormField
-            control={form.control}
-            name="description"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Description</FormLabel>
-                <FormControl>
-                  <TranscriptionInput
-                    value={field.value}
-                    onChange={field.onChange}
-                    placeholder="Tell the story of this heirloom"
-                    type="textarea"
-                    fieldType="description"
+          <section className="space-y-3">
+            <FormField
+              control={form.control}
+              name="collectionId"
+              render={({ field }) => (
+                <FormItem>
+                  <CollectionSelector
                     userId={userId}
-                    entityType="artifact"
-                    rows={4}
+                    value={field.value || ""}
+                    onChange={field.onChange}
+                    disabled={form.formState.isSubmitting || isUploading}
                   />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
+                  <FormDescription>Move this artifact to a different collection</FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {artifactTypes.length > 0 && (
+              <ArtifactTypeSelector
+                types={artifactTypes}
+                selectedTypeId={selectedTypeId}
+                onSelectType={handleTypeChange}
+                required={false}
+                defaultOpen={false}
+              />
             )}
-          />
+
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Description</FormLabel>
+                  <FormControl>
+                    <TranscriptionInput
+                      value={field.value}
+                      onChange={field.onChange}
+                      placeholder="Tell the story of this heirloom"
+                      type="textarea"
+                      fieldType="description"
+                      userId={userId}
+                      entityType="artifact"
+                      rows={4}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </section>
 
           <div className="space-y-3">
             <FormLabel>Photos</FormLabel>
