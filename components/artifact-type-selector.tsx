@@ -3,9 +3,10 @@
 import { useState, useEffect } from "react"
 import { getArtifactTypes } from "@/lib/actions/artifact-types"
 import type { ArtifactType } from "@/lib/types/artifact-types"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { FormControl, FormLabel, FormDescription } from "@/components/ui/form"
+import { FormLabel, FormDescription } from "@/components/ui/form"
 import * as LucideIcons from "lucide-react"
+import { Check } from "lucide-react"
+import { cn } from "@/lib/utils"
 
 interface ArtifactTypeSelectorProps {
   value: string | null | undefined
@@ -16,11 +17,11 @@ interface ArtifactTypeSelectorProps {
 }
 
 /**
- * ArtifactTypeSelector - Select artifact type from dynamic database
+ * ArtifactTypeSelector - Modern visual picker for artifact types
  *
  * Features:
  * - Loads types from database (future-expandable)
- * - Shows icon preview for each type
+ * - Shows icon and label in grid layout
  * - Preselects collection's primary type if available
  * - Allows clearing selection (optional field)
  */
@@ -57,46 +58,72 @@ export function ArtifactTypeSelector({
     return (
       <div className="space-y-2">
         <FormLabel>Type {!required && <span className="text-muted-foreground">(optional)</span>}</FormLabel>
-        <div className="h-9 w-full rounded-md border border-input bg-muted/30 animate-pulse" />
+        <div className="grid grid-cols-3 gap-3">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div key={i} className="aspect-square rounded-2xl border bg-muted/30 animate-pulse" />
+          ))}
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
       <FormLabel>Type {!required && <span className="text-muted-foreground">(optional)</span>}</FormLabel>
-      <Select
-        value={value || "none"}
-        onValueChange={(val) => onChange(val === "none" ? null : val)}
-        disabled={disabled}
-      >
-        <FormControl>
-          <SelectTrigger className="w-full text-base md:text-sm">
-            <SelectValue placeholder="Select artifact type" />
-          </SelectTrigger>
-        </FormControl>
-        <SelectContent className="text-base md:text-sm">
-          {!required && (
-            <SelectItem value="none" className="text-base md:text-sm text-muted-foreground">
-              No type selected
-            </SelectItem>
-          )}
-          {types.map((type) => {
-            // Get the Lucide icon component dynamically
-            const IconComponent = (LucideIcons as any)[type.icon_name] || LucideIcons.Package
 
-            return (
-              <SelectItem key={type.id} value={type.id} className="text-base md:text-sm">
-                <div className="flex items-center gap-2">
-                  <IconComponent className="h-4 w-4 text-muted-foreground" />
-                  <span>{type.name}</span>
+      <div className="grid grid-cols-3 gap-3">
+        {types.map((type) => {
+          const IconComponent = (LucideIcons as any)[type.icon_name] || LucideIcons.Package
+          const isSelected = value === type.id
+
+          return (
+            <button
+              key={type.id}
+              type="button"
+              disabled={disabled}
+              onClick={() => {
+                if (isSelected && !required) {
+                  onChange(null)
+                } else {
+                  onChange(type.id)
+                }
+              }}
+              className={cn(
+                "relative flex flex-col items-center justify-center gap-2 rounded-2xl border-2 p-4 transition-all",
+                "hover:border-primary/50 hover:bg-accent/50",
+                "disabled:opacity-50 disabled:cursor-not-allowed",
+                isSelected ? "border-primary bg-primary/5 shadow-sm" : "border-border bg-background",
+              )}
+            >
+              {/* Selected indicator */}
+              {isSelected && (
+                <div className="absolute top-2 right-2 h-5 w-5 rounded-full bg-primary flex items-center justify-center">
+                  <Check className="h-3 w-3 text-primary-foreground" />
                 </div>
-              </SelectItem>
-            )
-          })}
-        </SelectContent>
-      </Select>
-      <FormDescription className="text-xs">Categorize your artifact by type</FormDescription>
+              )}
+
+              {/* Icon */}
+              <IconComponent
+                className={cn("h-8 w-8 transition-colors", isSelected ? "text-primary" : "text-muted-foreground")}
+              />
+
+              {/* Label */}
+              <span
+                className={cn(
+                  "text-xs font-medium text-center leading-tight",
+                  isSelected ? "text-foreground" : "text-muted-foreground",
+                )}
+              >
+                {type.name}
+              </span>
+            </button>
+          )
+        })}
+      </div>
+
+      <FormDescription className="text-xs">
+        {required ? "Select a type for this artifact" : "Tap again to deselect"}
+      </FormDescription>
     </div>
   )
 }
