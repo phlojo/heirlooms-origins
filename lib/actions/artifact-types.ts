@@ -1,6 +1,6 @@
 "use server"
 
-import { createServerClient } from "@/lib/supabase/server"
+import { createClient } from "@/lib/supabase/server"
 import type { ArtifactType, ArtifactTypeWithCount } from "@/lib/types/artifact-types"
 
 /**
@@ -9,7 +9,7 @@ import type { ArtifactType, ArtifactTypeWithCount } from "@/lib/types/artifact-t
  */
 export async function getArtifactTypes(): Promise<ArtifactType[]> {
   try {
-    const supabase = await createServerClient()
+    const supabase = await createClient()
 
     const { data, error } = await supabase
       .from("artifact_types")
@@ -36,7 +36,7 @@ export async function getArtifactTypes(): Promise<ArtifactType[]> {
  * Useful for analytics and filtering UIs
  */
 export async function getArtifactTypesWithCounts(userId: string): Promise<ArtifactTypeWithCount[]> {
-  const supabase = await createServerClient()
+  const supabase = await createClient()
 
   const { data, error } = await supabase
     .from("artifact_types")
@@ -63,7 +63,7 @@ export async function getArtifactTypesWithCounts(userId: string): Promise<Artifa
  * Get a single artifact type by ID
  */
 export async function getArtifactTypeById(id: string): Promise<ArtifactType | null> {
-  const supabase = await createServerClient()
+  const supabase = await createClient()
 
   const { data, error } = await supabase.from("artifact_types").select("*").eq("id", id).eq("is_active", true).single()
 
@@ -79,7 +79,7 @@ export async function getArtifactTypeById(id: string): Promise<ArtifactType | nu
  * Get a single artifact type by slug
  */
 export async function getArtifactTypeBySlug(slug: string): Promise<ArtifactType | null> {
-  const supabase = await createServerClient()
+  const supabase = await createClient()
 
   const { data, error } = await supabase
     .from("artifact_types")
