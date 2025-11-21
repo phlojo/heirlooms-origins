@@ -2,17 +2,23 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Sparkles, Loader2 } from 'lucide-react'
+import { Sparkles, Loader2 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
-import { useRouter } from 'next/navigation'
+import { useRouter } from "next/navigation"
 
 interface TranscribeAudioButtonPerMediaProps {
-  artifactId: string
+  artifactId?: string
   audioUrl: string
-  onTranscriptGenerated?: (transcript: string) => void
+  onTranscriptGenerated?: (url: string, transcript: string) => void
+  currentTranscript?: string
 }
 
-export function TranscribeAudioButtonPerMedia({ artifactId, audioUrl, onTranscriptGenerated }: TranscribeAudioButtonPerMediaProps) {
+export function TranscribeAudioButtonPerMedia({
+  artifactId,
+  audioUrl,
+  onTranscriptGenerated,
+  currentTranscript,
+}: TranscribeAudioButtonPerMediaProps) {
   const [isLoading, setIsLoading] = useState(false)
   const { toast } = useToast()
   const router = useRouter()
@@ -25,7 +31,7 @@ export function TranscribeAudioButtonPerMedia({ artifactId, audioUrl, onTranscri
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ artifactId, audioUrl }),
+        body: JSON.stringify({ artifactId: artifactId || "temp", audioUrl }),
       })
 
       if (!response.ok) {
@@ -35,7 +41,7 @@ export function TranscribeAudioButtonPerMedia({ artifactId, audioUrl, onTranscri
 
       const data = await response.json()
       if (onTranscriptGenerated && data.transcript) {
-        onTranscriptGenerated(data.transcript)
+        onTranscriptGenerated(audioUrl, data.transcript)
       }
 
       toast({
@@ -60,13 +66,27 @@ export function TranscribeAudioButtonPerMedia({ artifactId, audioUrl, onTranscri
   return (
     <Button
       onClick={handleTranscribe}
-      disabled={isLoading}
+      disabled={isLoading || !!currentTranscript}
       variant="outline"
       size="sm"
       className="gap-2 bg-transparent"
     >
-      {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-      {isLoading ? "Transcribing..." : "AI Transcribe"}
+      {isLoading ? (
+        <>
+          <Loader2 className="h-4 w-4 animate-spin" />
+          Transcribing...
+        </>
+      ) : currentTranscript ? (
+        <>
+          <Sparkles className="h-4 w-4" />
+          Transcribed
+        </>
+      ) : (
+        <>
+          <Sparkles className="h-4 w-4" />
+          AI Transcribe
+        </>
+      )}
     </Button>
   )
 }

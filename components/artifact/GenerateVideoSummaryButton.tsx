@@ -2,18 +2,24 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Sparkles, Loader2 } from 'lucide-react'
-import { useRouter } from 'next/navigation'
+import { Sparkles, Loader2 } from "lucide-react"
+import { useRouter } from "next/navigation"
 import { useToast } from "@/hooks/use-toast"
 import { fetchJson } from "@/lib/fetchJson"
 
 interface GenerateVideoSummaryButtonProps {
-  artifactId: string
+  artifactId?: string
   videoUrl: string
-  onSummaryGenerated?: (summary: string) => void
+  onSummaryGenerated?: (url: string, summary: string) => void
+  currentSummary?: string
 }
 
-export function GenerateVideoSummaryButton({ artifactId, videoUrl, onSummaryGenerated }: GenerateVideoSummaryButtonProps) {
+export function GenerateVideoSummaryButton({
+  artifactId,
+  videoUrl,
+  onSummaryGenerated,
+  currentSummary,
+}: GenerateVideoSummaryButtonProps) {
   const [isGenerating, setIsGenerating] = useState(false)
   const router = useRouter()
   const { toast } = useToast()
@@ -22,7 +28,7 @@ export function GenerateVideoSummaryButton({ artifactId, videoUrl, onSummaryGene
     setIsGenerating(true)
     try {
       const data = await fetchJson("/api/analyze/video-single", {
-        body: { artifactId, videoUrl },
+        body: { artifactId: artifactId || "temp", videoUrl },
       })
 
       toast({
@@ -31,12 +37,7 @@ export function GenerateVideoSummaryButton({ artifactId, videoUrl, onSummaryGene
       })
 
       if (onSummaryGenerated && data.summary) {
-        // Check if callback expects 2 args (url, summary) or 1 arg (summary)
-        if (onSummaryGenerated.length === 2) {
-          (onSummaryGenerated as (url: string, summary: string) => void)(videoUrl, data.summary)
-        } else {
-          onSummaryGenerated(data.summary)
-        }
+        onSummaryGenerated(videoUrl, data.summary)
       } else {
         router.refresh()
       }
@@ -59,13 +60,18 @@ export function GenerateVideoSummaryButton({ artifactId, videoUrl, onSummaryGene
       variant="outline"
       size="sm"
       onClick={handleGenerate}
-      disabled={isGenerating}
+      disabled={isGenerating || !!currentSummary}
       className="gap-2 bg-transparent"
     >
       {isGenerating ? (
         <>
           <Loader2 className="h-4 w-4 animate-spin" />
           Generating...
+        </>
+      ) : currentSummary ? (
+        <>
+          <Sparkles className="h-4 w-4" />
+          Summary Generated
         </>
       ) : (
         <>

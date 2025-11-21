@@ -2,18 +2,24 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Sparkles, Loader2 } from 'lucide-react'
-import { useRouter } from 'next/navigation'
+import { Sparkles, Loader2 } from "lucide-react"
+import { useRouter } from "next/navigation"
 import { useToast } from "@/hooks/use-toast"
 import { fetchJson } from "@/lib/fetchJson"
 
 interface GenerateImageCaptionButtonProps {
-  artifactId: string
+  artifactId?: string
   imageUrl: string
   onCaptionGenerated?: (url: string, caption: string) => void
+  currentCaption?: string
 }
 
-export function GenerateImageCaptionButton({ artifactId, imageUrl, onCaptionGenerated }: GenerateImageCaptionButtonProps) {
+export function GenerateImageCaptionButton({
+  artifactId,
+  imageUrl,
+  onCaptionGenerated,
+  currentCaption,
+}: GenerateImageCaptionButtonProps) {
   const [isGenerating, setIsGenerating] = useState(false)
   const router = useRouter()
   const { toast } = useToast()
@@ -22,7 +28,7 @@ export function GenerateImageCaptionButton({ artifactId, imageUrl, onCaptionGene
     setIsGenerating(true)
     try {
       const data = await fetchJson("/api/analyze/image-single", {
-        body: { artifactId, imageUrl },
+        body: { artifactId: artifactId || "temp", imageUrl },
       })
 
       toast({
@@ -54,13 +60,18 @@ export function GenerateImageCaptionButton({ artifactId, imageUrl, onCaptionGene
       variant="outline"
       size="sm"
       onClick={handleGenerate}
-      disabled={isGenerating}
+      disabled={isGenerating || !!currentCaption}
       className="gap-2 bg-transparent"
     >
       {isGenerating ? (
         <>
           <Loader2 className="h-4 w-4 animate-spin" />
           Generating...
+        </>
+      ) : currentCaption ? (
+        <>
+          <Sparkles className="h-4 w-4" />
+          Caption Generated
         </>
       ) : (
         <>
