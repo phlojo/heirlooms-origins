@@ -2,15 +2,18 @@
 
 import { createServerClient } from "@/lib/supabase/server"
 import type { ArtifactType, ArtifactTypeWithCount } from "@/lib/types/artifact-types"
-import { artifactTypesList } from "@/config/artifact-types"
 
 /**
  * Get all active artifact types
  * Ordered by display_order
  */
 export async function getArtifactTypes(): Promise<ArtifactType[]> {
+  console.log("[v0] getArtifactTypes: Starting fetch from database")
+
   try {
     const supabase = await createServerClient()
+
+    console.log("[v0] getArtifactTypes: Supabase client created")
 
     const { data, error } = await supabase
       .from("artifact_types")
@@ -19,16 +22,15 @@ export async function getArtifactTypes(): Promise<ArtifactType[]> {
       .order("display_order", { ascending: true })
 
     if (error) {
-      console.error("[v0] Error fetching artifact types:", error)
-      console.log("[v0] Falling back to static artifact types config")
-      return artifactTypesList
+      console.error("[v0] getArtifactTypes: Database error:", error)
+      throw error
     }
 
-    return data || artifactTypesList
+    console.log("[v0] getArtifactTypes: Successfully fetched types:", data?.length || 0)
+    return data || []
   } catch (err) {
-    console.error("[v0] Exception fetching artifact types:", err)
-    console.log("[v0] Falling back to static artifact types config")
-    return artifactTypesList
+    console.error("[v0] getArtifactTypes: Exception:", err)
+    return []
   }
 }
 
