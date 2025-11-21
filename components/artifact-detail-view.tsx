@@ -28,7 +28,6 @@ import {
 } from "lucide-react"
 import { updateArtifact, deleteMediaFromArtifact, deleteArtifact } from "@/lib/actions/artifacts"
 import { getMyCollections } from "@/lib/actions/collections"
-import { cleanupPendingUploads } from "@/lib/actions/pending-uploads"
 import { useRouter } from "next/navigation"
 import { isImageUrl, isVideoUrl, isAudioUrl } from "@/lib/media"
 import { GenerateImageCaptionButton } from "@/components/artifact/GenerateImageCaptionButton"
@@ -48,6 +47,15 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { ArtifactTypeSelector } from "./artifact-type-selector"
+import { getArtifactTypes } from "@/lib/actions/artifact-types"
+import type { ArtifactType } from "@/lib/types/artifact-types"
+import { toast } from "sonner"
+
+interface CollectionWithArtifactCount {
+  id: string
+  title: string
+}
 
 interface ArtifactDetailViewProps {
   artifact: any
@@ -74,16 +82,12 @@ export function ArtifactDetailView({
   previousUrl,
   nextUrl,
 }: ArtifactDetailViewProps) {
-  const [originalState] = useState({
-    title: artifact.title,
-    description: artifact.description || "",
-    media_urls: artifact.media_urls || [],
-    image_captions: artifact.image_captions || {},
-    video_summaries: artifact.video_summaries || {},
-    audio_transcripts: artifact.audio_transcripts || {},
-    thumbnail_url: artifact.thumbnail_url || null,
-    collection_id: artifact.collection_id,
-  })
+  const [isSaving, setIsSaving] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [collections, setCollections] = useState<CollectionWithArtifactCount[]>([])
+  const [loadingCollections, setLoadingCollections] = useState(false)
+  const [artifactTypes, setArtifactTypes] = useState<ArtifactType[]>([])
+  const [selectedTypeId, setSelectedTypeId] = useState<string | null>(artifact.type_id || null)
 
   const [isImageFullscreen, setIsImageFullscreen] = useState(false)
   const [isAttributesOpen, setIsAttributesOpen] = useState(false)
@@ -99,24 +103,30 @@ export function ArtifactDetailView({
   const [editCaptionText, setEditCaptionText] = useState<string>("")
   const [isSavingCaption, setIsSavingCaption] = useState(false)
 
+  const [originalState] = useState({
+    title: artifact.title,
+    description: artifact.description || "",
+    media_urls: artifact.media_urls || [],
+    image_captions: artifact.image_captions || {},
+    video_summaries: artifact.video_summaries || {},
+    audio_transcripts: artifact.audio_transcripts || {},
+    thumbnail_url: artifact.thumbnail_url || "",
+    collection_id: artifact.collection_id,
+    type_id: artifact.type_id || null,
+  })
+
   const [editTitle, setEditTitle] = useState(artifact.title)
   const [editDescription, setEditDescription] = useState(artifact.description || "")
   const [editMediaUrls, setEditMediaUrls] = useState<string[]>(artifact.media_urls || [])
   const [editImageCaptions, setEditImageCaptions] = useState<Record<string, string>>(artifact.image_captions || {})
   const [editVideoSummaries, setEditVideoSummaries] = useState<Record<string, string>>(artifact.video_summaries || {})
-  const [editThumbnailUrl, setEditThumbnailUrl] = useState<string | null>(artifact.thumbnail_url || null)
+  const [editThumbnailUrl, setEditThumbnailUrl] = useState<string>(artifact.thumbnail_url || "")
   const [editCollectionId, setEditCollectionId] = useState<string>(artifact.collection_id)
-
-  const [isSaving, setIsSaving] = useState(false)
-  const [isDeleting, setIsDeleting] = useState(false)
 
   const router = useRouter()
   const supabase = useSupabase()
   const [userId, setUserId] = useState<string>("")
   const [isAdmin, setIsAdmin] = useState(false)
-
-  const [collections, setCollections] = useState<Array<{ id: string; title: string }>>([])
-  const [loadingCollections, setLoadingCollections] = useState(false)
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -154,6 +164,10 @@ export function ArtifactDetailView({
         .finally(() => {
           setLoadingCollections(false)
         })
+
+      getArtifactTypes().then((types) => {
+        setArtifactTypes(types)
+      })
     }
   }, [isEditMode, userId])
 
@@ -179,6 +193,7 @@ export function ArtifactDetailView({
       JSON.stringify(editImageCaptions) !== JSON.stringify(originalState.image_captions) ||
       JSON.stringify(editVideoSummaries) !== JSON.stringify(originalState.video_summaries) ||
       editThumbnailUrl !== originalState.thumbnail_url ||
+      selectedTypeId !== originalState.type_id ||
       editCollectionId !== originalState.collection_id)
 
   useEffect(() => {
@@ -204,16 +219,17 @@ export function ArtifactDetailView({
           media_urls: editMediaUrls,
           image_captions: editImageCaptions,
           video_summaries: editVideoSummaries,
-          thumbnail_url: editThumbnailUrl,
-          collectionId: editCollectionId,
+          thumbnail_url: editThumbnailUrl || null,
+          collection_id: editCollectionId,
+          type_id: selectedTypeId,
         },
-        originalState.media_urls,
+        artifact.slug,
       )
-      router.push(`/artifacts/${artifact.slug}`)
-      router.refresh()
+      toast.success("Artifact updated successfully")
+      window.location.href = `/artifacts/${artifact.slug}`
     } catch (error) {
-      console.error("[v0] Failed to save artifact:", error)
-      alert("Failed to save changes. Please try again.")
+      console.error("[v0] Error saving artifact:", error)
+      toast.error("Failed to save changes")
     } finally {
       setIsSaving(false)
     }
@@ -237,7 +253,7 @@ export function ArtifactDetailView({
       if (editThumbnailUrl === urlToDelete) {
         const remainingUrls = editMediaUrls.filter((url) => url !== urlToDelete)
         const newThumbnail = remainingUrls.find((url) => isImageUrl(url) || isVideoUrl(url))
-        setEditThumbnailUrl(newThumbnail || null)
+        setEditThumbnailUrl(newThumbnail || "")
       }
     } else {
       try {
@@ -295,7 +311,7 @@ export function ArtifactDetailView({
             description: artifact.description,
             media_urls: uniqueUrls,
           },
-          artifact.media_urls || [],
+          artifact.slug,
         )
 
         router.refresh()
@@ -352,7 +368,7 @@ export function ArtifactDetailView({
     if (hasUnsavedChanges) {
       setCancelDialogOpen(true)
     } else {
-      router.push(`/artifacts/${artifact.slug}`)
+      window.location.href = `/artifacts/${artifact.slug}`
     }
   }
 
@@ -360,26 +376,10 @@ export function ArtifactDetailView({
     setEditThumbnailUrl(url)
   }
 
-  const handleConfirmCancel = () => {
-    console.log("[v0] User confirmed discard - cleaning up pending uploads")
-
-    cleanupPendingUploads().then((result) => {
-      if (result.error) {
-        console.error("[v0] Cleanup failed:", result.error)
-      } else {
-        console.log(`[v0] Cleanup complete: ${result.deletedCount} files deleted from Cloudinary`)
-      }
-    })
-
-    setEditTitle(originalState.title)
-    setEditDescription(originalState.description)
-    setEditMediaUrls(originalState.media_urls)
-    setEditImageCaptions(originalState.image_captions)
-    setEditVideoSummaries(originalState.video_summaries)
-    setEditThumbnailUrl(originalState.thumbnail_url)
-    setEditCollectionId(originalState.collection_id)
+  const confirmCancel = () => {
     setCancelDialogOpen(false)
-    router.push(`/artifacts/${artifact.slug}`)
+    setSelectedTypeId(originalState.type_id)
+    window.location.href = `/artifacts/${artifact.slug}`
   }
 
   const handleCaptionGenerated = (url: string, newCaption: string) => {
@@ -398,6 +398,10 @@ export function ArtifactDetailView({
         [url]: newSummary,
       }))
     }
+  }
+
+  const handleTypeChange = (typeId: string | null) => {
+    setSelectedTypeId(typeId)
   }
 
   return (
@@ -500,6 +504,16 @@ export function ArtifactDetailView({
             </Select>
             <p className="text-sm text-muted-foreground">Move this artifact to a different collection</p>
           </section>
+        )}
+
+        {isEditMode && artifactTypes.length > 0 && (
+          <ArtifactTypeSelector
+            types={artifactTypes}
+            selectedTypeId={selectedTypeId}
+            onSelectType={handleTypeChange}
+            required={false}
+            defaultOpen={!!artifact.type_id}
+          />
         )}
 
         {/* Description Section */}
@@ -1040,7 +1054,7 @@ export function ArtifactDetailView({
           <AlertDialogFooter>
             <AlertDialogCancel>Keep Editing</AlertDialogCancel>
             <AlertDialogAction
-              onClick={handleConfirmCancel}
+              onClick={confirmCancel}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               Discard Changes
