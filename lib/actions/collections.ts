@@ -371,10 +371,7 @@ export async function getAllPublicCollectionsPaginated(
 
     let query = supabase
       .from("collections")
-      .select(`
-        *,
-        artifacts(count)
-      `)
+      .select("*")
       .eq("is_public", true)
       .order("created_at", { ascending: false })
       .order("id", { ascending: false })
@@ -400,6 +397,11 @@ export async function getAllPublicCollectionsPaginated(
 
     const collectionsWithImages = await Promise.all(
       resultCollections.map(async (collection) => {
+        const { count } = await supabase
+          .from("artifacts")
+          .select("*", { count: "exact", head: true })
+          .eq("collection_id", collection.id)
+
         const { data: artifacts } = await supabase
           .from("artifacts")
           .select("media_urls")
@@ -413,7 +415,7 @@ export async function getAllPublicCollectionsPaginated(
         return {
           ...collection,
           thumbnailImages,
-          itemCount: collection.artifacts?.[0]?.count || 0,
+          itemCount: count || 0,
           slug: collection.slug,
         }
       }),
@@ -440,10 +442,7 @@ export async function getMyCollectionsPaginated(
   try {
     let query = supabase
       .from("collections")
-      .select(`
-        *,
-        artifacts(count)
-      `)
+      .select("*")
       .eq("user_id", userId)
       .order("created_at", { ascending: false })
       .order("id", { ascending: false })
@@ -465,6 +464,11 @@ export async function getMyCollectionsPaginated(
 
     const collectionsWithImages = await Promise.all(
       resultCollections.map(async (collection) => {
+        const { count } = await supabase
+          .from("artifacts")
+          .select("*", { count: "exact", head: true })
+          .eq("collection_id", collection.id)
+
         const { data: artifacts } = await supabase
           .from("artifacts")
           .select("media_urls")
@@ -480,7 +484,7 @@ export async function getMyCollectionsPaginated(
         return {
           ...collection,
           thumbnailImages,
-          itemCount: collection.artifacts?.[0]?.count || 0,
+          itemCount: count || 0,
           slug: collection.slug,
           isUnsorted: isUncategorized,
         }
