@@ -14,6 +14,8 @@ import { collectionSchema, type CollectionInput } from "@/lib/schemas"
 import Link from "next/link"
 import { TranscriptionInput } from "@/components/transcription-input"
 import { useSupabase } from "@/lib/supabase/browser-context"
+import { ArtifactTypeSelector } from "@/components/artifact-type-selector"
+import { FormField, FormItem, FormMessage, Form } from "@/components/ui/form"
 
 export function NewCollectionForm() {
   const router = useRouter()
@@ -38,6 +40,7 @@ export function NewCollectionForm() {
       title: "",
       description: "",
       is_public: true,
+      primary_type_id: null,
     },
   })
 
@@ -91,74 +94,95 @@ export function NewCollectionForm() {
   }
 
   return (
-    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-      {error && (
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
-
-      <div className="space-y-2">
-        <Label htmlFor="title" className="text-sm font-medium">
-          Title
-        </Label>
-        <TranscriptionInput
-          value={form.watch("title")}
-          onChange={(value) => form.setValue("title", value)}
-          placeholder="Family Jewelry"
-          type="input"
-          fieldType="title"
-          userId={userId}
-          entityType="collection"
-        />
-        {form.formState.errors.title && (
-          <p className="text-sm text-destructive">{form.formState.errors.title.message}</p>
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        {error && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
         )}
-      </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="description" className="text-sm font-medium">
-          Description
-        </Label>
-        <TranscriptionInput
-          value={form.watch("description") || ""}
-          onChange={(value) => form.setValue("description", value)}
-          placeholder="A collection of precious jewelry passed down through generations..."
-          type="textarea"
-          fieldType="description"
-          userId={userId}
-          entityType="collection"
-          rows={4}
-        />
-        {form.formState.errors.description && (
-          <p className="text-sm text-destructive">{form.formState.errors.description.message}</p>
-        )}
-      </div>
-
-      <div className="flex flex-row items-start space-x-3 rounded-md border p-4">
-        <Checkbox
-          id="is_public"
-          checked={form.watch("is_public")}
-          onCheckedChange={(checked) => form.setValue("is_public", checked as boolean)}
-        />
-        <div className="space-y-1 leading-none">
-          <Label htmlFor="is_public" className="cursor-pointer">
-            Make this collection public
+        <div className="space-y-2">
+          <Label htmlFor="title" className="text-sm font-medium">
+            Title
           </Label>
-          <p className="text-sm text-muted-foreground">Public collections can be viewed by anyone</p>
+          <TranscriptionInput
+            value={form.watch("title")}
+            onChange={(value) => form.setValue("title", value)}
+            placeholder="Family Jewelry"
+            type="input"
+            fieldType="title"
+            userId={userId}
+            entityType="collection"
+          />
+          {form.formState.errors.title && (
+            <p className="text-sm text-destructive">{form.formState.errors.title.message}</p>
+          )}
         </div>
-      </div>
 
-      <div className="flex gap-4">
-        <Button type="button" variant="outline" onClick={() => router.back()} disabled={isSubmitting}>
-          Cancel
-        </Button>
-        <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Create Collection
-        </Button>
-      </div>
-    </form>
+        <div className="space-y-2">
+          <Label htmlFor="description" className="text-sm font-medium">
+            Description
+          </Label>
+          <TranscriptionInput
+            value={form.watch("description") || ""}
+            onChange={(value) => form.setValue("description", value)}
+            placeholder="A collection of precious jewelry passed down through generations..."
+            type="textarea"
+            fieldType="description"
+            userId={userId}
+            entityType="collection"
+            rows={4}
+          />
+          {form.formState.errors.description && (
+            <p className="text-sm text-destructive">{form.formState.errors.description.message}</p>
+          )}
+        </div>
+
+        <FormField
+          control={form.control}
+          name="primary_type_id"
+          render={({ field }) => (
+            <FormItem>
+              <ArtifactTypeSelector
+                value={field.value}
+                onChange={field.onChange}
+                disabled={isSubmitting}
+                required={false}
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Set a preferred type for artifacts in this collection (optional)
+              </p>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <div className="flex flex-row items-start space-x-3 rounded-md border p-4">
+          <Checkbox
+            id="is_public"
+            checked={form.watch("is_public")}
+            onCheckedChange={(checked) => form.setValue("is_public", checked as boolean)}
+          />
+          <div className="space-y-1 leading-none">
+            <Label htmlFor="is_public" className="cursor-pointer">
+              Make this collection public
+            </Label>
+            <p className="text-sm text-muted-foreground">Public collections can be viewed by anyone</p>
+          </div>
+        </div>
+
+        <div className="flex gap-4">
+          <Button type="button" variant="outline" onClick={() => router.back()} disabled={isSubmitting}>
+            Cancel
+          </Button>
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Create Collection
+          </Button>
+        </div>
+      </form>
+    </Form>
   )
 }

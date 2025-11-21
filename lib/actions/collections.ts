@@ -44,6 +44,7 @@ export async function createCollection(input: CollectionInput) {
       is_public: validatedFields.data.is_public,
       slug,
       user_id: user.id,
+      primary_type_id: validatedFields.data.primary_type_id,
     })
     .select()
     .single()
@@ -206,7 +207,7 @@ export async function updateCollection(collectionId: string, input: CollectionIn
   if (!collection) {
     return { success: false, error: "Collection not found" }
   }
-  
+
   if (!isAdmin && collection.user_id !== user.id) {
     return { success: false, error: "Unauthorized" }
   }
@@ -218,6 +219,7 @@ export async function updateCollection(collectionId: string, input: CollectionIn
       description: validatedFields.data.description,
       is_public: validatedFields.data.is_public,
       updated_at: new Date().toISOString(),
+      primary_type_id: validatedFields.data.primary_type_id,
     })
     .eq("id", collectionId)
     .select()
@@ -235,7 +237,7 @@ export async function updateCollection(collectionId: string, input: CollectionIn
 
 export async function getOrCreateUncategorizedCollection(userId: string) {
   console.log("[v0] getOrCreateUncategorizedCollection - Starting for userId:", userId)
-  
+
   const supabase = await createClient()
 
   const { data: userCollections, error: fetchError } = await supabase
@@ -247,7 +249,7 @@ export async function getOrCreateUncategorizedCollection(userId: string) {
 
   console.log("[v0] getOrCreateUncategorizedCollection - Query result:", {
     found: !!userCollections && userCollections.length > 0,
-    error: fetchError
+    error: fetchError,
   })
 
   if (fetchError) {
@@ -359,8 +361,8 @@ export async function deleteCollection(collectionId: string, deleteArtifacts = f
 
 export async function getAllPublicCollectionsPaginated(
   excludeUserId?: string,
-  limit: number = 24,
-  cursor?: { createdAt: string; id: string }
+  limit = 24,
+  cursor?: { createdAt: string; id: string },
 ) {
   const supabase = await createClient()
 
@@ -405,7 +407,8 @@ export async function getAllPublicCollectionsPaginated(
           .order("created_at", { ascending: false })
           .limit(5)
 
-        const thumbnailImages = artifacts?.map((artifact) => getPrimaryVisualMediaUrl(artifact.media_urls)).filter(Boolean) || []
+        const thumbnailImages =
+          artifacts?.map((artifact) => getPrimaryVisualMediaUrl(artifact.media_urls)).filter(Boolean) || []
 
         return {
           ...collection,
@@ -416,8 +419,8 @@ export async function getAllPublicCollectionsPaginated(
       }),
     )
 
-    const filteredCollections = isAdmin 
-      ? collectionsWithImages 
+    const filteredCollections = isAdmin
+      ? collectionsWithImages
       : collectionsWithImages.filter((collection) => collection.itemCount > 0)
 
     return { collections: filteredCollections, hasMore }
@@ -429,8 +432,8 @@ export async function getAllPublicCollectionsPaginated(
 
 export async function getMyCollectionsPaginated(
   userId: string,
-  limit: number = 24,
-  cursor?: { createdAt: string; id: string }
+  limit = 24,
+  cursor?: { createdAt: string; id: string },
 ) {
   const supabase = await createClient()
 
@@ -469,7 +472,8 @@ export async function getMyCollectionsPaginated(
           .order("created_at", { ascending: false })
           .limit(5)
 
-        const thumbnailImages = artifacts?.map((artifact) => getPrimaryVisualMediaUrl(artifact.media_urls)).filter(Boolean) || []
+        const thumbnailImages =
+          artifacts?.map((artifact) => getPrimaryVisualMediaUrl(artifact.media_urls)).filter(Boolean) || []
 
         const isUncategorized = collection.slug.startsWith("uncategorized")
 
@@ -511,7 +515,6 @@ export async function getMyCollections(userId: string) {
       return { collections: [], error: error.message }
     }
 
-    // Sort to put uncategorized first
     const sortedCollections = collections.sort((a, b) => {
       const aIsUncategorized = a.slug.startsWith("uncategorized")
       const bIsUncategorized = b.slug.startsWith("uncategorized")

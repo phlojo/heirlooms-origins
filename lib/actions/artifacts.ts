@@ -21,6 +21,7 @@ export async function createArtifact(
     title: input.title,
     mediaCount: input.media_urls?.length || 0,
     collectionId: input.collectionId,
+    typeId: input.type_id,
     hasThumbnailUrl: !!input.thumbnail_url,
     hasImageCaptions: !!input.image_captions && Object.keys(input.image_captions).length > 0,
     hasVideoSummaries: !!input.video_summaries && Object.keys(input.video_summaries).length > 0,
@@ -124,6 +125,7 @@ export async function createArtifact(
     user_id: user.id,
     slug,
     thumbnail_url: thumbnailUrl,
+    type_id: validatedFields.data.type_id,
   }
 
   if (validatedFields.data.image_captions && Object.keys(validatedFields.data.image_captions).length > 0) {
