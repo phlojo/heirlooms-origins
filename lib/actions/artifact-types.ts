@@ -95,3 +95,105 @@ export async function getArtifactTypeBySlug(slug: string): Promise<ArtifactType 
 
   return data
 }
+
+// ADMIN ONLY: Deactivate (soft-delete) an artifact type
+// Recommended over hard deletion to preserve data integrity
+export async function deactivateArtifactType(typeId: string): Promise<{ success: boolean; error?: string }> {
+  try {
+    const supabase = await createClient()
+
+    // Check if user is admin
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+    if (!user) {
+      return { success: false, error: "Not authenticated" }
+    }
+
+    const { data: profile } = await supabase.from("profiles").select("is_admin").eq("id", user.id).single()
+
+    if (!profile?.is_admin) {
+      return { success: false, error: "Admin access required" }
+    }
+
+    // Soft delete by setting is_active to false
+    const { error } = await supabase.from("artifact_types").update({ is_active: false }).eq("id", typeId)
+
+    if (error) {
+      console.error("[v0] deactivateArtifactType: Error:", error)
+      return { success: false, error: error.message }
+    }
+
+    console.log("[v0] deactivateArtifactType: Successfully deactivated type:", typeId)
+    return { success: true }
+  } catch (err) {
+    console.error("[v0] deactivateArtifactType: Exception:", err)
+    return { success: false, error: String(err) }
+  }
+}
+
+// ADMIN ONLY: Reactivate a previously deactivated artifact type
+export async function reactivateArtifactType(typeId: string): Promise<{ success: boolean; error?: string }> {
+  try {
+    const supabase = await createClient()
+
+    // Check if user is admin
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+    if (!user) {
+      return { success: false, error: "Not authenticated" }
+    }
+
+    const { data: profile } = await supabase.from("profiles").select("is_admin").eq("id", user.id).single()
+
+    if (!profile?.is_admin) {
+      return { success: false, error: "Admin access required" }
+    }
+
+    const { error } = await supabase.from("artifact_types").update({ is_active: true }).eq("id", typeId)
+
+    if (error) {
+      console.error("[v0] reactivateArtifactType: Error:", error)
+      return { success: false, error: error.message }
+    }
+
+    console.log("[v0] reactivateArtifactType: Successfully reactivated type:", typeId)
+    return { success: true }
+  } catch (err) {
+    console.error("[v0] reactivateArtifactType: Exception:", err)
+    return { success: false, error: String(err) }
+  }
+}
+
+// ADMIN ONLY: Get all artifact types including inactive ones
+export async function getAllArtifactTypesAdmin(): Promise<ArtifactType[]> {
+  try {
+    const supabase = await createClient()
+
+    // Check if user is admin
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+    if (!user) return []
+
+    const { data: profile } = await supabase.from("profiles").select("is_admin").eq("id", user.id).single()
+
+    if (!profile?.is_admin) return []
+
+    const { data, error } = await supabase
+      .from("artifact_types")
+      .select("*")
+      .order("display_order", { ascending: true })
+
+    if (error) {
+      console.error("[v0] getAllArtifactTypesAdmin: Error:", error)
+      return []
+    }
+
+    return data || []
+  } catch (err) {
+    console.error("[v0] getAllArtifactTypesAdmin: Exception:", err)
+    return []
+  }
+}
