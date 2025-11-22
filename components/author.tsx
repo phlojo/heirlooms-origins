@@ -13,6 +13,10 @@ interface AuthorProps {
   className?: string
 }
 
+const profileCache = new Map<string, { displayName: string; timestamp: number }>()
+const CACHE_TTL = 5 * 60 * 1000 // 5 minutes
+const pendingRequests = new Map<string, Promise<string>>()
+
 export function Author({ userId, authorName, size = "md", showAvatar = true, className }: AuthorProps) {
   const [displayName, setDisplayName] = useState(authorName || "Author")
   const [isLoading, setIsLoading] = useState(!authorName)
@@ -25,27 +29,48 @@ export function Author({ userId, authorName, size = "md", showAvatar = true, cla
       return
     }
 
-    const fetchProfile = async () => {
-      try {
-        const { data, error } = await supabase.from("profiles").select("display_name").eq("id", userId).single()
-
-        if (error) {
-          console.error("[v0] Error fetching profile:", error)
-          setDisplayName("Author")
-        } else if (data?.display_name) {
-          setDisplayName(data.display_name)
-        } else {
-          setDisplayName("Author")
-        }
-      } catch (err) {
-        console.error("[v0] Error in fetchProfile:", err)
-        setDisplayName("Author")
-      } finally {
-        setIsLoading(false)
-      }
+    const cached = profileCache.get(userId)
+    if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+      setDisplayName(cached.displayName)
+      setIsLoading(false)
+      return
     }
 
-    fetchProfile()
+    let requestPromise = pendingRequests.get(userId)
+
+    if (!requestPromise) {
+      requestPromise = (async () => {
+        try {
+          const { data, error } = await supabase.from("profiles").select("display_name").eq("id", userId).single()
+
+          if (error) {
+            console.error("[v0] Error fetching profile:", error)
+            return "Author"
+          }
+
+          const name = data?.display_name || "Author"
+
+          profileCache.set(userId, {
+            displayName: name,
+            timestamp: Date.now(),
+          })
+
+          return name
+        } catch (err) {
+          console.error("[v0] Error in fetchProfile:", err)
+          return "Author"
+        } finally {
+          pendingRequests.delete(userId)
+        }
+      })()
+
+      pendingRequests.set(userId, requestPromise)
+    }
+
+    requestPromise.then((name) => {
+      setDisplayName(name)
+      setIsLoading(false)
+    })
   }, [userId, authorName, supabase])
 
   const sizeClasses = {
