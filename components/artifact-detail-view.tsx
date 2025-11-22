@@ -51,6 +51,7 @@ import { ArtifactTypeSelector } from "./artifact-type-selector"
 import { getArtifactTypes } from "@/lib/actions/artifact-types"
 import type { ArtifactType } from "@/lib/types/artifact-types"
 import { toast } from "sonner"
+import { useRef } from "react"
 
 interface CollectionWithArtifactCount {
   id: string
@@ -88,6 +89,7 @@ export function ArtifactDetailView({
   const [loadingCollections, setLoadingCollections] = useState(false)
   const [artifactTypes, setArtifactTypes] = useState<ArtifactType[]>([])
   const [selectedTypeId, setSelectedTypeId] = useState<string | null>(artifact.type_id || null)
+  const shouldWarnOnUnloadRef = useRef(true)
 
   const [isImageFullscreen, setIsImageFullscreen] = useState(false)
   const [isAttributesOpen, setIsAttributesOpen] = useState(false)
@@ -197,9 +199,15 @@ export function ArtifactDetailView({
       editCollectionId !== originalState.collection_id)
 
   useEffect(() => {
-    if (!isEditMode || !hasUnsavedChanges) return
+    if (!isEditMode || !hasUnsavedChanges) {
+      shouldWarnOnUnloadRef.current = false
+      return
+    }
+
+    shouldWarnOnUnloadRef.current = true
 
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (!shouldWarnOnUnloadRef.current) return
       e.preventDefault()
       e.returnValue = ""
     }
@@ -211,7 +219,7 @@ export function ArtifactDetailView({
   const handleSave = async () => {
     setIsSaving(true)
     try {
-      await updateArtifact(
+      const result = await updateArtifact(
         {
           id: artifact.id,
           title: editTitle,
@@ -220,18 +228,20 @@ export function ArtifactDetailView({
           image_captions: editImageCaptions,
           video_summaries: editVideoSummaries,
           thumbnail_url: editThumbnailUrl || null,
-          collection_id: editCollectionId,
+          collectionId: editCollectionId,
           type_id: selectedTypeId,
         },
-        artifact.slug,
+        originalState.media_urls,
       )
       toast.success("Artifact updated successfully")
-      router.refresh()
-      window.location.href = `/artifacts/${artifact.slug}`
+      // Disable beforeunload warning before redirecting
+      shouldWarnOnUnloadRef.current = false
+      // Use the returned slug from server in case it changed
+      const slug = result.slug || artifact.slug
+      window.location.href = `/artifacts/${slug}`
     } catch (error) {
       console.error("[v0] Error saving artifact:", error)
       toast.error("Failed to save changes")
-    } finally {
       setIsSaving(false)
     }
   }
@@ -468,11 +478,14 @@ export function ArtifactDetailView({
             <label htmlFor="title" className="text-sm font-medium text-foreground">
               Title
             </label>
-            <Input
-              id="title"
+            <TranscriptionInput
               value={editTitle}
-              onChange={(e) => setEditTitle(e.target.value)}
+              onChange={setEditTitle}
               placeholder="Enter artifact title"
+              type="text"
+              fieldType="title"
+              userId={userId}
+              entityType="artifact"
             />
           </section>
         )}

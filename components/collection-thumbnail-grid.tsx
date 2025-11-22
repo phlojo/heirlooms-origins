@@ -28,9 +28,9 @@ export function CollectionThumbnailGrid({ images, title }: CollectionThumbnailGr
   if (validImages.length === 2) {
     return (
       <div className="grid h-full w-full grid-cols-2 gap-1">
-        {validImages.map((img) => {
+        {validImages.map((img, idx) => {
           const thumbnailUrl = getThumbnailUrl(img)
-          return <MediaImage key={img} src={thumbnailUrl} alt={`${title}`} className="h-full" objectFit="cover" />
+          return <MediaImage key={`${idx}-${img}`} src={thumbnailUrl} alt={`${title}`} className="h-full" objectFit="cover" />
         })}
       </div>
     )
@@ -39,9 +39,9 @@ export function CollectionThumbnailGrid({ images, title }: CollectionThumbnailGr
   if (validImages.length === 3) {
     return (
       <div className="grid h-full w-full grid-cols-3 gap-1">
-        {validImages.map((img) => {
+        {validImages.map((img, idx) => {
           const thumbnailUrl = getThumbnailUrl(img)
-          return <MediaImage key={img} src={thumbnailUrl} alt={`${title}`} className="h-full" objectFit="cover" />
+          return <MediaImage key={`${idx}-${img}`} src={thumbnailUrl} alt={`${title}`} className="h-full" objectFit="cover" />
         })}
       </div>
     )
@@ -49,9 +49,9 @@ export function CollectionThumbnailGrid({ images, title }: CollectionThumbnailGr
 
   return (
     <div className="grid h-full w-full grid-cols-4 gap-1">
-      {validImages.map((img) => {
+      {validImages.map((img, idx) => {
         const thumbnailUrl = getThumbnailUrl(img)
-        return <MediaImage key={img} src={thumbnailUrl} alt={`${title}`} className="h-full" objectFit="cover" />
+        return <MediaImage key={`${idx}-${img}`} src={thumbnailUrl} alt={`${title}`} className="h-full" objectFit="cover" />
       })}
     </div>
   )
