@@ -223,7 +223,7 @@ export function ArtifactDetailView({
           collection_id: editCollectionId,
           type_id: selectedTypeId,
         },
-        artifact.slug,
+        originalState.media_urls,
       )
       toast.success("Artifact updated successfully")
       window.location.href = `/artifacts/${artifact.slug}`
