@@ -38,6 +38,9 @@ export async function trackPendingUpload(url: string, resourceType: 'image' | 'v
   console.log('[v0] trackPendingUpload: Extracted public ID:', publicId)
   console.log('[v0] trackPendingUpload: Inserting into pending_uploads table...')
 
+  // Set expiry to 24 hours from now
+  const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+
   const { error } = await supabase
     .from("pending_uploads")
     .insert({
@@ -45,6 +48,7 @@ export async function trackPendingUpload(url: string, resourceType: 'image' | 'v
       cloudinary_url: url,
       cloudinary_public_id: publicId,
       resource_type: resourceType,
+      expires_at: expiresAt,
     })
 
   if (error) {
