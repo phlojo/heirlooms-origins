@@ -2,13 +2,15 @@
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
-import { Plus, Loader2 } from "lucide-react"
+import { Plus, Loader2, Grid3x3, Grid2x2 } from "lucide-react"
 import Link from "next/link"
 import { ArtifactCard } from "@/components/artifact-card"
+import { ArtifactCardCompact } from "@/components/artifact-card-compact"
 import { LoginModule } from "@/components/login-module"
 import { useEffect, useState, useTransition } from "react"
 import { usePathname } from "next/navigation"
 import { getAllPublicArtifactsPaginated, getMyArtifactsPaginated } from "@/lib/actions/artifacts"
+import { updateArtifactsViewPreference } from "@/lib/actions/profile"
 
 interface Artifact {
   id: string
@@ -28,13 +30,22 @@ interface ArtifactsTabsProps {
   user: any
   myArtifacts: Artifact[]
   allArtifacts: Artifact[]
+  initialViewPreference?: "standard" | "compact"
 }
 
 const STORAGE_KEY = "heirloom-artifacts-tab"
 const PAGE_SIZE = 24
 
-export function ArtifactsTabs({ user, myArtifacts, allArtifacts }: ArtifactsTabsProps) {
+type ViewType = "standard" | "compact"
+
+export function ArtifactsTabs({
+  user,
+  myArtifacts,
+  allArtifacts,
+  initialViewPreference = "standard",
+}: ArtifactsTabsProps) {
   const [activeTab, setActiveTab] = useState<string>("all")
+  const [viewType, setViewType] = useState<ViewType>(initialViewPreference)
   const pathname = usePathname()
 
   const [allArtifactsList, setAllArtifactsList] = useState<Artifact[]>(allArtifacts)
@@ -54,6 +65,16 @@ export function ArtifactsTabs({ user, myArtifacts, allArtifacts }: ArtifactsTabs
   const handleTabChange = (value: string) => {
     setActiveTab(value)
     sessionStorage.setItem(STORAGE_KEY, value)
+  }
+
+  const handleViewToggle = async () => {
+    const newView: ViewType = viewType === "standard" ? "compact" : "standard"
+    setViewType(newView)
+
+    // Save to database if user is logged in
+    if (user) {
+      await updateArtifactsViewPreference(newView)
+    }
   }
 
   const handleLoadMoreAll = async () => {
@@ -93,10 +114,21 @@ export function ArtifactsTabs({ user, myArtifacts, allArtifacts }: ArtifactsTabs
   return (
     <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
       <div className="sticky top-0 lg:top-16 z-10 -mx-3.5 lg:-mx-8 bg-background px-3.5 lg:px-8 py-4 flex items-center justify-between border-b opacity-95">
-        <TabsList>
-          <TabsTrigger value="all">Community</TabsTrigger>
-          <TabsTrigger value="mine">My Artifacts</TabsTrigger>
-        </TabsList>
+        <div className="flex items-center gap-2">
+          <TabsList>
+            <TabsTrigger value="all">Community</TabsTrigger>
+            <TabsTrigger value="mine">My Artifacts</TabsTrigger>
+          </TabsList>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={handleViewToggle}
+            className="h-9 w-9 shrink-0 bg-transparent"
+            aria-label={`Switch to ${viewType === "standard" ? "compact" : "standard"} view`}
+          >
+            {viewType === "standard" ? <Grid2x2 className="h-4 w-4" /> : <Grid3x3 className="h-4 w-4" />}
+          </Button>
+        </div>
         {user ? (
           <Button asChild>
             <Link href="/artifacts/new">
@@ -114,15 +146,25 @@ export function ArtifactsTabs({ user, myArtifacts, allArtifacts }: ArtifactsTabs
       <TabsContent value="all" className="mt-6">
         {allArtifactsList.length > 0 ? (
           <>
-            <div className="grid gap-2 grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
-              {allArtifactsList.map((artifact) => (
-                <ArtifactCard
-                  key={artifact.id}
-                  artifact={artifact}
-                  showAuthor={true}
-                  authorName={artifact.author_name}
-                />
-              ))}
+            <div
+              className={
+                viewType === "standard"
+                  ? "grid gap-2 grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6"
+                  : "grid gap-2 grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8"
+              }
+            >
+              {allArtifactsList.map((artifact) =>
+                viewType === "standard" ? (
+                  <ArtifactCard
+                    key={artifact.id}
+                    artifact={artifact}
+                    showAuthor={true}
+                    authorName={artifact.author_name}
+                  />
+                ) : (
+                  <ArtifactCardCompact key={artifact.id} artifact={artifact} showAuthor={false} />
+                ),
+              )}
             </div>
             {allHasMore && (
               <div className="mt-8 pb-12 flex justify-center">
@@ -159,10 +201,20 @@ export function ArtifactsTabs({ user, myArtifacts, allArtifacts }: ArtifactsTabs
           </div>
         ) : myArtifactsList.length > 0 ? (
           <>
-            <div className="grid gap-2 grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
-              {myArtifactsList.map((artifact) => (
-                <ArtifactCard key={artifact.id} artifact={artifact} showAuthor={false} />
-              ))}
+            <div
+              className={
+                viewType === "standard"
+                  ? "grid gap-2 grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6"
+                  : "grid gap-2 grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8"
+              }
+            >
+              {myArtifactsList.map((artifact) =>
+                viewType === "standard" ? (
+                  <ArtifactCard key={artifact.id} artifact={artifact} showAuthor={false} />
+                ) : (
+                  <ArtifactCardCompact key={artifact.id} artifact={artifact} showAuthor={false} />
+                ),
+              )}
             </div>
             {myHasMore && (
               <div className="mt-8 pb-12 flex justify-center">

@@ -5,12 +5,14 @@ import { getCurrentUser } from "@/lib/supabase/server"
 import { getAllPublicArtifactsPaginated, getMyArtifactsPaginated } from "@/lib/actions/artifacts"
 import { ArtifactsTabs } from "@/components/artifacts-tabs"
 import { ThemeToggle } from "@/components/theme-toggle"
+import { getArtifactsViewPreference } from "@/lib/actions/profile"
 
 export default async function ArtifactsPage() {
   const user = await getCurrentUser()
 
   const myArtifactsResult = user ? await getMyArtifactsPaginated(user.id, 24) : { artifacts: [], hasMore: false }
   const allArtifactsResult = await getAllPublicArtifactsPaginated(user?.id, 24)
+  const viewPreference = await getArtifactsViewPreference()
 
   return (
     <AppLayout user={user}>
@@ -54,6 +56,7 @@ export default async function ArtifactsPage() {
           user={user}
           myArtifacts={myArtifactsResult.artifacts}
           allArtifacts={allArtifactsResult.artifacts}
+          initialViewPreference={viewPreference}
         />
       </div>
     </AppLayout>

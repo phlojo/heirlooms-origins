@@ -300,3 +300,65 @@ export async function getViewPreference() {
 
   return (profile?.view_preference || "gallery") as "gallery" | "list"
 }
+
+/**
+ * Server action to update user's artifacts view preference
+ */
+export async function updateArtifactsViewPreference(view: "standard" | "compact") {
+  const supabase = await createClient()
+
+  // Check authentication
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    return { success: false, error: "Unauthorized" }
+  }
+
+  // Update or insert profile with artifacts view preference
+  const { error } = await supabase
+    .from("profiles")
+    .upsert(
+      {
+        id: user.id,
+        artifacts_view_preference: view,
+        updated_at: new Date().toISOString(),
+      },
+      {
+        onConflict: "id",
+      },
+    )
+    .select()
+    .single()
+
+  if (error) {
+    console.error("[v0] Artifacts view preference update error:", error)
+    return { success: false, error: "Failed to save artifacts view preference" }
+  }
+
+  return { success: true }
+}
+
+/**
+ * Get user's artifacts view preference from database
+ */
+export async function getArtifactsViewPreference() {
+  const supabase = await createClient()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    return "standard" as const
+  }
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("artifacts_view_preference")
+    .eq("id", user.id)
+    .single()
+
+  return (profile?.artifacts_view_preference || "standard") as "standard" | "compact"
+}

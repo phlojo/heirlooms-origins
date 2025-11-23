@@ -12,7 +12,7 @@ export function ArtifactTypeBadge({ iconName, typeName }: ArtifactTypeBadgeProps
 
   return (
     <div
-      className="absolute top-2 left-2 flex items-center justify-center rounded-md bg-black/70 p-1.5 backdrop-blur-sm"
+      className="absolute top-2 left-2 flex items-center justify-center rounded-md bg-black/50 p-1.5 backdrop-blur-sm"
       title={typeName}
       aria-label={typeName}
     >
