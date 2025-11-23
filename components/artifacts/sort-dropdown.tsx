@@ -14,7 +14,7 @@ export function SortDropdown({ value, onChange }: SortDropdownProps) {
     <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
       <span className="text-sm font-medium text-muted-foreground shrink-0 hidden sm:inline">Sort:</span>
       <Select value={value} onValueChange={onChange}>
-        <SelectTrigger className="w-[140px] sm:w-[180px] h-9">
+        <SelectTrigger className="w-[148px] sm:w-[180px] h-9">
           <div className="flex items-center gap-2">
             <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
             <SelectValue />
