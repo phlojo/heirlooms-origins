@@ -406,7 +406,7 @@ export function ArtifactDetailView({
         />
       )}
 
-      <div className={`space-y-6 px-6 lg:px-8 overflow-x-hidden ${isEditMode ? "pt-4" : "pt-2"}`}>
+      <div className={`space-y-6 px-6 lg:px-8 overflow-x-hidden pb-20 ${isEditMode ? "pt-4" : "pt-2"}`}>
         {!isEditMode && canEdit && (
           <div className="flex items-center justify-between gap-3">
             <Button asChild className="bg-purple-600 hover:bg-purple-700 text-white">

@@ -17,7 +17,7 @@ export default async function NewCollectionPage() {
 
   return (
     <AppLayout user={user}>
-      <div className="mx-auto max-w-2xl space-y-8">
+      <div className="mx-auto max-w-2xl space-y-8 pb-20">
         <Button variant="ghost" size="sm" asChild className="pl-0">
           <Link href="/collections">
             <ArrowLeft className="mr-2 h-4 w-4" />

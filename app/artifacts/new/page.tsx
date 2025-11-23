@@ -35,7 +35,7 @@ export default async function NewArtifactPage({
 
   return (
     <AppLayout user={user}>
-      <div className="mx-auto max-w-2xl space-y-4">
+      <div className="mx-auto max-w-2xl space-y-4 pb-20">
         <Button variant="ghost" size="sm" asChild className="pl-0">
           <Link href="/artifacts">
             <ArrowLeft className="mr-2 h-4 w-4" />

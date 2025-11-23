@@ -174,7 +174,7 @@ export function CollectionsTabs({
                 ),
               )}
             </div>
-            {allHasMore && (
+            {allHasMore ? (
               <div className="mt-8 pb-12 flex justify-center">
                 <Button
                   onClick={handleLoadMoreAll}
@@ -193,10 +193,12 @@ export function CollectionsTabs({
                   )}
                 </Button>
               </div>
+            ) : (
+              <div className="pb-20" />
             )}
           </>
         ) : (
-          <div className="rounded-lg border border-dashed p-12 text-center">
+          <div className="rounded-lg border border-dashed p-12 text-center pb-20">
             <p className="text-sm text-muted-foreground">No public collections available yet.</p>
           </div>
         )}
@@ -224,7 +226,7 @@ export function CollectionsTabs({
                 ),
               )}
             </div>
-            {myHasMore && (
+            {myHasMore ? (
               <div className="mt-8 pb-12 flex justify-center">
                 <Button
                   onClick={handleLoadMoreMy}
@@ -243,10 +245,14 @@ export function CollectionsTabs({
                   )}
                 </Button>
               </div>
+            ) : (
+              <div className="pb-20" />
             )}
           </>
         ) : (
-          <EmptyCollections />
+          <div className="pb-20">
+            <EmptyCollections />
+          </div>
         )}
       </TabsContent>
     </Tabs>

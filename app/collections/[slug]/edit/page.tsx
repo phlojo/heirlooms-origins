@@ -41,7 +41,7 @@ export default async function EditCollectionPage({ params }: { params: Promise<{
         isCurrentUserAdmin={isAdmin}
         contentOwnerId={collection.user_id}
       />
-      <div className="mx-auto max-w-2xl space-y-8">
+      <div className="mx-auto max-w-2xl space-y-8 pb-20">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Edit Collection</h1>
           <p className="mt-1 text-muted-foreground">Update your collection details and settings</p>

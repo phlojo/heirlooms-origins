@@ -89,7 +89,7 @@ export default async function CollectionDetailPage({
 
   return (
     <AppLayout user={user}>
-      <div className="space-y-2.5">
+      <div className="space-y-2.5 pb-20">
         <CollectionsStickyNav
           title={collection.title}
           backHref="/collections"

@@ -32,7 +32,7 @@ export default async function HomePage() {
 
   return (
     <AppLayout user={user}>
-      <div className="space-y-4">
+      <div className="space-y-4 pb-20">
         <div>
           <h1 className="flex items-center gap-3 font-bold tracking-tight text-3xl">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center bg-gradient-to-br from-primary to-chart-2 text-primary-foreground shadow-sm rounded-sm">

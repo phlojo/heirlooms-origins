@@ -65,7 +65,7 @@ export default async function ProfilePage() {
 
   return (
     <AppLayout user={user}>
-      <div className="space-y-8">
+      <div className="space-y-8 pb-20">
         <div className="flex items-center justify-between gap-4">
           <div>
             <h1 className="flex items-center gap-3 text-3xl font-bold tracking-tight">

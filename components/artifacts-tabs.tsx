@@ -166,7 +166,7 @@ export function ArtifactsTabs({
                 ),
               )}
             </div>
-            {allHasMore && (
+            {allHasMore ? (
               <div className="mt-8 pb-12 flex justify-center">
                 <Button
                   onClick={handleLoadMoreAll}
@@ -185,10 +185,12 @@ export function ArtifactsTabs({
                   )}
                 </Button>
               </div>
+            ) : (
+              <div className="pb-20" />
             )}
           </>
         ) : (
-          <div className="rounded-lg border border-dashed p-12 text-center">
+          <div className="rounded-lg border border-dashed p-12 text-center pb-20">
             <p className="text-sm text-muted-foreground">No public artifacts available yet.</p>
           </div>
         )}
@@ -216,7 +218,7 @@ export function ArtifactsTabs({
                 ),
               )}
             </div>
-            {myHasMore && (
+            {myHasMore ? (
               <div className="mt-8 pb-12 flex justify-center">
                 <Button
                   onClick={handleLoadMoreMy}
@@ -235,10 +237,12 @@ export function ArtifactsTabs({
                   )}
                 </Button>
               </div>
+            ) : (
+              <div className="pb-20" />
             )}
           </>
         ) : (
-          <div className="rounded-lg border border-dashed p-12 text-center">
+          <div className="rounded-lg border border-dashed p-12 text-center pb-20">
             <p className="text-sm text-muted-foreground">You haven't created any artifacts yet.</p>
             <Button asChild className="mt-4">
               <Link href="/artifacts/new">
