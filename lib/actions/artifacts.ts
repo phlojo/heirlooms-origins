@@ -304,11 +304,24 @@ export async function getAdjacentArtifacts(artifactId: string, collectionId: str
   }
 }
 
+export interface ArtifactQueryOptions {
+  limit?: number
+  cursor?: {
+    createdAt?: string
+    updatedAt?: string
+    title?: string
+    id: string
+  }
+  sortBy?: "newest" | "oldest" | "title-asc" | "title-desc" | "last-edited"
+  typeIds?: string[]
+}
+
 export async function getAllPublicArtifactsPaginated(
   excludeUserId?: string,
-  limit = 24,
-  cursor?: { createdAt: string; id: string },
+  options: ArtifactQueryOptions = {},
 ) {
+  const { limit = 24, cursor, sortBy = "newest", typeIds } = options
+
   const supabase = await createClient()
 
   let query = supabase
@@ -324,14 +337,58 @@ export async function getAllPublicArtifactsPaginated(
     query = query.neq("user_id", excludeUserId)
   }
 
-  if (cursor) {
-    query = query.or(`created_at.lt.${cursor.createdAt},and(created_at.eq.${cursor.createdAt},id.lt.${cursor.id})`)
+  // Apply type filter if provided
+  if (typeIds && typeIds.length > 0) {
+    query = query.in("type_id", typeIds)
   }
 
-  const { data, error } = await query
-    .order("created_at", { ascending: false })
-    .order("id", { ascending: false })
-    .limit(limit + 1)
+  // Apply cursor-based pagination based on sort order
+  if (cursor) {
+    switch (sortBy) {
+      case "newest":
+        query = query.or(
+          `created_at.lt.${cursor.createdAt},and(created_at.eq.${cursor.createdAt},id.lt.${cursor.id})`,
+        )
+        break
+      case "oldest":
+        query = query.or(
+          `created_at.gt.${cursor.createdAt},and(created_at.eq.${cursor.createdAt},id.gt.${cursor.id})`,
+        )
+        break
+      case "title-asc":
+        query = query.or(`title.gt.${cursor.title},and(title.eq.${cursor.title},id.gt.${cursor.id})`)
+        break
+      case "title-desc":
+        query = query.or(`title.lt.${cursor.title},and(title.eq.${cursor.title},id.lt.${cursor.id})`)
+        break
+      case "last-edited":
+        query = query.or(
+          `updated_at.lt.${cursor.updatedAt},and(updated_at.eq.${cursor.updatedAt},id.lt.${cursor.id})`,
+        )
+        break
+    }
+  }
+
+  // Apply sorting
+  switch (sortBy) {
+    case "newest":
+      query = query.order("created_at", { ascending: false }).order("id", { ascending: false })
+      break
+    case "oldest":
+      query = query.order("created_at", { ascending: true }).order("id", { ascending: true })
+      break
+    case "title-asc":
+      query = query.order("title", { ascending: true }).order("id", { ascending: true })
+      break
+    case "title-desc":
+      query = query.order("title", { ascending: false }).order("id", { ascending: false })
+      break
+    case "last-edited":
+      query = query.order("updated_at", { ascending: false }).order("id", { ascending: false })
+      break
+  }
+
+  const { data, error } = await query.limit(limit + 1)
 
   if (error) {
     console.error("Error fetching public artifacts:", error)
@@ -357,7 +414,9 @@ export async function getAllPublicArtifactsPaginated(
   }
 }
 
-export async function getMyArtifactsPaginated(userId: string, limit = 24, cursor?: { createdAt: string; id: string }) {
+export async function getMyArtifactsPaginated(userId: string, options: ArtifactQueryOptions = {}) {
+  const { limit = 24, cursor, sortBy = "newest", typeIds } = options
+
   const supabase = await createClient()
 
   let query = supabase
@@ -369,14 +428,58 @@ export async function getMyArtifactsPaginated(userId: string, limit = 24, cursor
     `)
     .eq("user_id", userId)
 
-  if (cursor) {
-    query = query.or(`created_at.lt.${cursor.createdAt},and(created_at.eq.${cursor.createdAt},id.lt.${cursor.id})`)
+  // Apply type filter if provided
+  if (typeIds && typeIds.length > 0) {
+    query = query.in("type_id", typeIds)
   }
 
-  const { data, error } = await query
-    .order("created_at", { ascending: false })
-    .order("id", { ascending: false })
-    .limit(limit + 1)
+  // Apply cursor-based pagination based on sort order
+  if (cursor) {
+    switch (sortBy) {
+      case "newest":
+        query = query.or(
+          `created_at.lt.${cursor.createdAt},and(created_at.eq.${cursor.createdAt},id.lt.${cursor.id})`,
+        )
+        break
+      case "oldest":
+        query = query.or(
+          `created_at.gt.${cursor.createdAt},and(created_at.eq.${cursor.createdAt},id.gt.${cursor.id})`,
+        )
+        break
+      case "title-asc":
+        query = query.or(`title.gt.${cursor.title},and(title.eq.${cursor.title},id.gt.${cursor.id})`)
+        break
+      case "title-desc":
+        query = query.or(`title.lt.${cursor.title},and(title.eq.${cursor.title},id.lt.${cursor.id})`)
+        break
+      case "last-edited":
+        query = query.or(
+          `updated_at.lt.${cursor.updatedAt},and(updated_at.eq.${cursor.updatedAt},id.lt.${cursor.id})`,
+        )
+        break
+    }
+  }
+
+  // Apply sorting
+  switch (sortBy) {
+    case "newest":
+      query = query.order("created_at", { ascending: false }).order("id", { ascending: false })
+      break
+    case "oldest":
+      query = query.order("created_at", { ascending: true }).order("id", { ascending: true })
+      break
+    case "title-asc":
+      query = query.order("title", { ascending: true }).order("id", { ascending: true })
+      break
+    case "title-desc":
+      query = query.order("title", { ascending: false }).order("id", { ascending: false })
+      break
+    case "last-edited":
+      query = query.order("updated_at", { ascending: false }).order("id", { ascending: false })
+      break
+  }
+
+  const { data, error } = await query.limit(limit + 1)
 
   if (error) {
     console.error("Error fetching my artifacts:", error)
