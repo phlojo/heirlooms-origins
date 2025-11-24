@@ -34,7 +34,7 @@ export function ArtifactCardCompact({ artifact, showAuthor = false, authorName }
   const thumbnailUrl = artifact.thumbnail_url ? getThumbnailUrl(artifact.thumbnail_url) : null
 
   return (
-    <Link href={`/artifacts/${artifact.slug}`}>
+    <Link href={`/artifacts/${artifact.slug}`} data-testid="artifact-link">
       <Card className="group overflow-hidden border p-0 transition-all hover:shadow-md rounded-md">
         <div className="relative aspect-square overflow-hidden bg-muted">
           {thumbnailUrl ? (
