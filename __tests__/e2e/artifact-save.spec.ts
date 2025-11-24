@@ -6,21 +6,13 @@ test.describe("Artifact Save Flow", () => {
 
   test.beforeEach(async ({ page }) => {
     testSlug = await getFirstArtifactSlug(page)
+    // Note: getFirstArtifactSlug now navigates to the edit page and verifies access
+    // So we're already on /artifacts/${testSlug}/edit after this call
   })
 
   test("should save artifact changes without beforeunload warning", async ({ page }) => {
-    // Navigate directly to the edit page using the slug from setup
-    await page.goto(`/artifacts/${testSlug}/edit`)
-
+    // Just wait for the form to be fully ready
     await page.waitForLoadState("networkidle")
-
-    // Check if we're still on the edit page (not redirected to login or 404)
-    const currentUrl = page.url()
-    console.log("[v0] Current URL after navigation:", currentUrl)
-    expect(currentUrl).toContain(`/artifacts/${testSlug}/edit`)
-
-    // Wait for the form to load with increased timeout
-    await page.waitForSelector("input[placeholder='Enter artifact title']", { timeout: 15000 })
 
     // Update the title
     const titleInput = page.getByPlaceholder("Enter artifact title")
@@ -51,11 +43,7 @@ test.describe("Artifact Save Flow", () => {
   })
 
   test("should use returned slug for redirect", async ({ page }) => {
-    // Navigate to edit page
-    await page.goto(`/artifacts/${testSlug}/edit`)
-
     await page.waitForLoadState("networkidle")
-    await page.waitForSelector("input[placeholder='Enter artifact title']", { timeout: 15000 })
 
     // Update with a unique title
     const titleInput = page.getByPlaceholder("Enter artifact title")
@@ -75,11 +63,7 @@ test.describe("Artifact Save Flow", () => {
   })
 
   test("should show warning when navigating away with unsaved changes", async ({ page }) => {
-    // Navigate to edit page
-    await page.goto(`/artifacts/${testSlug}/edit`)
-
     await page.waitForLoadState("networkidle")
-    await page.waitForSelector("input[placeholder='Enter artifact title']", { timeout: 15000 })
 
     // Make changes without saving
     const titleInput = page.getByPlaceholder("Enter artifact title")
@@ -101,11 +85,7 @@ test.describe("Artifact Save Flow", () => {
   })
 
   test("should not show warning when navigating away after saving", async ({ page }) => {
-    // Navigate to edit page
-    await page.goto(`/artifacts/${testSlug}/edit`)
-
     await page.waitForLoadState("networkidle")
-    await page.waitForSelector("input[placeholder='Enter artifact title']", { timeout: 15000 })
 
     // Make and save changes
     const titleInput = page.getByPlaceholder("Enter artifact title")
@@ -132,11 +112,7 @@ test.describe("Artifact Save Flow", () => {
   })
 
   test("should have audio input for title field", async ({ page }) => {
-    // Navigate to edit page
-    await page.goto(`/artifacts/${testSlug}/edit`)
-
     await page.waitForLoadState("networkidle")
-    await page.waitForSelector("input[placeholder='Enter artifact title']", { timeout: 15000 })
 
     // Look for audio/microphone button near the title field
     // The TranscriptionInput component includes a mic button

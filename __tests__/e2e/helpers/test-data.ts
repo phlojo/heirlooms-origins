@@ -40,12 +40,24 @@ export async function getFirstArtifactSlug(page: Page): Promise<string> {
   const slug = matches[1]
   console.log("[v0] Found artifact slug:", slug)
 
-  await page.goto(`/artifacts/${slug}`)
+  await page.goto(`/artifacts/${slug}/edit`)
   await page.waitForLoadState("networkidle")
 
-  const detailPageUrl = page.url()
-  if (detailPageUrl.includes("/404") || detailPageUrl.includes("/login")) {
-    throw new Error(`Artifact ${slug} is not accessible. User may not have permissions.`)
+  const editPageUrl = page.url()
+  console.log("[v0] Edit page URL:", editPageUrl)
+
+  // Check if we're still on the edit page (not redirected to login or 404)
+  if (!editPageUrl.includes(`/artifacts/${slug}/edit`)) {
+    throw new Error(`Cannot edit artifact ${slug} - permission denied or redirected to ${editPageUrl}`)
+  }
+
+  // Verify the edit form is actually present
+  try {
+    await page.waitForSelector("input[placeholder='Enter artifact title']", { timeout: 5000 })
+    console.log("[v0] Verified artifact is editable by current user")
+  } catch (error) {
+    await page.screenshot({ path: "test-results/edit-form-not-visible.png", fullPage: true })
+    throw new Error(`Edit form not visible for artifact ${slug} - user may not have permission`)
   }
 
   return slug
