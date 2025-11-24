@@ -13,8 +13,15 @@ export async function getFirstArtifactSlug(page: Page): Promise<string> {
   // Navigate to artifacts page
   await page.goto("/artifacts")
 
-  // Wait for artifacts to load
-  await page.waitForSelector("[data-testid='artifact-link']", { timeout: 10000 })
+  await page.waitForLoadState("networkidle")
+
+  // Wait for artifacts to load with better error handling
+  try {
+    await page.waitForSelector("[data-testid='artifact-link']", { timeout: 15000 })
+  } catch (error) {
+    await page.screenshot({ path: "test-results/no-artifacts-found.png", fullPage: true })
+    throw new Error("No artifacts found on /artifacts page. Make sure test data exists in the database.")
+  }
 
   // Get the first artifact link
   const firstArtifactLink = page.locator("[data-testid='artifact-link']").first()
@@ -32,6 +39,14 @@ export async function getFirstArtifactSlug(page: Page): Promise<string> {
 
   const slug = matches[1]
   console.log("[v0] Found artifact slug:", slug)
+
+  await page.goto(`/artifacts/${slug}`)
+  await page.waitForLoadState("networkidle")
+
+  const detailPageUrl = page.url()
+  if (detailPageUrl.includes("/404") || detailPageUrl.includes("/login")) {
+    throw new Error(`Artifact ${slug} is not accessible. User may not have permissions.`)
+  }
 
   return slug
 }

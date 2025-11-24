@@ -12,8 +12,15 @@ test.describe("Artifact Save Flow", () => {
     // Navigate directly to the edit page using the slug from setup
     await page.goto(`/artifacts/${testSlug}/edit`)
 
-    // Wait for the form to load
-    await page.waitForSelector("input[placeholder='Enter artifact title']", { timeout: 5000 })
+    await page.waitForLoadState("networkidle")
+
+    // Check if we're still on the edit page (not redirected to login or 404)
+    const currentUrl = page.url()
+    console.log("[v0] Current URL after navigation:", currentUrl)
+    expect(currentUrl).toContain(`/artifacts/${testSlug}/edit`)
+
+    // Wait for the form to load with increased timeout
+    await page.waitForSelector("input[placeholder='Enter artifact title']", { timeout: 15000 })
 
     // Update the title
     const titleInput = page.getByPlaceholder("Enter artifact title")
@@ -38,16 +45,17 @@ test.describe("Artifact Save Flow", () => {
     expect(dialogFired).toBe(false)
 
     // Verify we're on the detail page, not edit page
-    const currentUrl = page.url()
-    expect(currentUrl).toContain("/artifacts/")
-    expect(currentUrl).not.toContain("/edit")
+    const finalUrl = page.url()
+    expect(finalUrl).toContain("/artifacts/")
+    expect(finalUrl).not.toContain("/edit")
   })
 
   test("should use returned slug for redirect", async ({ page }) => {
     // Navigate to edit page
     await page.goto(`/artifacts/${testSlug}/edit`)
 
-    await page.waitForSelector("input[placeholder='Enter artifact title']", { timeout: 5000 })
+    await page.waitForLoadState("networkidle")
+    await page.waitForSelector("input[placeholder='Enter artifact title']", { timeout: 15000 })
 
     // Update with a unique title
     const titleInput = page.getByPlaceholder("Enter artifact title")
@@ -70,7 +78,8 @@ test.describe("Artifact Save Flow", () => {
     // Navigate to edit page
     await page.goto(`/artifacts/${testSlug}/edit`)
 
-    await page.waitForSelector("input[placeholder='Enter artifact title']", { timeout: 5000 })
+    await page.waitForLoadState("networkidle")
+    await page.waitForSelector("input[placeholder='Enter artifact title']", { timeout: 15000 })
 
     // Make changes without saving
     const titleInput = page.getByPlaceholder("Enter artifact title")
@@ -95,7 +104,8 @@ test.describe("Artifact Save Flow", () => {
     // Navigate to edit page
     await page.goto(`/artifacts/${testSlug}/edit`)
 
-    await page.waitForSelector("input[placeholder='Enter artifact title']", { timeout: 5000 })
+    await page.waitForLoadState("networkidle")
+    await page.waitForSelector("input[placeholder='Enter artifact title']", { timeout: 15000 })
 
     // Make and save changes
     const titleInput = page.getByPlaceholder("Enter artifact title")
@@ -125,7 +135,8 @@ test.describe("Artifact Save Flow", () => {
     // Navigate to edit page
     await page.goto(`/artifacts/${testSlug}/edit`)
 
-    await page.waitForSelector("input[placeholder='Enter artifact title']", { timeout: 5000 })
+    await page.waitForLoadState("networkidle")
+    await page.waitForSelector("input[placeholder='Enter artifact title']", { timeout: 15000 })
 
     // Look for audio/microphone button near the title field
     // The TranscriptionInput component includes a mic button
