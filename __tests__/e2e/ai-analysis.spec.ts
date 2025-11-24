@@ -1,4 +1,4 @@
-import { test, expect, type Page } from "@playwright/test"
+import { test, expect, type Page } from "./global.setup"
 
 // Mock data for AI responses
 const mockTranscript =
@@ -116,12 +116,6 @@ test.describe("AI Analysis Flow", () => {
   test.beforeEach(async ({ page }) => {
     // Setup API mocks before each test
     await setupApiMocks(page)
-
-    // Navigate to the home page
-    await page.goto("/")
-
-    // TODO: Add login flow here once authentication is set up in E2E tests
-    // For now, we assume the user is already authenticated or auth is bypassed in test mode
   })
 
   test("should transcribe audio file successfully", async ({ page }) => {
