@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -16,6 +16,7 @@ import { TranscriptionInput } from "@/components/transcription-input"
 import { useSupabase } from "@/lib/supabase/browser-context"
 import { ArtifactTypeSelector } from "@/components/artifact-type-selector"
 import { FormField, FormItem, FormMessage, Form } from "@/components/ui/form"
+import { getArtifactTypes } from "@/lib/actions/artifact-types"
 
 export function NewCollectionForm() {
   const router = useRouter()
@@ -24,15 +25,23 @@ export function NewCollectionForm() {
   const [error, setError] = useState<string | null>(null)
   const [successData, setSuccessData] = useState<{ id: string; title: string } | null>(null)
   const [userId, setUserId] = useState<string>("")
+  const [types, setTypes] = useState<any[]>([])
 
   // Get user ID for transcription audio storage
-  useState(() => {
+  useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
       if (data.user) {
         setUserId(data.user.id)
       }
     })
-  })
+  }, [supabase])
+
+  // Load artifact types
+  useEffect(() => {
+    getArtifactTypes().then((result) => {
+      setTypes(Array.isArray(result) ? result : [])
+    })
+  }, [])
 
   const form = useForm<CollectionInput>({
     resolver: zodResolver(collectionSchema),
@@ -146,9 +155,9 @@ export function NewCollectionForm() {
           render={({ field }) => (
             <FormItem>
               <ArtifactTypeSelector
-                value={field.value}
-                onChange={field.onChange}
-                disabled={isSubmitting}
+                types={types}
+                selectedTypeId={field.value}
+                onSelectType={field.onChange}
                 required={false}
               />
               <p className="text-xs text-muted-foreground mt-1">
