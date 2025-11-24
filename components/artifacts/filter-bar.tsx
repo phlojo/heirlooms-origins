@@ -32,7 +32,7 @@ export function FilterBar({
   hasActiveFilters,
 }: FilterBarProps) {
   return (
-    <div className="py-4 space-y-2">
+    <div className="py-3 space-y-2">
       <div className="flex flex-row gap-2 items-center justify-between">
         <div className="flex flex-row gap-2 items-center min-w-0 flex-1">
           <SortDropdown value={sortBy} onChange={onSortChange} />
