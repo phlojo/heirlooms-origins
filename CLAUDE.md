@@ -247,32 +247,6 @@ See `docs/operations/bug-tracker.md` for active bugs and workarounds.
 - `__tests__/test-utils.ts` - Testing infrastructure
 - `vitest.config.ts` / `playwright.config.ts` - Test configurations
 
-## Pre-commit Hooks
-Husky + lint-staged runs on commit:
-- Prettier formatting (`prettier -w`)
-- ESLint auto-fix (`eslint --fix`)
-
-Files: `*.{ts,tsx,js,jsx,json,md,css}`
-
-## Environment Variables Required
-\`\`\`env
-# Supabase
-NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_ANON_KEY=
-SUPABASE_SERVICE_ROLE_KEY=
-
-# Cloudinary
-NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=
-NEXT_PUBLIC_CLOUDINARY_API_KEY=
-CLOUDINARY_API_SECRET=
-
-# OpenAI
-OPENAI_API_KEY=
-
-# Cron security (optional)
-CRON_SECRET=
-\`\`\`
-
 ## Testing Philosophy
 - **Unit tests**: Test utilities, schemas, server actions in isolation
 - **Component tests**: Test UI behavior with React Testing Library (focus on user interactions)
@@ -285,6 +259,25 @@ CRON_SECRET=
 
 ## Package Manager
 **Always use pnpm**, not npm or yarn. The project uses pnpm workspaces and lock file.
+
+## Environment Variables Required
+\`\`\`env
+# Supabase
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+
+# Cloudinary
+NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=
+CLOUDINARY_API_KEY=
+CLOUDINARY_API_SECRET=
+
+# OpenAI
+OPENAI_API_KEY=
+
+# Cron security (optional)
+CRON_SECRET=
+\`\`\`
 
 ---
 

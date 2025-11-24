@@ -96,7 +96,7 @@ SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 
 # Cloudinary
 NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=your-cloud-name
-NEXT_PUBLIC_CLOUDINARY_API_KEY=your-api-key
+CLOUDINARY_API_KEY=your-api-key
 CLOUDINARY_API_SECRET=your-api-secret
 
 # OpenAI
