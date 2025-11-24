@@ -47,12 +47,25 @@ export function CollectionsTabs({
   allHasMore: initialAllHasMore,
   initialViewPreference = "gallery",
 }: CollectionsTabsProps) {
+  console.log("[v0] CollectionsTabs props:", {
+    myCollections,
+    allCollections,
+    myCollectionsType: typeof myCollections,
+    allCollectionsType: typeof allCollections,
+    myCollectionsIsArray: Array.isArray(myCollections),
+    allCollectionsIsArray: Array.isArray(allCollections),
+  })
+
   const [activeTab, setActiveTab] = useState<string>("all")
   const [viewType, setViewType] = useState<ViewType>(initialViewPreference)
   const pathname = usePathname()
 
-  const [allCollectionsList, setAllCollectionsList] = useState<Collection[]>(allCollections || [])
-  const [myCollectionsList, setMyCollectionsList] = useState<Collection[]>(myCollections || [])
+  const [allCollectionsList, setAllCollectionsList] = useState<Collection[]>(
+    Array.isArray(allCollections) ? allCollections : [],
+  )
+  const [myCollectionsList, setMyCollectionsList] = useState<Collection[]>(
+    Array.isArray(myCollections) ? myCollections : [],
+  )
   const [allHasMore, setAllHasMore] = useState(initialAllHasMore)
   const [myHasMore, setMyHasMore] = useState(initialMyHasMore)
   const [isLoadingAll, setIsLoadingAll] = useState(false)
