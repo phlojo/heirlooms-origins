@@ -23,51 +23,51 @@ The testing setup consists of three layers:
 
 ### All Tests
 
-```bash
+\`\`\`bash
 npm run test:all
-```
+\`\`\`
 
 Runs type checking, linting, unit tests, and E2E tests in sequence.
 
 ### Unit & Component Tests
 
-```bash
+\`\`\`bash
 npm run test
-```
+\`\`\`
 
 Run all tests in watch mode:
 
-```bash
+\`\`\`bash
 npm run test:watch
-```
+\`\`\`
 
 Run tests with UI dashboard:
 
-```bash
+\`\`\`bash
 npm run test:ui
-```
+\`\`\`
 
 Run tests with coverage report:
 
-```bash
+\`\`\`bash
 npm run test:coverage
-```
+\`\`\`
 
 ### E2E Tests
 
-```bash
+\`\`\`bash
 npm run test:e2e
-```
+\`\`\`
 
 Run E2E tests with interactive UI:
 
-```bash
+\`\`\`bash
 npm run test:e2e:ui
-```
+\`\`\`
 
 ## Test Structure
 
-```
+\`\`\`
 __tests__/
 ├── unit/
 │   ├── actions/              # Server action tests
@@ -88,7 +88,7 @@ __tests__/
 ├── fixtures/                 # Test data
 │   └── index.ts
 └── test-utils.ts             # Testing utilities and helpers
-```
+\`\`\`
 
 ## Test Files Included
 
@@ -175,7 +175,7 @@ The `__tests__/test-utils.ts` file provides:
 
 Use `__tests__/fixtures/index.ts` for reusable test data:
 
-```typescript
+\`\`\`typescript
 import { fixtures } from "@/__tests__/fixtures"
 
 describe("Artifact Tests", () => {
@@ -184,40 +184,40 @@ describe("Artifact Tests", () => {
     // Test with fixture data...
   })
 })
-```
+\`\`\`
 
 ### Mock Examples
 
 #### Mocking Supabase
 
-```typescript
+\`\`\`typescript
 import { setupSupabaseMocks } from "@/__tests__/mocks/supabase.mock"
 
 const mockSupabase = setupSupabaseMocks()
 // Use mockSupabase in your tests
-```
+\`\`\`
 
 #### Mocking Cloudinary
 
-```typescript
+\`\`\`typescript
 import { setupCloudinaryMocks } from "@/__tests__/mocks/cloudinary.mock"
 
 const mockAPI = setupCloudinaryMocks()
 // Fetch calls to Cloudinary will use mocked responses
-```
+\`\`\`
 
 #### Mocking OpenAI
 
-```typescript
+\`\`\`typescript
 import { setupOpenAIMocks } from "@/__tests__/mocks/openai.mock"
 
 const mockAPI = setupOpenAIMocks()
 // Fetch calls to OpenAI will use mocked responses
-```
+\`\`\`
 
 ### Example Test
 
-```typescript
+\`\`\`typescript
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render, screen, fireEvent } from '@/__tests__/test-utils'
 import { fixtures } from '@/__tests__/fixtures'
@@ -245,7 +245,7 @@ describe('ArtifactCard', () => {
     expect(handleClick).toHaveBeenCalledWith(artifact.id)
   })
 })
-```
+\`\`\`
 
 ## Coverage Goals
 
@@ -258,9 +258,9 @@ describe('ArtifactCard', () => {
 
 View coverage report:
 
-```bash
+\`\`\`bash
 npm run test:coverage
-```
+\`\`\`
 
 HTML report will be generated in `coverage/` directory.
 

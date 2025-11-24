@@ -92,7 +92,7 @@ Setup needed:
 
 ## Quick Commands to Resume
 
-```bash
+\`\`\`bash
 # Switch to testing branch (if needed)
 git checkout claude-testing
 
@@ -116,11 +116,11 @@ git status
 
 # See recent commits
 git log --oneline -5
-```
+\`\`\`
 
 ## File Structure Reference
 
-```
+\`\`\`
 __tests__/
 ├── unit/              # DONE: 118 tests
 │   ├── actions/
@@ -143,39 +143,39 @@ __tests__/
 ├── fixtures/         # DONE: 20+ test objects
 ├── test-utils.ts     # DONE: utilities
 └── example.test.ts   # DONE: basic example
-```
+\`\`\`
 
 ## Key Test Utilities
 
 **Mock data generators:**
 
-```typescript
+\`\`\`typescript
 import { mockData } from "@/__tests__/test-utils"
 
 mockData.user() // Creates mock user
 mockData.artifact() // Creates mock artifact
 mockData.collection() // Creates mock collection
 mockData.artifactType() // Creates mock artifact type
-```
+\`\`\`
 
 **Fixtures:**
 
-```typescript
+\`\`\`typescript
 import { fixtures } from "@/__tests__/fixtures"
 
 fixtures.users.validUser
 fixtures.artifacts.imageArtifact
 fixtures.collections.publicCollection
 fixtures.artifactTypes.car
-```
+\`\`\`
 
 **Mock setup functions:**
 
-```typescript
+\`\`\`typescript
 import { setupSupabaseMocks } from "@/__tests__/mocks/supabase.mock"
 import { setupCloudinaryMocks } from "@/__tests__/mocks/cloudinary.mock"
 import { setupOpenAIMocks } from "@/__tests__/mocks/openai.mock"
-```
+\`\`\`
 
 ## Test Statistics Summary
 
@@ -191,14 +191,14 @@ import { setupOpenAIMocks } from "@/__tests__/mocks/openai.mock"
 
 ## Recent Commits
 
-```
+\`\`\`
 350c977 - docs: add comprehensive phase 3 completion summary
 e6ed5fc - test: add comprehensive component tests for card components
 d0e9692 - test: add unit tests for server actions and validation schemas
 8a8cfcd - docs: add test infrastructure setup summary
 6d29d48 - docs: add comprehensive testing guide and best practices
 3c51ffa - feat: set up comprehensive testing infrastructure
-```
+\`\`\`
 
 ## Documentation Files
 

@@ -64,21 +64,21 @@ View reports in:
 ### 2. Configure Security
 
 Add environment variable in Vercel:
-```
+\`\`\`
 CRON_SECRET=your-random-secret-string
-```
+\`\`\`
 
 Use a strong random string (32+ characters recommended).
 
 ### 3. Test Cron Job
 
 **Manual trigger:**
-```bash
+\`\`\`bash
 curl -X GET "https://yourdomain.com/api/cron/audit-media?secret=YOUR_CRON_SECRET"
-```
+\`\`\`
 
 **Expected response:**
-```json
+\`\`\`json
 {
   "success": true,
   "summary": {
@@ -89,7 +89,7 @@ curl -X GET "https://yourdomain.com/api/cron/audit-media?secret=YOUR_CRON_SECRET
   },
   "details": { ... }
 }
-```
+\`\`\`
 
 ---
 

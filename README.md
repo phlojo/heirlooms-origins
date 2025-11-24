@@ -63,7 +63,7 @@ Heirlooms is a web application designed to help users preserve, document, and sh
 
 ### Installation
 
-```bash
+\`\`\`bash
 # Clone the repository
 git clone https://github.com/phlojo/heirlooms-v0.git
 cd heirlooms-v0
@@ -80,7 +80,7 @@ cp .env.example .env.local
 
 # Start development server
 pnpm dev
-```
+\`\`\`
 
 Visit `http://localhost:3000` to see the app.
 
@@ -88,7 +88,7 @@ Visit `http://localhost:3000` to see the app.
 
 Required environment variables:
 
-```env
+\`\`\`env
 # Supabase
 NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
@@ -104,13 +104,13 @@ OPENAI_API_KEY=your-openai-key
 
 # Optional: Cron job security
 CRON_SECRET=your-random-secret
-```
+\`\`\`
 
 ---
 
 ## Project Structure
 
-```
+\`\`\`
 heirlooms-v0/
 ├── app/                    # Next.js App Router
 │   ├── api/               # API routes (analysis, auth, cron)
@@ -138,7 +138,7 @@ heirlooms-v0/
 │   └── archive/           # Historical snapshots
 ├── public/                # Static assets
 └── scripts/               # Utility scripts
-```
+\`\`\`
 
 ---
 
@@ -166,7 +166,7 @@ heirlooms-v0/
 
 ## Scripts
 
-```bash
+\`\`\`bash
 # Development
 pnpm dev              # Start dev server
 pnpm build            # Build for production
@@ -184,7 +184,7 @@ pnpm test:ui          # Interactive test dashboard
 pnpm test:coverage    # Generate coverage report
 pnpm test:e2e         # Run E2E tests
 pnpm test:all         # Run all checks (lint, type, test)
-```
+\`\`\`
 
 ---
 
@@ -223,14 +223,14 @@ This repository is connected to Vercel and deploys automatically:
 
 ### Manual Deployment
 
-```bash
+\`\`\`bash
 # Build and test locally
 pnpm build
 pnpm test:all
 
 # Deploy to Vercel
 vercel --prod
-```
+\`\`\`
 
 ### Environment Setup
 

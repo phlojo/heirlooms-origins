@@ -41,14 +41,14 @@
 
 **Package Scripts:**
 
-```bash
+\`\`\`bash
 npm test              # Run unit/component tests
 npm test:watch       # Watch mode for development
 npm test:ui          # Interactive test dashboard
 npm test:coverage    # Coverage report
 npm test:e2e         # End-to-end tests
 npm test:all         # Everything (lint, type check, test)
-```
+\`\`\`
 
 ---
 

@@ -30,7 +30,7 @@ A comprehensive testing infrastructure has been set up for the Heirlooms applica
 
 **Package Scripts Added:**
 
-```json
+\`\`\`json
 {
   "test": "vitest",
   "test:watch": "vitest --watch",
@@ -40,13 +40,13 @@ A comprehensive testing infrastructure has been set up for the Heirlooms applica
   "test:e2e:ui": "playwright test --ui",
   "test:all": "npm run typecheck && npm run lint && npm run test && npm run test:e2e"
 }
-```
+\`\`\`
 
 ### Test Infrastructure Files Created
 
 **Directory Structure:**
 
-```
+\`\`\`
 __tests__/
 ├── unit/
 │   ├── actions/         (Ready for server action tests)
@@ -67,7 +67,7 @@ __tests__/
 ├── fixtures/           (Reusable test data)
 │   └── index.ts
 └── test-utils.ts       (Testing utilities and helpers)
-```
+\`\`\`
 
 ### Test Utilities & Helpers
 
@@ -245,7 +245,7 @@ Coverage: 100% of media.ts utility functions
 
 To continue test implementation:
 
-```bash
+\`\`\`bash
 # Watch mode for development
 npm run test:watch
 
@@ -257,7 +257,7 @@ npm run test:e2e
 
 # Run all checks
 npm run test:all
-```
+\`\`\`
 
 ---
 

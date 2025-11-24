@@ -33,15 +33,15 @@ This is particularly problematic for a family heirloom app where links may be sh
 
 **Chosen approach:** Use UUID + slug in URLs (like Stack Overflow, Medium, Reddit)
 
-```
+\`\`\`
 /artifacts/{uuid}/{slug}
 /collections/{uuid}/{slug}
-```
+\`\`\`
 
 **Example:**
-```
+\`\`\`
 /artifacts/a1234567-89ab-cdef-0123-456789abcdef/grandmothers-watch
-```
+\`\`\`
 
 ### Options Considered
 

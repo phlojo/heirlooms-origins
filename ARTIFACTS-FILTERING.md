@@ -56,7 +56,7 @@ This document details the multi-phase implementation of filtering and sorting fu
 
 #### 5. Data Fetching
 - Modified server actions to accept `ArtifactQueryOptions`:
-  ```typescript
+  \`\`\`typescript
   interface ArtifactQueryOptions {
     limit?: number
     cursor?: {
@@ -68,7 +68,7 @@ This document details the multi-phase implementation of filtering and sorting fu
     sortBy?: SortOption
     typeIds?: string[]
   }
-  ```
+  \`\`\`
 - Dynamic cursor-based pagination adapts to sort field
 - Type filtering via Supabase `.in()` query
 
@@ -87,25 +87,25 @@ This document details the multi-phase implementation of filtering and sorting fu
 
 ### Files Created
 
-```
+\`\`\`
 lib/utils/artifact-filters.ts         # Filter utilities and parsing functions
 components/artifacts/sort-dropdown.tsx # Sort selector component
 components/artifacts/type-filter.tsx   # Type multi-select component
 components/artifacts/filter-bar.tsx    # Container component
-```
+\`\`\`
 
 ### Files Modified
 
-```
+\`\`\`
 lib/actions/artifacts.ts               # Added ArtifactQueryOptions, dynamic sorting/filtering
 components/artifacts-tabs.tsx          # Integrated filters, URL management, refetch logic
 app/artifacts/page.tsx                 # Parse URL params, fetch types, pass to components
-```
+\`\`\`
 
 ### Key Code Patterns
 
 #### Cursor Generation (Dynamic Based on Sort)
-```typescript
+\`\`\`typescript
 const getCursor = (artifact: Artifact, sort: SortOption) => {
   switch (sort) {
     case "newest":
@@ -118,10 +118,10 @@ const getCursor = (artifact: Artifact, sort: SortOption) => {
       return { updatedAt: artifact.updated_at, id: artifact.id }
   }
 }
-```
+\`\`\`
 
 #### Smart Type Toggle Logic
-```typescript
+\`\`\`typescript
 const handleToggleType = (typeId: string) => {
   if (allSelected) {
     // Selecting from "All" state = only this type
@@ -136,15 +136,15 @@ const handleToggleType = (typeId: string) => {
     onChange(newTypes.length === types.length ? [] : newTypes)
   }
 }
-```
+\`\`\`
 
 #### URL State Management
-```typescript
+\`\`\`typescript
 const updateURL = (sort: SortOption, typeIds: string[]) => {
   const params = buildFilterParams(sort, typeIds)
   router.push(`/artifacts${params ? `?${params}` : ""}`, { scroll: false })
 }
-```
+\`\`\`
 
 ---
 
@@ -352,7 +352,7 @@ The filtering system is built with modularity and reusability in mind:
 
 ### Data Flow
 
-```
+\`\`\`
 User Action (change filter)
     ↓
 Update Local State (sortBy, selectedTypes)
@@ -366,11 +366,11 @@ Server Queries Database (with filters)
 Return Filtered Results
     ↓
 Update UI (artifacts list, empty states)
-```
+\`\`\`
 
 ### File Structure
 
-```
+\`\`\`
 heirlooms-v0/
 ├── app/
 │   ├── artifacts/
@@ -395,7 +395,7 @@ heirlooms-v0/
 │       ├── artifact-filters.ts         # Filter utilities
 │       └── collection-filters.ts       # (Phase 2)
 └── ARTIFACTS-FILTERING.md              # This document
-```
+\`\`\`
 
 ---
 
@@ -404,7 +404,7 @@ heirlooms-v0/
 ### Database Queries
 
 #### Artifacts with Type Filtering
-```typescript
+\`\`\`typescript
 let query = supabase
   .from("artifacts")
   .select("*, artifact_type:artifact_types(*), author:profiles(*)")
@@ -424,10 +424,10 @@ if (cursor) {
   const operator = sortConfig.ascending ? "gt" : "lt"
   query = query[operator](sortConfig.field, cursor[sortConfig.field])
 }
-```
+\`\`\`
 
 #### Collections with Type Filtering (Phase 2)
-```typescript
+\`\`\`typescript
 // Approach: Use EXISTS subquery to filter collections containing artifacts of selected types
 let query = supabase
   .from("collections")
@@ -444,7 +444,7 @@ if (typeIds && typeIds.length > 0) {
 
 // Note: This returns collections with at least one artifact of selected types
 // For "contains ALL types" logic, more complex query needed
-```
+\`\`\`
 
 ### Performance Considerations
 
@@ -529,7 +529,7 @@ if (typeIds && typeIds.length > 0) {
 Currently no automated tests for filtering system. Recommended tests:
 
 1. **Unit Tests** (`lib/utils/artifact-filters.test.ts`)
-   ```typescript
+   \`\`\`typescript
    describe("parseSortParam", () => {
      it("returns valid sort option", () => {
        expect(parseSortParam("newest")).toBe("newest")
@@ -549,7 +549,7 @@ Currently no automated tests for filtering system. Recommended tests:
          .toEqual(["id1"])
      })
    })
-   ```
+   \`\`\`
 
 2. **Integration Tests** (using Playwright or similar)
    - Test filter interactions in real browser

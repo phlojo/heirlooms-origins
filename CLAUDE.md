@@ -14,21 +14,21 @@ Heirlooms is a Next.js 16 application for preserving and sharing family artifact
 ## Essential Commands
 
 ### Development
-```bash
+\`\`\`bash
 pnpm dev              # Start dev server (http://localhost:3000)
 pnpm build            # Build for production
 pnpm start            # Start production server
-```
+\`\`\`
 
 ### Code Quality
-```bash
+\`\`\`bash
 pnpm typecheck        # TypeScript type checking (must pass before commits)
 pnpm lint             # ESLint (auto-fixes in pre-commit hook)
 pnpm format           # Prettier formatting
-```
+\`\`\`
 
 ### Testing
-```bash
+\`\`\`bash
 pnpm test             # Run unit/component tests (Vitest)
 pnpm test:watch       # Watch mode
 pnpm test:ui          # Interactive test UI
@@ -36,15 +36,15 @@ pnpm test:coverage    # Generate coverage report (target: 80%+)
 pnpm test:e2e         # Run E2E tests (Playwright)
 pnpm test:e2e:ui      # E2E tests in interactive mode
 pnpm test:all         # Run typecheck + lint + unit + E2E tests
-```
+\`\`\`
 
 **Test file pattern**: `__tests__/**/*.{test,spec}.{ts,tsx}` (excluding `__tests__/e2e/`)
 
 ### Running Single Tests
-```bash
+\`\`\`bash
 pnpm test media.test.ts                    # Run specific test file
 pnpm test -t "should detect image URLs"    # Run tests matching pattern
-```
+\`\`\`
 
 ## Architecture Overview
 
@@ -80,10 +80,10 @@ All data mutations use Next.js Server Actions in `lib/actions/`:
 ### URL Routing (Hybrid ID + Slug)
 **Decision**: Use UUID + slug pattern for stable, shareable URLs.
 
-```
+\`\`\`
 /artifacts/[uuid]/[slug]    # Slug is optional
 /collections/[uuid]/[slug]  # Slug updates with title changes
-```
+\`\`\`
 
 **Benefits**: Old links never break (UUID is authoritative), slugs stay SEO-friendly and match current titles. See `ARCHITECTURE.md` for full rationale.
 
@@ -123,7 +123,7 @@ All inputs validated with Zod schemas in `lib/schemas.ts`:
 **Current status**: Phases 1-3 complete (169 tests, 66% coverage)
 
 **Test structure**:
-```
+\`\`\`
 __tests__/
 ├── unit/           # Utilities, schemas, server actions
 │   ├── utils/      # 42 tests for media.ts
@@ -133,7 +133,7 @@ __tests__/
 ├── e2e/           # Playwright E2E tests (Phase 5)
 ├── mocks/         # Supabase, Cloudinary, OpenAI mocks
 └── fixtures/      # Test data (20+ objects with proper UUIDs)
-```
+\`\`\`
 
 **Test utilities** (`__tests__/test-utils.ts`):
 - `render()` - Enhanced React Testing Library render
@@ -185,7 +185,7 @@ See `TESTING.md` for comprehensive testing guide.
 - **Important**: Never use `createClient()` from `lib/supabase/client.ts` in Server Components
 
 ### Error Handling in Server Actions
-```typescript
+\`\`\`typescript
 const validatedFields = schema.safeParse(input)
 if (!validatedFields.success) {
   return {
@@ -193,7 +193,7 @@ if (!validatedFields.success) {
     fieldErrors: validatedFields.error.flatten().fieldErrors
   }
 }
-```
+\`\`\`
 
 ### Media Upload Flow
 1. User selects files → Upload to Cloudinary via `uploadToCloudinary()`
@@ -203,7 +203,7 @@ if (!validatedFields.success) {
 5. Cron job `/api/cron/audit-media` identifies orphaned uploads (runs daily at 2 AM UTC)
 
 ### Slug Generation
-```typescript
+\`\`\`typescript
 import { generateUniqueSlug } from "@/lib/utils/slug"
 
 const slug = await generateUniqueSlug(
@@ -211,7 +211,7 @@ const slug = await generateUniqueSlug(
   "artifacts",  // table name
   userId        // scope to user
 )
-```
+\`\`\`
 
 ## Cron Jobs & Scheduled Tasks
 
@@ -223,9 +223,9 @@ const slug = await generateUniqueSlug(
   - See `docs/operations/cron-jobs.md` and `docs/guides/media-audit.md`
 
 **Manual trigger**:
-```bash
+\`\`\`bash
 curl "https://yourdomain.com/api/cron/audit-media?secret=YOUR_CRON_SECRET"
-```
+\`\`\`
 
 ## Known Issues & Bug Tracker
 See `docs/operations/bug-tracker.md` for active bugs and workarounds.
@@ -255,7 +255,7 @@ Husky + lint-staged runs on commit:
 Files: `*.{ts,tsx,js,jsx,json,md,css}`
 
 ## Environment Variables Required
-```env
+\`\`\`env
 # Supabase
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
@@ -271,7 +271,7 @@ OPENAI_API_KEY=
 
 # Cron security (optional)
 CRON_SECRET=
-```
+\`\`\`
 
 ## Testing Philosophy
 - **Unit tests**: Test utilities, schemas, server actions in isolation
