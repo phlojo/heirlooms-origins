@@ -55,17 +55,17 @@ export function TypeFilter({ types, selectedTypes, onChange }: TypeFilterProps) 
   return (
     <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
       <span className="text-sm font-medium text-muted-foreground shrink-0 hidden sm:inline">Type:</span>
-      <Popover>
+      <Popover modal>
         <PopoverTrigger asChild>
-          <Button variant="outline" size="sm" className="h-9 border-dashed">
+          <Button variant="outline" size="sm" className="h-9">
             <Filter className="mr-1.5 sm:mr-2 h-4 w-4" />
             <span className="hidden sm:inline">{allSelected ? "All Types" : `${selectedCount} selected`}</span>
             <span className="sm:hidden">{allSelected ? "All" : `${selectedCount}`}</span>
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-[280px] p-0" align="start">
-          <div className="p-4 space-y-4">
-            <div className="flex items-center justify-between">
+          <div className="p-3">
+            <div className="flex items-center justify-between mb-2">
               <h4 className="text-sm font-medium">Filter by Type</h4>
               {!allSelected && (
                 <Button variant="ghost" size="sm" onClick={handleToggleAll} className="h-auto p-0 text-xs">
@@ -73,8 +73,8 @@ export function TypeFilter({ types, selectedTypes, onChange }: TypeFilterProps) 
                 </Button>
               )}
             </div>
-            <div className="space-y-3">
-              <div className="flex items-center space-x-2">
+            <div className="space-y-1">
+              <div className="flex items-center space-x-2 py-1.5 px-2">
                 <Checkbox
                   id="type-all"
                   checked={allSelected}
@@ -88,13 +88,13 @@ export function TypeFilter({ types, selectedTypes, onChange }: TypeFilterProps) 
                   All Types
                 </label>
               </div>
-              <div className="h-px bg-border" />
+              <div className="h-px bg-border my-1" />
               {types.map((type) => {
                 const Icon = getDynamicLucideIcon(type.icon_name)
                 const isChecked = allSelected || selectedTypes.includes(type.id)
 
                 return (
-                  <div key={type.id} className="flex items-center space-x-2">
+                  <div key={type.id} className="flex items-center space-x-2 py-1.5 px-2">
                     <Checkbox
                       id={`type-${type.id}`}
                       checked={isChecked}
