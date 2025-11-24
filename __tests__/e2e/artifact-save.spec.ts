@@ -1,16 +1,19 @@
 import { test, expect } from "@playwright/test"
+import { setupAuthMocks } from "./helpers/auth"
 
 test.describe("Artifact Save Flow", () => {
   test.beforeEach(async ({ page }) => {
-    // Login before each test
+    await setupAuthMocks(page)
+
+    // Navigate to home (now authenticated)
     await page.goto("/")
-    // Assuming there's a login page or we can navigate to the artifacts page
-    // This would depend on your authentication setup
   })
 
   test("should save artifact changes without beforeunload warning", async ({ page, context }) => {
     // Navigate to an artifact edit page
     await page.goto("/artifacts")
+
+    await page.waitForSelector("[data-testid='artifact-link']", { timeout: 10000 })
 
     // Click on an artifact to view it
     const firstArtifactLink = page.locator("[data-testid='artifact-link']").first()
@@ -30,11 +33,10 @@ test.describe("Artifact Save Flow", () => {
       await page.goto(`/artifacts/${slug}/edit`)
     }
 
-    // Wait for edit form to load
-    await page.waitForSelector("input[placeholder*='artifact title']", { timeout: 5000 })
+    await page.waitForSelector("input[placeholder='Enter artifact title']", { timeout: 5000 })
 
     // Make a change to the title
-    const titleInput = page.locator("input").first()
+    const titleInput = page.locator("input[placeholder='Enter artifact title']")
     await titleInput.fill("Updated Artifact Title")
 
     // Listen for dialog events (beforeunload)
@@ -65,6 +67,8 @@ test.describe("Artifact Save Flow", () => {
     // Navigate to edit page
     await page.goto("/artifacts")
 
+    await page.waitForSelector("[data-testid='artifact-link']", { timeout: 10000 })
+
     const firstArtifactLink = page.locator("[data-testid='artifact-link']").first()
     await firstArtifactLink.click()
 
@@ -75,8 +79,10 @@ test.describe("Artifact Save Flow", () => {
     // Navigate to edit
     await page.goto(`/artifacts/${slug}/edit`)
 
+    await page.waitForSelector("input[placeholder='Enter artifact title']", { timeout: 5000 })
+
     // Change the title significantly
-    const titleInput = page.locator("input").first()
+    const titleInput = page.locator("input[placeholder='Enter artifact title']")
     const newTitle = `Updated ${Date.now()}`
     await titleInput.fill(newTitle)
 
@@ -95,6 +101,8 @@ test.describe("Artifact Save Flow", () => {
   test("should show warning when navigating away with unsaved changes", async ({ page, context }) => {
     await page.goto("/artifacts")
 
+    await page.waitForSelector("[data-testid='artifact-link']", { timeout: 10000 })
+
     const firstArtifactLink = page.locator("[data-testid='artifact-link']").first()
     await firstArtifactLink.click()
 
@@ -103,8 +111,10 @@ test.describe("Artifact Save Flow", () => {
     const slug = page.url().split("/").pop()
     await page.goto(`/artifacts/${slug}/edit`)
 
+    await page.waitForSelector("input[placeholder='Enter artifact title']", { timeout: 5000 })
+
     // Make a change
-    const titleInput = page.locator("input").first()
+    const titleInput = page.locator("input[placeholder='Enter artifact title']")
     await titleInput.fill("Unsaved Changes")
 
     // Try to navigate away without saving
@@ -125,6 +135,8 @@ test.describe("Artifact Save Flow", () => {
   test("should not show warning when navigating away after saving", async ({ page, context }) => {
     await page.goto("/artifacts")
 
+    await page.waitForSelector("[data-testid='artifact-link']", { timeout: 10000 })
+
     const firstArtifactLink = page.locator("[data-testid='artifact-link']").first()
     await firstArtifactLink.click()
 
@@ -133,8 +145,10 @@ test.describe("Artifact Save Flow", () => {
     const slug = page.url().split("/").pop()
     await page.goto(`/artifacts/${slug}/edit`)
 
+    await page.waitForSelector("input[placeholder='Enter artifact title']", { timeout: 5000 })
+
     // Make a change
-    const titleInput = page.locator("input").first()
+    const titleInput = page.locator("input[placeholder='Enter artifact title']")
     await titleInput.fill("Changes to Save")
 
     // Save
@@ -161,6 +175,8 @@ test.describe("Artifact Save Flow", () => {
   test("should have audio input for title field", async ({ page }) => {
     await page.goto("/artifacts")
 
+    await page.waitForSelector("[data-testid='artifact-link']", { timeout: 10000 })
+
     const firstArtifactLink = page.locator("[data-testid='artifact-link']").first()
     await firstArtifactLink.click()
 
@@ -168,6 +184,8 @@ test.describe("Artifact Save Flow", () => {
 
     const slug = page.url().split("/").pop()
     await page.goto(`/artifacts/${slug}/edit`)
+
+    await page.waitForSelector("input[placeholder='Enter artifact title']", { timeout: 5000 })
 
     // Check for microphone button (audio input indicator)
     const micButton = page.locator("button[aria-label*='Record'], button:has-text('🎤'), [role='button']:has-text('♪')")
