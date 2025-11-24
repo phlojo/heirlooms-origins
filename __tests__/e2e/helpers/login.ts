@@ -24,22 +24,20 @@ export async function login(page: Page): Promise<void> {
   // Wait for the login form to load
   await page.waitForSelector('input[type="email"]', { timeout: 10000 })
 
-  // Fill in the email field
-  await page.fill('input[placeholder="you@example.com"]', email)
+  // Fill in the email field using placeholder selector
+  await page.getByPlaceholder("you@example.com").fill(email)
 
   // Click "Use password instead" button to switch to password login
-  const usePasswordButton = page.locator("button:has-text('Use password instead')")
-  await usePasswordButton.click()
+  await page.getByRole("button", { name: "Use password instead" }).click()
 
   // Wait for password field to appear
   await page.waitForSelector('input[type="password"]', { timeout: 5000 })
 
   // Fill in the password field
-  await page.fill('input[type="password"]', password)
+  await page.getByLabel("Password").fill(password)
 
   // Click the Sign In button
-  const signInButton = page.locator('button[type="submit"]:has-text("Sign In")')
-  await signInButton.click()
+  await page.getByRole("button", { name: "Sign In" }).click()
 
   // Wait for successful redirect to home or collections page
   // The app redirects to /collections by default after login

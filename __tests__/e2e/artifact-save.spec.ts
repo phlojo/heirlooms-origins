@@ -1,30 +1,26 @@
 import { test, expect } from "./global.setup"
+import { createTestArtifact } from "./helpers/test-data"
 
 test.describe("Artifact Save Flow", () => {
-  test("should save artifact changes without beforeunload warning", async ({ page, context }) => {
-    await page.goto("/artifacts")
+  let testSlug: string
 
-    await page.waitForSelector("[data-testid='artifact-link']", { timeout: 10000 })
+  test.beforeEach(async ({ page }) => {
+    // Create a fresh test artifact before each test
+    testSlug = await createTestArtifact(page, `Test Artifact ${Date.now()}`)
+  })
 
-    const firstArtifactLink = page.locator("[data-testid='artifact-link']").first()
-    await firstArtifactLink.click()
+  test("should save artifact changes without beforeunload warning", async ({ page }) => {
+    // Navigate directly to the edit page using the slug from setup
+    await page.goto(`/artifacts/${testSlug}/edit`)
 
-    await page.waitForURL(/\/artifacts\/[^/]+$/)
-
-    const editButton = page.locator("button:has-text('Edit')")
-    if (await editButton.isVisible()) {
-      await editButton.click()
-    } else {
-      const currentUrl = page.url()
-      const slug = currentUrl.split("/").pop()
-      await page.goto(`/artifacts/${slug}/edit`)
-    }
-
+    // Wait for the form to load
     await page.waitForSelector("input[placeholder='Enter artifact title']", { timeout: 5000 })
 
-    const titleInput = page.locator("input[placeholder='Enter artifact title']")
+    // Update the title
+    const titleInput = page.getByPlaceholder("Enter artifact title")
     await titleInput.fill("Updated Artifact Title")
 
+    // Listen for any dialogs
     let dialogFired = false
     page.on("dialog", async (dialog) => {
       console.log("Dialog appeared:", dialog.message())
@@ -32,105 +28,94 @@ test.describe("Artifact Save Flow", () => {
       await dialog.dismiss()
     })
 
-    const saveButton = page.locator("button:has-text('Save Changes')")
+    // Save the changes
+    const saveButton = page.getByRole("button", { name: /save changes/i })
     await saveButton.click()
 
+    // Wait for redirect back to detail view
     await page.waitForURL(/\/artifacts\/[^/]+$/, { timeout: 10000 })
 
+    // Verify no dialog appeared
     expect(dialogFired).toBe(false)
 
+    // Verify we're on the detail page, not edit page
     const currentUrl = page.url()
     expect(currentUrl).toContain("/artifacts/")
     expect(currentUrl).not.toContain("/edit")
   })
 
   test("should use returned slug for redirect", async ({ page }) => {
-    await page.goto("/artifacts")
-
-    await page.waitForSelector("[data-testid='artifact-link']", { timeout: 10000 })
-
-    const firstArtifactLink = page.locator("[data-testid='artifact-link']").first()
-    await firstArtifactLink.click()
-
-    await page.waitForURL(/\/artifacts\/[^/]+$/)
-
-    const slug = page.url().split("/").pop()
-    await page.goto(`/artifacts/${slug}/edit`)
+    // Navigate to edit page
+    await page.goto(`/artifacts/${testSlug}/edit`)
 
     await page.waitForSelector("input[placeholder='Enter artifact title']", { timeout: 5000 })
 
-    const titleInput = page.locator("input[placeholder='Enter artifact title']")
+    // Update with a unique title
+    const titleInput = page.getByPlaceholder("Enter artifact title")
     const newTitle = `Updated ${Date.now()}`
     await titleInput.fill(newTitle)
 
-    const saveButton = page.locator("button:has-text('Save Changes')")
+    // Save changes
+    const saveButton = page.getByRole("button", { name: /save changes/i })
     await saveButton.click()
 
+    // Wait for redirect
     await page.waitForURL(/\/artifacts\/[^/]+$/, { timeout: 10000 })
 
+    // Verify final URL has a valid slug format
     const finalUrl = page.url()
     expect(finalUrl).toMatch(/\/artifacts\/[a-z0-9-]+$/)
   })
 
-  test("should show warning when navigating away with unsaved changes", async ({ page, context }) => {
-    await page.goto("/artifacts")
-
-    await page.waitForSelector("[data-testid='artifact-link']", { timeout: 10000 })
-
-    const firstArtifactLink = page.locator("[data-testid='artifact-link']").first()
-    await firstArtifactLink.click()
-
-    await page.waitForURL(/\/artifacts\/[^/]+$/)
-
-    const slug = page.url().split("/").pop()
-    await page.goto(`/artifacts/${slug}/edit`)
+  test("should show warning when navigating away with unsaved changes", async ({ page }) => {
+    // Navigate to edit page
+    await page.goto(`/artifacts/${testSlug}/edit`)
 
     await page.waitForSelector("input[placeholder='Enter artifact title']", { timeout: 5000 })
 
-    const titleInput = page.locator("input[placeholder='Enter artifact title']")
+    // Make changes without saving
+    const titleInput = page.getByPlaceholder("Enter artifact title")
     await titleInput.fill("Unsaved Changes")
 
+    // Listen for beforeunload dialog
     let dialogFired = false
     page.on("dialog", async (dialog) => {
       dialogFired = true
       await dialog.accept()
     })
 
+    // Try to navigate away
     await page.goto("/artifacts")
 
+    // Give time for dialog to fire
     await page.waitForTimeout(500)
     expect(dialogFired).toBe(true)
   })
 
-  test("should not show warning when navigating away after saving", async ({ page, context }) => {
-    await page.goto("/artifacts")
-
-    await page.waitForSelector("[data-testid='artifact-link']", { timeout: 10000 })
-
-    const firstArtifactLink = page.locator("[data-testid='artifact-link']").first()
-    await firstArtifactLink.click()
-
-    await page.waitForURL(/\/artifacts\/[^/]+$/)
-
-    const slug = page.url().split("/").pop()
-    await page.goto(`/artifacts/${slug}/edit`)
+  test("should not show warning when navigating away after saving", async ({ page }) => {
+    // Navigate to edit page
+    await page.goto(`/artifacts/${testSlug}/edit`)
 
     await page.waitForSelector("input[placeholder='Enter artifact title']", { timeout: 5000 })
 
-    const titleInput = page.locator("input[placeholder='Enter artifact title']")
+    // Make and save changes
+    const titleInput = page.getByPlaceholder("Enter artifact title")
     await titleInput.fill("Changes to Save")
 
-    const saveButton = page.locator("button:has-text('Save Changes')")
+    const saveButton = page.getByRole("button", { name: /save changes/i })
     await saveButton.click()
 
+    // Wait for redirect
     await page.waitForURL(/\/artifacts\/[^/]+$/, { timeout: 10000 })
 
+    // Listen for dialogs
     let dialogFired = false
     page.on("dialog", async (dialog) => {
       dialogFired = true
       await dialog.dismiss()
     })
 
+    // Navigate away - should not trigger warning
     await page.goto("/artifacts")
 
     await page.waitForTimeout(500)
@@ -138,25 +123,18 @@ test.describe("Artifact Save Flow", () => {
   })
 
   test("should have audio input for title field", async ({ page }) => {
-    await page.goto("/artifacts")
-
-    await page.waitForSelector("[data-testid='artifact-link']", { timeout: 10000 })
-
-    const firstArtifactLink = page.locator("[data-testid='artifact-link']").first()
-    await firstArtifactLink.click()
-
-    await page.waitForURL(/\/artifacts\/[^/]+$/)
-
-    const slug = page.url().split("/").pop()
-    await page.goto(`/artifacts/${slug}/edit`)
+    // Navigate to edit page
+    await page.goto(`/artifacts/${testSlug}/edit`)
 
     await page.waitForSelector("input[placeholder='Enter artifact title']", { timeout: 5000 })
 
-    const micButton = page.locator("button[aria-label*='Record'], button:has-text('🎤'), [role='button']:has-text('♪')")
-
+    // Look for audio/microphone button near the title field
+    // The TranscriptionInput component includes a mic button
     const titleSection = page.locator("label:has-text('Title')").locator("..")
-    const audioIndicator = titleSection.locator("button, [class*='mic'], [class*='audio']")
+    const audioButton = titleSection.locator("button[aria-label*='Record'], button[aria-label*='microphone']")
 
-    expect(await audioIndicator.count()).toBeGreaterThan(0)
+    // Verify audio input functionality exists
+    const audioButtonCount = await audioButton.count()
+    expect(audioButtonCount).toBeGreaterThan(0)
   })
 })
