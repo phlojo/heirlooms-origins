@@ -48,12 +48,12 @@ export function HomeCard({ title, description, href, backgroundImage }: HomeCard
     return (
       <Link
         href={href}
-        className="block rounded-lg border bg-card overflow-hidden transition-all hover:shadow-lg hover:scale-[1.02] h-full"
+        className="block rounded-lg border bg-card overflow-hidden transition-all hover:shadow-lg hover:scale-[1.02] h-full animate-fade-in"
       >
         {content}
       </Link>
     )
   }
 
-  return <div className="rounded-lg border bg-card overflow-hidden h-full">{content}</div>
+  return <div className="rounded-lg border bg-card overflow-hidden h-full animate-fade-in">{content}</div>
 }

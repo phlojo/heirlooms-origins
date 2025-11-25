@@ -104,7 +104,7 @@ export default async function ProfilePage() {
 
         <div className="grid gap-6 md:grid-cols-2">
           {/* Profile Information Card */}
-          <Card>
+          <Card className="animate-fade-in">
             <CardHeader>
               <CardTitle>Profile Information</CardTitle>
               <CardDescription>Your personal account details</CardDescription>
@@ -149,7 +149,7 @@ export default async function ProfilePage() {
           </Card>
 
           {/* Statistics Card */}
-          <Card>
+          <Card className="animate-fade-in">
             <CardHeader>
               <CardTitle>Your Heirlooms</CardTitle>
               <CardDescription>Overview of your collections and artifacts</CardDescription>
@@ -177,7 +177,7 @@ export default async function ProfilePage() {
         </div>
 
         {showPasswordUI && (
-          <Card>
+          <Card className="animate-fade-in">
             <CardHeader>
               <div className="flex items-center gap-2">
                 <Lock className="h-5 w-5" />
@@ -195,7 +195,7 @@ export default async function ProfilePage() {
           </Card>
         )}
 
-        <Card>
+        <Card className="animate-fade-in">
           <CardHeader>
             <div className="flex items-center gap-2">
               <Settings className="h-5 w-5" />
