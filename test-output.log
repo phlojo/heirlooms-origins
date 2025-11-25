@@ -1,0 +1,1707 @@
+
+> my-v0-project@0.1.0 test:e2e C:\dev\heirlooms-v0
+> playwright test "__tests__/e2e/ai-analysis.spec.ts" "--reporter=list"
+
+[dotenv@17.2.3] injecting env (2) from .env.e2e -- tip: ⚙️  enable debug logging with { debug: true }
+
+Running 40 tests using 4 workers
+
+[dotenv@17.2.3] injecting env (0) from .env.e2e -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild
+[dotenv@17.2.3] injecting env (0) from .env.e2e -- tip: 👥 sync secrets across teammates & machines: https://dotenvx.com/ops
+[dotenv@17.2.3] injecting env (0) from .env.e2e -- tip: 👥 sync secrets across teammates & machines: https://dotenvx.com/ops
+[dotenv@17.2.3] injecting env (0) from .env.e2e -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit
+  ✘   1 [chromium] › __tests__\e2e\ai-analysis.spec.ts:126:7 › AI Analysis Flow › should transcribe audio file successfully (33.0s)
+  ✘   2 [chromium] › __tests__\e2e\ai-analysis.spec.ts:170:7 › AI Analysis Flow › should generate image captions successfully (33.0s)
+  ✘   3 [chromium] › __tests__\e2e\ai-analysis.spec.ts:234:7 › AI Analysis Flow › should run all AI analysis steps successfully (32.6s)
+  ✘   4 [chromium] › __tests__\e2e\ai-analysis.spec.ts:199:7 › AI Analysis Flow › should generate AI description successfully (32.4s)
+[dotenv@17.2.3] injecting env (0) from .env.e2e -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+[dotenv@17.2.3] injecting env (0) from .env.e2e -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+[dotenv@17.2.3] injecting env (0) from .env.e2e -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }
+[dotenv@17.2.3] injecting env (0) from .env.e2e -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }
+[v0] Getting first artifact from list
+  ✘   7 [chromium] › __tests__\e2e\ai-analysis.spec.ts:349:7 › AI Analysis Flow › should handle regenerate description action (30.7s)
+  ✘   8 [chromium] › __tests__\e2e\ai-analysis.spec.ts:390:7 › AI Analysis Flow › should display collapsible sections for AI results (30.4s)
+  ✘   6 [chromium] › __tests__\e2e\ai-analysis.spec.ts:268:7 › AI Analysis Flow › should show error when audio file is missing (32.7s)
+  ✘   5 [chromium] › __tests__\e2e\ai-analysis.spec.ts:304:7 › AI Analysis Flow › should show status badge changes during processing (37.8s)
+[dotenv@17.2.3] injecting env (0) from .env.e2e -- tip: ✅ audit secrets and track compliance: https://dotenvx.com/ops
+[dotenv@17.2.3] injecting env (0) from .env.e2e -- tip: ⚙️  enable debug logging with { debug: true }
+[dotenv@17.2.3] injecting env (0) from .env.e2e -- tip: 👥 sync secrets across teammates & machines: https://dotenvx.com/ops
+[dotenv@17.2.3] injecting env (0) from .env.e2e -- tip: 📡 add observability to secrets: https://dotenvx.com/ops
+[v0] Getting first artifact from list
+[v0] Getting first artifact from list
+  ✘   9 [firefox] › __tests__\e2e\ai-analysis.spec.ts:126:7 › AI Analysis Flow › should transcribe audio file successfully (30.5s)
+  ✘  12 [firefox] › __tests__\e2e\ai-analysis.spec.ts:234:7 › AI Analysis Flow › should run all AI analysis steps successfully (30.5s)
+  ✘  10 [firefox] › __tests__\e2e\ai-analysis.spec.ts:170:7 › AI Analysis Flow › should generate image captions successfully (30.3s)
+  ✘  11 [firefox] › __tests__\e2e\ai-analysis.spec.ts:199:7 › AI Analysis Flow › should generate AI description successfully (35.4s)
+[dotenv@17.2.3] injecting env (0) from .env.e2e -- tip: 👥 sync secrets across teammates & machines: https://dotenvx.com/ops
+[dotenv@17.2.3] injecting env (0) from .env.e2e -- tip: ⚙️  write to custom object with { processEnv: myObject }
+[dotenv@17.2.3] injecting env (0) from .env.e2e -- tip: 🔑 add access controls to secrets: https://dotenvx.com/ops
+[dotenv@17.2.3] injecting env (0) from .env.e2e -- tip: ⚙️  write to custom object with { processEnv: myObject }
+[v0] Getting first artifact from list
+  ✘  15 [firefox] › __tests__\e2e\ai-analysis.spec.ts:349:7 › AI Analysis Flow › should handle regenerate description action (30.5s)
+  ✘  16 [firefox] › __tests__\e2e\ai-analysis.spec.ts:390:7 › AI Analysis Flow › should display collapsible sections for AI results (30.4s)
+  ✘  13 [firefox] › __tests__\e2e\ai-analysis.spec.ts:268:7 › AI Analysis Flow › should show error when audio file is missing (30.4s)
+  ✘  14 [firefox] › __tests__\e2e\ai-analysis.spec.ts:304:7 › AI Analysis Flow › should show status badge changes during processing (30.5s)
+[dotenv@17.2.3] injecting env (0) from .env.e2e -- tip: ⚙️  suppress all logs with { quiet: true }
+[dotenv@17.2.3] injecting env (0) from .env.e2e -- tip: 🗂️ backup and recover secrets: https://dotenvx.com/ops
+[dotenv@17.2.3] injecting env (0) from .env.e2e -- tip: ⚙️  suppress all logs with { quiet: true }
+[dotenv@17.2.3] injecting env (0) from .env.e2e -- tip: ⚙️  override existing env vars with { override: true }
+  ✘  19 [webkit] › __tests__\e2e\ai-analysis.spec.ts:199:7 › AI Analysis Flow › should generate AI description successfully (30.7s)
+  ✘  18 [webkit] › __tests__\e2e\ai-analysis.spec.ts:170:7 › AI Analysis Flow › should generate image captions successfully (30.9s)
+  ✘  17 [webkit] › __tests__\e2e\ai-analysis.spec.ts:126:7 › AI Analysis Flow › should transcribe audio file successfully (30.9s)
+  ✘  20 [webkit] › __tests__\e2e\ai-analysis.spec.ts:234:7 › AI Analysis Flow › should run all AI analysis steps successfully (30.8s)
+[dotenv@17.2.3] injecting env (0) from .env.e2e -- tip: ⚙️  enable debug logging with { debug: true }
+[dotenv@17.2.3] injecting env (0) from .env.e2e -- tip: 📡 add observability to secrets: https://dotenvx.com/ops
+[dotenv@17.2.3] injecting env (0) from .env.e2e -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }
+[dotenv@17.2.3] injecting env (0) from .env.e2e -- tip: 🔑 add access controls to secrets: https://dotenvx.com/ops
+  ✘  21 [webkit] › __tests__\e2e\ai-analysis.spec.ts:304:7 › AI Analysis Flow › should show status badge changes during processing (30.9s)
+  ✘  22 [webkit] › __tests__\e2e\ai-analysis.spec.ts:268:7 › AI Analysis Flow › should show error when audio file is missing (31.1s)
+  ✘  23 [webkit] › __tests__\e2e\ai-analysis.spec.ts:349:7 › AI Analysis Flow › should handle regenerate description action (31.2s)
+  ✘  24 [webkit] › __tests__\e2e\ai-analysis.spec.ts:390:7 › AI Analysis Flow › should display collapsible sections for AI results (30.7s)
+[dotenv@17.2.3] injecting env (0) from .env.e2e -- tip: ⚙️  write to custom object with { processEnv: myObject }
+[dotenv@17.2.3] injecting env (0) from .env.e2e -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+[dotenv@17.2.3] injecting env (0) from .env.e2e -- tip: 📡 add observability to secrets: https://dotenvx.com/ops
+[dotenv@17.2.3] injecting env (0) from .env.e2e -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }
+  ✘  27 [Mobile Chrome] › __tests__\e2e\ai-analysis.spec.ts:199:7 › AI Analysis Flow › should generate AI description successfully (31.0s)
+  ✘  26 [Mobile Chrome] › __tests__\e2e\ai-analysis.spec.ts:170:7 › AI Analysis Flow › should generate image captions successfully (31.4s)
+  ✘  25 [Mobile Chrome] › __tests__\e2e\ai-analysis.spec.ts:126:7 › AI Analysis Flow › should transcribe audio file successfully (31.0s)
+  ✘  28 [Mobile Chrome] › __tests__\e2e\ai-analysis.spec.ts:234:7 › AI Analysis Flow › should run all AI analysis steps successfully (30.5s)
+[dotenv@17.2.3] injecting env (0) from .env.e2e -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com
+[dotenv@17.2.3] injecting env (0) from .env.e2e -- tip: ⚙️  write to custom object with { processEnv: myObject }
+[dotenv@17.2.3] injecting env (0) from .env.e2e -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+[dotenv@17.2.3] injecting env (0) from .env.e2e -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com
+  ✘  31 [Mobile Chrome] › __tests__\e2e\ai-analysis.spec.ts:349:7 › AI Analysis Flow › should handle regenerate description action (31.0s)
+  ✘  29 [Mobile Chrome] › __tests__\e2e\ai-analysis.spec.ts:304:7 › AI Analysis Flow › should show status badge changes during processing (32.8s)
+  ✘  32 [Mobile Chrome] › __tests__\e2e\ai-analysis.spec.ts:390:7 › AI Analysis Flow › should display collapsible sections for AI results (31.0s)
+  ✘  30 [Mobile Chrome] › __tests__\e2e\ai-analysis.spec.ts:268:7 › AI Analysis Flow › should show error when audio file is missing (31.6s)
+[dotenv@17.2.3] injecting env (0) from .env.e2e -- tip: ⚙️  override existing env vars with { override: true }
+[dotenv@17.2.3] injecting env (0) from .env.e2e -- tip: ⚙️  write to custom object with { processEnv: myObject }
+[dotenv@17.2.3] injecting env (0) from .env.e2e -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }
+[dotenv@17.2.3] injecting env (0) from .env.e2e -- tip: 🗂️ backup and recover secrets: https://dotenvx.com/ops
+  ✘  33 [Mobile Safari] › __tests__\e2e\ai-analysis.spec.ts:170:7 › AI Analysis Flow › should generate image captions successfully (30.5s)
+  ✘  34 [Mobile Safari] › __tests__\e2e\ai-analysis.spec.ts:126:7 › AI Analysis Flow › should transcribe audio file successfully (30.6s)
+  ✘  35 [Mobile Safari] › __tests__\e2e\ai-analysis.spec.ts:199:7 › AI Analysis Flow › should generate AI description successfully (31.0s)
+  ✘  36 [Mobile Safari] › __tests__\e2e\ai-analysis.spec.ts:234:7 › AI Analysis Flow › should run all AI analysis steps successfully (30.6s)
+[dotenv@17.2.3] injecting env (0) from .env.e2e -- tip: ✅ audit secrets and track compliance: https://dotenvx.com/ops
+[dotenv@17.2.3] injecting env (0) from .env.e2e -- tip: ⚙️  write to custom object with { processEnv: myObject }
+[dotenv@17.2.3] injecting env (0) from .env.e2e -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild
+[dotenv@17.2.3] injecting env (0) from .env.e2e -- tip: 🗂️ backup and recover secrets: https://dotenvx.com/ops
+  ✘  37 [Mobile Safari] › __tests__\e2e\ai-analysis.spec.ts:268:7 › AI Analysis Flow › should show error when audio file is missing (30.6s)
+  ✘  38 [Mobile Safari] › __tests__\e2e\ai-analysis.spec.ts:304:7 › AI Analysis Flow › should show status badge changes during processing (30.7s)
+  ✘  39 [Mobile Safari] › __tests__\e2e\ai-analysis.spec.ts:349:7 › AI Analysis Flow › should handle regenerate description action (30.5s)
+  ✘  40 [Mobile Safari] › __tests__\e2e\ai-analysis.spec.ts:390:7 › AI Analysis Flow › should display collapsible sections for AI results (30.4s)
+
+
+  1) [chromium] › __tests__\e2e\ai-analysis.spec.ts:126:7 › AI Analysis Flow › should transcribe audio file successfully 
+
+    [31mTest timeout of 30000ms exceeded while running "beforeEach" hook.[39m
+
+      117 |   let testSlug: string
+      118 |
+    > 119 |   test.beforeEach(async ({ page }) => {
+          |        ^
+      120 |     // Setup API mocks before each test
+      121 |     await setupApiMocks(page)
+      122 |
+        at C:\dev\heirlooms-v0\__tests__\e2e\ai-analysis.spec.ts:119:8
+
+    Error: page.waitForURL: Test timeout of 30000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation until "load"
+    ============================================================
+
+       at helpers\login.ts:56
+
+      54 |   // Wait for either successful redirect OR error message
+      55 |   try {
+    > 56 |     await page.waitForURL(/\/(collections|artifacts|$)/, { timeout: 30000 })
+         |                ^
+      57 |   } catch (error) {
+      58 |     // Check for error alert
+      59 |     const alertText = await page.locator('[role="alert"]').textContent({ timeout: 2000 }).catch(() => null)
+        at login (C:\dev\heirlooms-v0\__tests__\e2e\helpers\login.ts:56:16)
+        at Object.page (C:\dev\heirlooms-v0\__tests__\e2e\global.setup.ts:11:5)
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\ai-analysis-AI-Analysis-Fl-260cd-ibe-audio-file-successfully-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\ai-analysis-AI-Analysis-Fl-260cd-ibe-audio-file-successfully-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\ai-analysis-AI-Analysis-Fl-260cd-ibe-audio-file-successfully-chromium\error-context.md
+
+  2) [chromium] › __tests__\e2e\ai-analysis.spec.ts:170:7 › AI Analysis Flow › should generate image captions successfully 
+
+    [31mTest timeout of 30000ms exceeded while running "beforeEach" hook.[39m
+
+      117 |   let testSlug: string
+      118 |
+    > 119 |   test.beforeEach(async ({ page }) => {
+          |        ^
+      120 |     // Setup API mocks before each test
+      121 |     await setupApiMocks(page)
+      122 |
+        at C:\dev\heirlooms-v0\__tests__\e2e\ai-analysis.spec.ts:119:8
+
+    Error: page.waitForURL: Test timeout of 30000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation until "load"
+    ============================================================
+
+       at helpers\login.ts:56
+
+      54 |   // Wait for either successful redirect OR error message
+      55 |   try {
+    > 56 |     await page.waitForURL(/\/(collections|artifacts|$)/, { timeout: 30000 })
+         |                ^
+      57 |   } catch (error) {
+      58 |     // Check for error alert
+      59 |     const alertText = await page.locator('[role="alert"]').textContent({ timeout: 2000 }).catch(() => null)
+        at login (C:\dev\heirlooms-v0\__tests__\e2e\helpers\login.ts:56:16)
+        at Object.page (C:\dev\heirlooms-v0\__tests__\e2e\global.setup.ts:11:5)
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\ai-analysis-AI-Analysis-Fl-11ca0-image-captions-successfully-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\ai-analysis-AI-Analysis-Fl-11ca0-image-captions-successfully-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\ai-analysis-AI-Analysis-Fl-11ca0-image-captions-successfully-chromium\error-context.md
+
+  3) [chromium] › __tests__\e2e\ai-analysis.spec.ts:199:7 › AI Analysis Flow › should generate AI description successfully 
+
+    [31mTest timeout of 30000ms exceeded while running "beforeEach" hook.[39m
+
+      117 |   let testSlug: string
+      118 |
+    > 119 |   test.beforeEach(async ({ page }) => {
+          |        ^
+      120 |     // Setup API mocks before each test
+      121 |     await setupApiMocks(page)
+      122 |
+        at C:\dev\heirlooms-v0\__tests__\e2e\ai-analysis.spec.ts:119:8
+
+    Error: page.waitForURL: Test timeout of 30000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation until "load"
+    ============================================================
+
+       at helpers\login.ts:56
+
+      54 |   // Wait for either successful redirect OR error message
+      55 |   try {
+    > 56 |     await page.waitForURL(/\/(collections|artifacts|$)/, { timeout: 30000 })
+         |                ^
+      57 |   } catch (error) {
+      58 |     // Check for error alert
+      59 |     const alertText = await page.locator('[role="alert"]').textContent({ timeout: 2000 }).catch(() => null)
+        at login (C:\dev\heirlooms-v0\__tests__\e2e\helpers\login.ts:56:16)
+        at Object.page (C:\dev\heirlooms-v0\__tests__\e2e\global.setup.ts:11:5)
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\ai-analysis-AI-Analysis-Fl-cb634-AI-description-successfully-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\ai-analysis-AI-Analysis-Fl-cb634-AI-description-successfully-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\ai-analysis-AI-Analysis-Fl-cb634-AI-description-successfully-chromium\error-context.md
+
+  4) [chromium] › __tests__\e2e\ai-analysis.spec.ts:234:7 › AI Analysis Flow › should run all AI analysis steps successfully 
+
+    [31mTest timeout of 30000ms exceeded while running "beforeEach" hook.[39m
+
+      117 |   let testSlug: string
+      118 |
+    > 119 |   test.beforeEach(async ({ page }) => {
+          |        ^
+      120 |     // Setup API mocks before each test
+      121 |     await setupApiMocks(page)
+      122 |
+        at C:\dev\heirlooms-v0\__tests__\e2e\ai-analysis.spec.ts:119:8
+
+    Error: page.waitForURL: Test timeout of 30000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation until "load"
+    ============================================================
+
+       at helpers\login.ts:56
+
+      54 |   // Wait for either successful redirect OR error message
+      55 |   try {
+    > 56 |     await page.waitForURL(/\/(collections|artifacts|$)/, { timeout: 30000 })
+         |                ^
+      57 |   } catch (error) {
+      58 |     // Check for error alert
+      59 |     const alertText = await page.locator('[role="alert"]').textContent({ timeout: 2000 }).catch(() => null)
+        at login (C:\dev\heirlooms-v0\__tests__\e2e\helpers\login.ts:56:16)
+        at Object.page (C:\dev\heirlooms-v0\__tests__\e2e\global.setup.ts:11:5)
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\ai-analysis-AI-Analysis-Fl-32ea6-analysis-steps-successfully-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\ai-analysis-AI-Analysis-Fl-32ea6-analysis-steps-successfully-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\ai-analysis-AI-Analysis-Fl-32ea6-analysis-steps-successfully-chromium\error-context.md
+
+  5) [chromium] › __tests__\e2e\ai-analysis.spec.ts:268:7 › AI Analysis Flow › should show error when audio file is missing 
+
+    [31mTest timeout of 30000ms exceeded while running "beforeEach" hook.[39m
+
+      117 |   let testSlug: string
+      118 |
+    > 119 |   test.beforeEach(async ({ page }) => {
+          |        ^
+      120 |     // Setup API mocks before each test
+      121 |     await setupApiMocks(page)
+      122 |
+        at C:\dev\heirlooms-v0\__tests__\e2e\ai-analysis.spec.ts:119:8
+
+    Error: page.waitForURL: Test timeout of 30000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation until "load"
+    ============================================================
+
+       at helpers\login.ts:56
+
+      54 |   // Wait for either successful redirect OR error message
+      55 |   try {
+    > 56 |     await page.waitForURL(/\/(collections|artifacts|$)/, { timeout: 30000 })
+         |                ^
+      57 |   } catch (error) {
+      58 |     // Check for error alert
+      59 |     const alertText = await page.locator('[role="alert"]').textContent({ timeout: 2000 }).catch(() => null)
+        at login (C:\dev\heirlooms-v0\__tests__\e2e\helpers\login.ts:56:16)
+        at Object.page (C:\dev\heirlooms-v0\__tests__\e2e\global.setup.ts:11:5)
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\ai-analysis-AI-Analysis-Fl-4562d--when-audio-file-is-missing-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\ai-analysis-AI-Analysis-Fl-4562d--when-audio-file-is-missing-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\ai-analysis-AI-Analysis-Fl-4562d--when-audio-file-is-missing-chromium\error-context.md
+
+  6) [chromium] › __tests__\e2e\ai-analysis.spec.ts:304:7 › AI Analysis Flow › should show status badge changes during processing 
+
+    [31mTest timeout of 30000ms exceeded while running "beforeEach" hook.[39m
+
+      117 |   let testSlug: string
+      118 |
+    > 119 |   test.beforeEach(async ({ page }) => {
+          |        ^
+      120 |     // Setup API mocks before each test
+      121 |     await setupApiMocks(page)
+      122 |
+        at C:\dev\heirlooms-v0\__tests__\e2e\ai-analysis.spec.ts:119:8
+
+    Error: page.goto: Test timeout of 30000ms exceeded.
+    Call log:
+    [2m  - navigating to "http://localhost:3000/artifacts", waiting until "load"[22m
+
+
+       at helpers\test-data.ts:14
+
+      12 |
+      13 |   // Navigate to artifacts page
+    > 14 |   await page.goto("/artifacts")
+         |              ^
+      15 |
+      16 |   await page.waitForLoadState("networkidle")
+      17 |
+        at getFirstArtifactSlug (C:\dev\heirlooms-v0\__tests__\e2e\helpers\test-data.ts:14:14)
+        at C:\dev\heirlooms-v0\__tests__\e2e\ai-analysis.spec.ts:123:42
+
+    attachment #1: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\ai-analysis-AI-Analysis-Fl-d7630-e-changes-during-processing-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  7) [chromium] › __tests__\e2e\ai-analysis.spec.ts:349:7 › AI Analysis Flow › should handle regenerate description action 
+
+    [31mTest timeout of 30000ms exceeded while running "beforeEach" hook.[39m
+
+      117 |   let testSlug: string
+      118 |
+    > 119 |   test.beforeEach(async ({ page }) => {
+          |        ^
+      120 |     // Setup API mocks before each test
+      121 |     await setupApiMocks(page)
+      122 |
+        at C:\dev\heirlooms-v0\__tests__\e2e\ai-analysis.spec.ts:119:8
+
+    Error: page.waitForURL: Test timeout of 30000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation until "load"
+    ============================================================
+
+       at helpers\login.ts:56
+
+      54 |   // Wait for either successful redirect OR error message
+      55 |   try {
+    > 56 |     await page.waitForURL(/\/(collections|artifacts|$)/, { timeout: 30000 })
+         |                ^
+      57 |   } catch (error) {
+      58 |     // Check for error alert
+      59 |     const alertText = await page.locator('[role="alert"]').textContent({ timeout: 2000 }).catch(() => null)
+        at login (C:\dev\heirlooms-v0\__tests__\e2e\helpers\login.ts:56:16)
+        at Object.page (C:\dev\heirlooms-v0\__tests__\e2e\global.setup.ts:11:5)
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\ai-analysis-AI-Analysis-Fl-f0901-generate-description-action-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\ai-analysis-AI-Analysis-Fl-f0901-generate-description-action-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\ai-analysis-AI-Analysis-Fl-f0901-generate-description-action-chromium\error-context.md
+
+  8) [chromium] › __tests__\e2e\ai-analysis.spec.ts:390:7 › AI Analysis Flow › should display collapsible sections for AI results 
+
+    [31mTest timeout of 30000ms exceeded while running "beforeEach" hook.[39m
+
+      117 |   let testSlug: string
+      118 |
+    > 119 |   test.beforeEach(async ({ page }) => {
+          |        ^
+      120 |     // Setup API mocks before each test
+      121 |     await setupApiMocks(page)
+      122 |
+        at C:\dev\heirlooms-v0\__tests__\e2e\ai-analysis.spec.ts:119:8
+
+    Error: page.waitForURL: Test timeout of 30000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation until "load"
+    ============================================================
+
+       at helpers\login.ts:56
+
+      54 |   // Wait for either successful redirect OR error message
+      55 |   try {
+    > 56 |     await page.waitForURL(/\/(collections|artifacts|$)/, { timeout: 30000 })
+         |                ^
+      57 |   } catch (error) {
+      58 |     // Check for error alert
+      59 |     const alertText = await page.locator('[role="alert"]').textContent({ timeout: 2000 }).catch(() => null)
+        at login (C:\dev\heirlooms-v0\__tests__\e2e\helpers\login.ts:56:16)
+        at Object.page (C:\dev\heirlooms-v0\__tests__\e2e\global.setup.ts:11:5)
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\ai-analysis-AI-Analysis-Fl-490de-ble-sections-for-AI-results-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\ai-analysis-AI-Analysis-Fl-490de-ble-sections-for-AI-results-chromium\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\ai-analysis-AI-Analysis-Fl-490de-ble-sections-for-AI-results-chromium\error-context.md
+
+  9) [firefox] › __tests__\e2e\ai-analysis.spec.ts:126:7 › AI Analysis Flow › should transcribe audio file successfully 
+
+    [31mTest timeout of 30000ms exceeded while running "beforeEach" hook.[39m
+
+      117 |   let testSlug: string
+      118 |
+    > 119 |   test.beforeEach(async ({ page }) => {
+          |        ^
+      120 |     // Setup API mocks before each test
+      121 |     await setupApiMocks(page)
+      122 |
+        at C:\dev\heirlooms-v0\__tests__\e2e\ai-analysis.spec.ts:119:8
+
+    Error: page.waitForURL: Test timeout of 30000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation until "load"
+    ============================================================
+
+       at helpers\login.ts:56
+
+      54 |   // Wait for either successful redirect OR error message
+      55 |   try {
+    > 56 |     await page.waitForURL(/\/(collections|artifacts|$)/, { timeout: 30000 })
+         |                ^
+      57 |   } catch (error) {
+      58 |     // Check for error alert
+      59 |     const alertText = await page.locator('[role="alert"]').textContent({ timeout: 2000 }).catch(() => null)
+        at login (C:\dev\heirlooms-v0\__tests__\e2e\helpers\login.ts:56:16)
+        at Object.page (C:\dev\heirlooms-v0\__tests__\e2e\global.setup.ts:11:5)
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\ai-analysis-AI-Analysis-Fl-260cd-ibe-audio-file-successfully-firefox\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\ai-analysis-AI-Analysis-Fl-260cd-ibe-audio-file-successfully-firefox\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\ai-analysis-AI-Analysis-Fl-260cd-ibe-audio-file-successfully-firefox\error-context.md
+
+  10) [firefox] › __tests__\e2e\ai-analysis.spec.ts:170:7 › AI Analysis Flow › should generate image captions successfully 
+
+    [31mTest timeout of 30000ms exceeded while running "beforeEach" hook.[39m
+
+      117 |   let testSlug: string
+      118 |
+    > 119 |   test.beforeEach(async ({ page }) => {
+          |        ^
+      120 |     // Setup API mocks before each test
+      121 |     await setupApiMocks(page)
+      122 |
+        at C:\dev\heirlooms-v0\__tests__\e2e\ai-analysis.spec.ts:119:8
+
+    Error: page.goto: Test timeout of 30000ms exceeded.
+    Call log:
+    [2m  - navigating to "http://localhost:3000/artifacts", waiting until "load"[22m
+
+
+       at helpers\test-data.ts:14
+
+      12 |
+      13 |   // Navigate to artifacts page
+    > 14 |   await page.goto("/artifacts")
+         |              ^
+      15 |
+      16 |   await page.waitForLoadState("networkidle")
+      17 |
+        at getFirstArtifactSlug (C:\dev\heirlooms-v0\__tests__\e2e\helpers\test-data.ts:14:14)
+        at C:\dev\heirlooms-v0\__tests__\e2e\ai-analysis.spec.ts:123:42
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\ai-analysis-AI-Analysis-Fl-11ca0-image-captions-successfully-firefox\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\ai-analysis-AI-Analysis-Fl-11ca0-image-captions-successfully-firefox\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\ai-analysis-AI-Analysis-Fl-11ca0-image-captions-successfully-firefox\error-context.md
+
+  11) [firefox] › __tests__\e2e\ai-analysis.spec.ts:199:7 › AI Analysis Flow › should generate AI description successfully 
+
+    [31mTest timeout of 30000ms exceeded while running "beforeEach" hook.[39m
+
+      117 |   let testSlug: string
+      118 |
+    > 119 |   test.beforeEach(async ({ page }) => {
+          |        ^
+      120 |     // Setup API mocks before each test
+      121 |     await setupApiMocks(page)
+      122 |
+        at C:\dev\heirlooms-v0\__tests__\e2e\ai-analysis.spec.ts:119:8
+
+    Error: page.goto: Test timeout of 30000ms exceeded.
+    Call log:
+    [2m  - navigating to "http://localhost:3000/artifacts", waiting until "load"[22m
+
+
+       at helpers\test-data.ts:14
+
+      12 |
+      13 |   // Navigate to artifacts page
+    > 14 |   await page.goto("/artifacts")
+         |              ^
+      15 |
+      16 |   await page.waitForLoadState("networkidle")
+      17 |
+        at getFirstArtifactSlug (C:\dev\heirlooms-v0\__tests__\e2e\helpers\test-data.ts:14:14)
+        at C:\dev\heirlooms-v0\__tests__\e2e\ai-analysis.spec.ts:123:42
+
+    attachment #1: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\ai-analysis-AI-Analysis-Fl-cb634-AI-description-successfully-firefox\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  12) [firefox] › __tests__\e2e\ai-analysis.spec.ts:234:7 › AI Analysis Flow › should run all AI analysis steps successfully 
+
+    [31mTest timeout of 30000ms exceeded while running "beforeEach" hook.[39m
+
+      117 |   let testSlug: string
+      118 |
+    > 119 |   test.beforeEach(async ({ page }) => {
+          |        ^
+      120 |     // Setup API mocks before each test
+      121 |     await setupApiMocks(page)
+      122 |
+        at C:\dev\heirlooms-v0\__tests__\e2e\ai-analysis.spec.ts:119:8
+
+    Error: page.waitForURL: Test timeout of 30000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation until "load"
+    ============================================================
+
+       at helpers\login.ts:56
+
+      54 |   // Wait for either successful redirect OR error message
+      55 |   try {
+    > 56 |     await page.waitForURL(/\/(collections|artifacts|$)/, { timeout: 30000 })
+         |                ^
+      57 |   } catch (error) {
+      58 |     // Check for error alert
+      59 |     const alertText = await page.locator('[role="alert"]').textContent({ timeout: 2000 }).catch(() => null)
+        at login (C:\dev\heirlooms-v0\__tests__\e2e\helpers\login.ts:56:16)
+        at Object.page (C:\dev\heirlooms-v0\__tests__\e2e\global.setup.ts:11:5)
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\ai-analysis-AI-Analysis-Fl-32ea6-analysis-steps-successfully-firefox\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\ai-analysis-AI-Analysis-Fl-32ea6-analysis-steps-successfully-firefox\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\ai-analysis-AI-Analysis-Fl-32ea6-analysis-steps-successfully-firefox\error-context.md
+
+  13) [firefox] › __tests__\e2e\ai-analysis.spec.ts:268:7 › AI Analysis Flow › should show error when audio file is missing 
+
+    [31mTest timeout of 30000ms exceeded while running "beforeEach" hook.[39m
+
+      117 |   let testSlug: string
+      118 |
+    > 119 |   test.beforeEach(async ({ page }) => {
+          |        ^
+      120 |     // Setup API mocks before each test
+      121 |     await setupApiMocks(page)
+      122 |
+        at C:\dev\heirlooms-v0\__tests__\e2e\ai-analysis.spec.ts:119:8
+
+    Error: page.goto: Test timeout of 30000ms exceeded.
+    Call log:
+    [2m  - navigating to "http://localhost:3000/artifacts", waiting until "load"[22m
+
+
+       at helpers\test-data.ts:14
+
+      12 |
+      13 |   // Navigate to artifacts page
+    > 14 |   await page.goto("/artifacts")
+         |              ^
+      15 |
+      16 |   await page.waitForLoadState("networkidle")
+      17 |
+        at getFirstArtifactSlug (C:\dev\heirlooms-v0\__tests__\e2e\helpers\test-data.ts:14:14)
+        at C:\dev\heirlooms-v0\__tests__\e2e\ai-analysis.spec.ts:123:42
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\ai-analysis-AI-Analysis-Fl-4562d--when-audio-file-is-missing-firefox\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\ai-analysis-AI-Analysis-Fl-4562d--when-audio-file-is-missing-firefox\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\ai-analysis-AI-Analysis-Fl-4562d--when-audio-file-is-missing-firefox\error-context.md
+
+  14) [firefox] › __tests__\e2e\ai-analysis.spec.ts:304:7 › AI Analysis Flow › should show status badge changes during processing 
+
+    [31mTest timeout of 30000ms exceeded while running "beforeEach" hook.[39m
+
+      117 |   let testSlug: string
+      118 |
+    > 119 |   test.beforeEach(async ({ page }) => {
+          |        ^
+      120 |     // Setup API mocks before each test
+      121 |     await setupApiMocks(page)
+      122 |
+        at C:\dev\heirlooms-v0\__tests__\e2e\ai-analysis.spec.ts:119:8
+
+    Error: page.waitForURL: Test timeout of 30000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation until "load"
+    ============================================================
+
+       at helpers\login.ts:56
+
+      54 |   // Wait for either successful redirect OR error message
+      55 |   try {
+    > 56 |     await page.waitForURL(/\/(collections|artifacts|$)/, { timeout: 30000 })
+         |                ^
+      57 |   } catch (error) {
+      58 |     // Check for error alert
+      59 |     const alertText = await page.locator('[role="alert"]').textContent({ timeout: 2000 }).catch(() => null)
+        at login (C:\dev\heirlooms-v0\__tests__\e2e\helpers\login.ts:56:16)
+        at Object.page (C:\dev\heirlooms-v0\__tests__\e2e\global.setup.ts:11:5)
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\ai-analysis-AI-Analysis-Fl-d7630-e-changes-during-processing-firefox\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\ai-analysis-AI-Analysis-Fl-d7630-e-changes-during-processing-firefox\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\ai-analysis-AI-Analysis-Fl-d7630-e-changes-during-processing-firefox\error-context.md
+
+  15) [firefox] › __tests__\e2e\ai-analysis.spec.ts:349:7 › AI Analysis Flow › should handle regenerate description action 
+
+    [31mTest timeout of 30000ms exceeded while running "beforeEach" hook.[39m
+
+      117 |   let testSlug: string
+      118 |
+    > 119 |   test.beforeEach(async ({ page }) => {
+          |        ^
+      120 |     // Setup API mocks before each test
+      121 |     await setupApiMocks(page)
+      122 |
+        at C:\dev\heirlooms-v0\__tests__\e2e\ai-analysis.spec.ts:119:8
+
+    Error: page.waitForURL: Test timeout of 30000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation until "load"
+    ============================================================
+
+       at helpers\login.ts:56
+
+      54 |   // Wait for either successful redirect OR error message
+      55 |   try {
+    > 56 |     await page.waitForURL(/\/(collections|artifacts|$)/, { timeout: 30000 })
+         |                ^
+      57 |   } catch (error) {
+      58 |     // Check for error alert
+      59 |     const alertText = await page.locator('[role="alert"]').textContent({ timeout: 2000 }).catch(() => null)
+        at login (C:\dev\heirlooms-v0\__tests__\e2e\helpers\login.ts:56:16)
+        at Object.page (C:\dev\heirlooms-v0\__tests__\e2e\global.setup.ts:11:5)
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\ai-analysis-AI-Analysis-Fl-f0901-generate-description-action-firefox\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\ai-analysis-AI-Analysis-Fl-f0901-generate-description-action-firefox\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\ai-analysis-AI-Analysis-Fl-f0901-generate-description-action-firefox\error-context.md
+
+  16) [firefox] › __tests__\e2e\ai-analysis.spec.ts:390:7 › AI Analysis Flow › should display collapsible sections for AI results 
+
+    [31mTest timeout of 30000ms exceeded while running "beforeEach" hook.[39m
+
+      117 |   let testSlug: string
+      118 |
+    > 119 |   test.beforeEach(async ({ page }) => {
+          |        ^
+      120 |     // Setup API mocks before each test
+      121 |     await setupApiMocks(page)
+      122 |
+        at C:\dev\heirlooms-v0\__tests__\e2e\ai-analysis.spec.ts:119:8
+
+    Error: page.waitForURL: Test timeout of 30000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation until "load"
+    ============================================================
+
+       at helpers\login.ts:56
+
+      54 |   // Wait for either successful redirect OR error message
+      55 |   try {
+    > 56 |     await page.waitForURL(/\/(collections|artifacts|$)/, { timeout: 30000 })
+         |                ^
+      57 |   } catch (error) {
+      58 |     // Check for error alert
+      59 |     const alertText = await page.locator('[role="alert"]').textContent({ timeout: 2000 }).catch(() => null)
+        at login (C:\dev\heirlooms-v0\__tests__\e2e\helpers\login.ts:56:16)
+        at Object.page (C:\dev\heirlooms-v0\__tests__\e2e\global.setup.ts:11:5)
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\ai-analysis-AI-Analysis-Fl-490de-ble-sections-for-AI-results-firefox\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\ai-analysis-AI-Analysis-Fl-490de-ble-sections-for-AI-results-firefox\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\ai-analysis-AI-Analysis-Fl-490de-ble-sections-for-AI-results-firefox\error-context.md
+
+  17) [webkit] › __tests__\e2e\ai-analysis.spec.ts:126:7 › AI Analysis Flow › should transcribe audio file successfully 
+
+    [31mTest timeout of 30000ms exceeded while running "beforeEach" hook.[39m
+
+      117 |   let testSlug: string
+      118 |
+    > 119 |   test.beforeEach(async ({ page }) => {
+          |        ^
+      120 |     // Setup API mocks before each test
+      121 |     await setupApiMocks(page)
+      122 |
+        at C:\dev\heirlooms-v0\__tests__\e2e\ai-analysis.spec.ts:119:8
+
+    Error: page.waitForURL: Test timeout of 30000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation until "load"
+    ============================================================
+
+       at helpers\login.ts:56
+
+      54 |   // Wait for either successful redirect OR error message
+      55 |   try {
+    > 56 |     await page.waitForURL(/\/(collections|artifacts|$)/, { timeout: 30000 })
+         |                ^
+      57 |   } catch (error) {
+      58 |     // Check for error alert
+      59 |     const alertText = await page.locator('[role="alert"]').textContent({ timeout: 2000 }).catch(() => null)
+        at login (C:\dev\heirlooms-v0\__tests__\e2e\helpers\login.ts:56:16)
+        at Object.page (C:\dev\heirlooms-v0\__tests__\e2e\global.setup.ts:11:5)
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\ai-analysis-AI-Analysis-Fl-260cd-ibe-audio-file-successfully-webkit\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\ai-analysis-AI-Analysis-Fl-260cd-ibe-audio-file-successfully-webkit\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\ai-analysis-AI-Analysis-Fl-260cd-ibe-audio-file-successfully-webkit\error-context.md
+
+  18) [webkit] › __tests__\e2e\ai-analysis.spec.ts:170:7 › AI Analysis Flow › should generate image captions successfully 
+
+    [31mTest timeout of 30000ms exceeded while running "beforeEach" hook.[39m
+
+      117 |   let testSlug: string
+      118 |
+    > 119 |   test.beforeEach(async ({ page }) => {
+          |        ^
+      120 |     // Setup API mocks before each test
+      121 |     await setupApiMocks(page)
+      122 |
+        at C:\dev\heirlooms-v0\__tests__\e2e\ai-analysis.spec.ts:119:8
+
+    Error: page.waitForURL: Test timeout of 30000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation until "load"
+    ============================================================
+
+       at helpers\login.ts:56
+
+      54 |   // Wait for either successful redirect OR error message
+      55 |   try {
+    > 56 |     await page.waitForURL(/\/(collections|artifacts|$)/, { timeout: 30000 })
+         |                ^
+      57 |   } catch (error) {
+      58 |     // Check for error alert
+      59 |     const alertText = await page.locator('[role="alert"]').textContent({ timeout: 2000 }).catch(() => null)
+        at login (C:\dev\heirlooms-v0\__tests__\e2e\helpers\login.ts:56:16)
+        at Object.page (C:\dev\heirlooms-v0\__tests__\e2e\global.setup.ts:11:5)
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\ai-analysis-AI-Analysis-Fl-11ca0-image-captions-successfully-webkit\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\ai-analysis-AI-Analysis-Fl-11ca0-image-captions-successfully-webkit\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\ai-analysis-AI-Analysis-Fl-11ca0-image-captions-successfully-webkit\error-context.md
+
+  19) [webkit] › __tests__\e2e\ai-analysis.spec.ts:199:7 › AI Analysis Flow › should generate AI description successfully 
+
+    [31mTest timeout of 30000ms exceeded while running "beforeEach" hook.[39m
+
+      117 |   let testSlug: string
+      118 |
+    > 119 |   test.beforeEach(async ({ page }) => {
+          |        ^
+      120 |     // Setup API mocks before each test
+      121 |     await setupApiMocks(page)
+      122 |
+        at C:\dev\heirlooms-v0\__tests__\e2e\ai-analysis.spec.ts:119:8
+
+    Error: page.waitForURL: Test timeout of 30000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation until "load"
+    ============================================================
+
+       at helpers\login.ts:56
+
+      54 |   // Wait for either successful redirect OR error message
+      55 |   try {
+    > 56 |     await page.waitForURL(/\/(collections|artifacts|$)/, { timeout: 30000 })
+         |                ^
+      57 |   } catch (error) {
+      58 |     // Check for error alert
+      59 |     const alertText = await page.locator('[role="alert"]').textContent({ timeout: 2000 }).catch(() => null)
+        at login (C:\dev\heirlooms-v0\__tests__\e2e\helpers\login.ts:56:16)
+        at Object.page (C:\dev\heirlooms-v0\__tests__\e2e\global.setup.ts:11:5)
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\ai-analysis-AI-Analysis-Fl-cb634-AI-description-successfully-webkit\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\ai-analysis-AI-Analysis-Fl-cb634-AI-description-successfully-webkit\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\ai-analysis-AI-Analysis-Fl-cb634-AI-description-successfully-webkit\error-context.md
+
+  20) [webkit] › __tests__\e2e\ai-analysis.spec.ts:234:7 › AI Analysis Flow › should run all AI analysis steps successfully 
+
+    [31mTest timeout of 30000ms exceeded while running "beforeEach" hook.[39m
+
+      117 |   let testSlug: string
+      118 |
+    > 119 |   test.beforeEach(async ({ page }) => {
+          |        ^
+      120 |     // Setup API mocks before each test
+      121 |     await setupApiMocks(page)
+      122 |
+        at C:\dev\heirlooms-v0\__tests__\e2e\ai-analysis.spec.ts:119:8
+
+    Error: page.waitForURL: Test timeout of 30000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation until "load"
+    ============================================================
+
+       at helpers\login.ts:56
+
+      54 |   // Wait for either successful redirect OR error message
+      55 |   try {
+    > 56 |     await page.waitForURL(/\/(collections|artifacts|$)/, { timeout: 30000 })
+         |                ^
+      57 |   } catch (error) {
+      58 |     // Check for error alert
+      59 |     const alertText = await page.locator('[role="alert"]').textContent({ timeout: 2000 }).catch(() => null)
+        at login (C:\dev\heirlooms-v0\__tests__\e2e\helpers\login.ts:56:16)
+        at Object.page (C:\dev\heirlooms-v0\__tests__\e2e\global.setup.ts:11:5)
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\ai-analysis-AI-Analysis-Fl-32ea6-analysis-steps-successfully-webkit\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\ai-analysis-AI-Analysis-Fl-32ea6-analysis-steps-successfully-webkit\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\ai-analysis-AI-Analysis-Fl-32ea6-analysis-steps-successfully-webkit\error-context.md
+
+  21) [webkit] › __tests__\e2e\ai-analysis.spec.ts:268:7 › AI Analysis Flow › should show error when audio file is missing 
+
+    [31mTest timeout of 30000ms exceeded while running "beforeEach" hook.[39m
+
+      117 |   let testSlug: string
+      118 |
+    > 119 |   test.beforeEach(async ({ page }) => {
+          |        ^
+      120 |     // Setup API mocks before each test
+      121 |     await setupApiMocks(page)
+      122 |
+        at C:\dev\heirlooms-v0\__tests__\e2e\ai-analysis.spec.ts:119:8
+
+    Error: page.waitForURL: Test timeout of 30000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation until "load"
+    ============================================================
+
+       at helpers\login.ts:56
+
+      54 |   // Wait for either successful redirect OR error message
+      55 |   try {
+    > 56 |     await page.waitForURL(/\/(collections|artifacts|$)/, { timeout: 30000 })
+         |                ^
+      57 |   } catch (error) {
+      58 |     // Check for error alert
+      59 |     const alertText = await page.locator('[role="alert"]').textContent({ timeout: 2000 }).catch(() => null)
+        at login (C:\dev\heirlooms-v0\__tests__\e2e\helpers\login.ts:56:16)
+        at Object.page (C:\dev\heirlooms-v0\__tests__\e2e\global.setup.ts:11:5)
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\ai-analysis-AI-Analysis-Fl-4562d--when-audio-file-is-missing-webkit\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\ai-analysis-AI-Analysis-Fl-4562d--when-audio-file-is-missing-webkit\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\ai-analysis-AI-Analysis-Fl-4562d--when-audio-file-is-missing-webkit\error-context.md
+
+  22) [webkit] › __tests__\e2e\ai-analysis.spec.ts:304:7 › AI Analysis Flow › should show status badge changes during processing 
+
+    [31mTest timeout of 30000ms exceeded while running "beforeEach" hook.[39m
+
+      117 |   let testSlug: string
+      118 |
+    > 119 |   test.beforeEach(async ({ page }) => {
+          |        ^
+      120 |     // Setup API mocks before each test
+      121 |     await setupApiMocks(page)
+      122 |
+        at C:\dev\heirlooms-v0\__tests__\e2e\ai-analysis.spec.ts:119:8
+
+    Error: page.waitForURL: Test timeout of 30000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation until "load"
+    ============================================================
+
+       at helpers\login.ts:56
+
+      54 |   // Wait for either successful redirect OR error message
+      55 |   try {
+    > 56 |     await page.waitForURL(/\/(collections|artifacts|$)/, { timeout: 30000 })
+         |                ^
+      57 |   } catch (error) {
+      58 |     // Check for error alert
+      59 |     const alertText = await page.locator('[role="alert"]').textContent({ timeout: 2000 }).catch(() => null)
+        at login (C:\dev\heirlooms-v0\__tests__\e2e\helpers\login.ts:56:16)
+        at Object.page (C:\dev\heirlooms-v0\__tests__\e2e\global.setup.ts:11:5)
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\ai-analysis-AI-Analysis-Fl-d7630-e-changes-during-processing-webkit\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\ai-analysis-AI-Analysis-Fl-d7630-e-changes-during-processing-webkit\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\ai-analysis-AI-Analysis-Fl-d7630-e-changes-during-processing-webkit\error-context.md
+
+  23) [webkit] › __tests__\e2e\ai-analysis.spec.ts:349:7 › AI Analysis Flow › should handle regenerate description action 
+
+    [31mTest timeout of 30000ms exceeded while running "beforeEach" hook.[39m
+
+      117 |   let testSlug: string
+      118 |
+    > 119 |   test.beforeEach(async ({ page }) => {
+          |        ^
+      120 |     // Setup API mocks before each test
+      121 |     await setupApiMocks(page)
+      122 |
+        at C:\dev\heirlooms-v0\__tests__\e2e\ai-analysis.spec.ts:119:8
+
+    Error: page.waitForURL: Test timeout of 30000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation until "load"
+    ============================================================
+
+       at helpers\login.ts:56
+
+      54 |   // Wait for either successful redirect OR error message
+      55 |   try {
+    > 56 |     await page.waitForURL(/\/(collections|artifacts|$)/, { timeout: 30000 })
+         |                ^
+      57 |   } catch (error) {
+      58 |     // Check for error alert
+      59 |     const alertText = await page.locator('[role="alert"]').textContent({ timeout: 2000 }).catch(() => null)
+        at login (C:\dev\heirlooms-v0\__tests__\e2e\helpers\login.ts:56:16)
+        at Object.page (C:\dev\heirlooms-v0\__tests__\e2e\global.setup.ts:11:5)
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\ai-analysis-AI-Analysis-Fl-f0901-generate-description-action-webkit\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\ai-analysis-AI-Analysis-Fl-f0901-generate-description-action-webkit\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\ai-analysis-AI-Analysis-Fl-f0901-generate-description-action-webkit\error-context.md
+
+  24) [webkit] › __tests__\e2e\ai-analysis.spec.ts:390:7 › AI Analysis Flow › should display collapsible sections for AI results 
+
+    [31mTest timeout of 30000ms exceeded while running "beforeEach" hook.[39m
+
+      117 |   let testSlug: string
+      118 |
+    > 119 |   test.beforeEach(async ({ page }) => {
+          |        ^
+      120 |     // Setup API mocks before each test
+      121 |     await setupApiMocks(page)
+      122 |
+        at C:\dev\heirlooms-v0\__tests__\e2e\ai-analysis.spec.ts:119:8
+
+    Error: page.waitForURL: Test timeout of 30000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation until "load"
+    ============================================================
+
+       at helpers\login.ts:56
+
+      54 |   // Wait for either successful redirect OR error message
+      55 |   try {
+    > 56 |     await page.waitForURL(/\/(collections|artifacts|$)/, { timeout: 30000 })
+         |                ^
+      57 |   } catch (error) {
+      58 |     // Check for error alert
+      59 |     const alertText = await page.locator('[role="alert"]').textContent({ timeout: 2000 }).catch(() => null)
+        at login (C:\dev\heirlooms-v0\__tests__\e2e\helpers\login.ts:56:16)
+        at Object.page (C:\dev\heirlooms-v0\__tests__\e2e\global.setup.ts:11:5)
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\ai-analysis-AI-Analysis-Fl-490de-ble-sections-for-AI-results-webkit\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\ai-analysis-AI-Analysis-Fl-490de-ble-sections-for-AI-results-webkit\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\ai-analysis-AI-Analysis-Fl-490de-ble-sections-for-AI-results-webkit\error-context.md
+
+  25) [Mobile Chrome] › __tests__\e2e\ai-analysis.spec.ts:126:7 › AI Analysis Flow › should transcribe audio file successfully 
+
+    [31mTest timeout of 30000ms exceeded while running "beforeEach" hook.[39m
+
+      117 |   let testSlug: string
+      118 |
+    > 119 |   test.beforeEach(async ({ page }) => {
+          |        ^
+      120 |     // Setup API mocks before each test
+      121 |     await setupApiMocks(page)
+      122 |
+        at C:\dev\heirlooms-v0\__tests__\e2e\ai-analysis.spec.ts:119:8
+
+    Error: page.waitForURL: Test timeout of 30000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation until "load"
+    ============================================================
+
+       at helpers\login.ts:56
+
+      54 |   // Wait for either successful redirect OR error message
+      55 |   try {
+    > 56 |     await page.waitForURL(/\/(collections|artifacts|$)/, { timeout: 30000 })
+         |                ^
+      57 |   } catch (error) {
+      58 |     // Check for error alert
+      59 |     const alertText = await page.locator('[role="alert"]').textContent({ timeout: 2000 }).catch(() => null)
+        at login (C:\dev\heirlooms-v0\__tests__\e2e\helpers\login.ts:56:16)
+        at Object.page (C:\dev\heirlooms-v0\__tests__\e2e\global.setup.ts:11:5)
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\ai-analysis-AI-Analysis-Fl-260cd-ibe-audio-file-successfully-Mobile-Chrome\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\ai-analysis-AI-Analysis-Fl-260cd-ibe-audio-file-successfully-Mobile-Chrome\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\ai-analysis-AI-Analysis-Fl-260cd-ibe-audio-file-successfully-Mobile-Chrome\error-context.md
+
+  26) [Mobile Chrome] › __tests__\e2e\ai-analysis.spec.ts:170:7 › AI Analysis Flow › should generate image captions successfully 
+
+    [31mTest timeout of 30000ms exceeded while running "beforeEach" hook.[39m
+
+      117 |   let testSlug: string
+      118 |
+    > 119 |   test.beforeEach(async ({ page }) => {
+          |        ^
+      120 |     // Setup API mocks before each test
+      121 |     await setupApiMocks(page)
+      122 |
+        at C:\dev\heirlooms-v0\__tests__\e2e\ai-analysis.spec.ts:119:8
+
+    Error: page.waitForURL: Test timeout of 30000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation until "load"
+    ============================================================
+
+       at helpers\login.ts:56
+
+      54 |   // Wait for either successful redirect OR error message
+      55 |   try {
+    > 56 |     await page.waitForURL(/\/(collections|artifacts|$)/, { timeout: 30000 })
+         |                ^
+      57 |   } catch (error) {
+      58 |     // Check for error alert
+      59 |     const alertText = await page.locator('[role="alert"]').textContent({ timeout: 2000 }).catch(() => null)
+        at login (C:\dev\heirlooms-v0\__tests__\e2e\helpers\login.ts:56:16)
+        at Object.page (C:\dev\heirlooms-v0\__tests__\e2e\global.setup.ts:11:5)
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\ai-analysis-AI-Analysis-Fl-11ca0-image-captions-successfully-Mobile-Chrome\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\ai-analysis-AI-Analysis-Fl-11ca0-image-captions-successfully-Mobile-Chrome\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\ai-analysis-AI-Analysis-Fl-11ca0-image-captions-successfully-Mobile-Chrome\error-context.md
+
+  27) [Mobile Chrome] › __tests__\e2e\ai-analysis.spec.ts:199:7 › AI Analysis Flow › should generate AI description successfully 
+
+    [31mTest timeout of 30000ms exceeded while running "beforeEach" hook.[39m
+
+      117 |   let testSlug: string
+      118 |
+    > 119 |   test.beforeEach(async ({ page }) => {
+          |        ^
+      120 |     // Setup API mocks before each test
+      121 |     await setupApiMocks(page)
+      122 |
+        at C:\dev\heirlooms-v0\__tests__\e2e\ai-analysis.spec.ts:119:8
+
+    Error: page.waitForURL: Test timeout of 30000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation until "load"
+    ============================================================
+
+       at helpers\login.ts:56
+
+      54 |   // Wait for either successful redirect OR error message
+      55 |   try {
+    > 56 |     await page.waitForURL(/\/(collections|artifacts|$)/, { timeout: 30000 })
+         |                ^
+      57 |   } catch (error) {
+      58 |     // Check for error alert
+      59 |     const alertText = await page.locator('[role="alert"]').textContent({ timeout: 2000 }).catch(() => null)
+        at login (C:\dev\heirlooms-v0\__tests__\e2e\helpers\login.ts:56:16)
+        at Object.page (C:\dev\heirlooms-v0\__tests__\e2e\global.setup.ts:11:5)
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\ai-analysis-AI-Analysis-Fl-cb634-AI-description-successfully-Mobile-Chrome\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\ai-analysis-AI-Analysis-Fl-cb634-AI-description-successfully-Mobile-Chrome\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\ai-analysis-AI-Analysis-Fl-cb634-AI-description-successfully-Mobile-Chrome\error-context.md
+
+  28) [Mobile Chrome] › __tests__\e2e\ai-analysis.spec.ts:234:7 › AI Analysis Flow › should run all AI analysis steps successfully 
+
+    [31mTest timeout of 30000ms exceeded while running "beforeEach" hook.[39m
+
+      117 |   let testSlug: string
+      118 |
+    > 119 |   test.beforeEach(async ({ page }) => {
+          |        ^
+      120 |     // Setup API mocks before each test
+      121 |     await setupApiMocks(page)
+      122 |
+        at C:\dev\heirlooms-v0\__tests__\e2e\ai-analysis.spec.ts:119:8
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\ai-analysis-AI-Analysis-Fl-32ea6-analysis-steps-successfully-Mobile-Chrome\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\ai-analysis-AI-Analysis-Fl-32ea6-analysis-steps-successfully-Mobile-Chrome\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\ai-analysis-AI-Analysis-Fl-32ea6-analysis-steps-successfully-Mobile-Chrome\error-context.md
+
+  29) [Mobile Chrome] › __tests__\e2e\ai-analysis.spec.ts:268:7 › AI Analysis Flow › should show error when audio file is missing 
+
+    [31mTest timeout of 30000ms exceeded while running "beforeEach" hook.[39m
+
+      117 |   let testSlug: string
+      118 |
+    > 119 |   test.beforeEach(async ({ page }) => {
+          |        ^
+      120 |     // Setup API mocks before each test
+      121 |     await setupApiMocks(page)
+      122 |
+        at C:\dev\heirlooms-v0\__tests__\e2e\ai-analysis.spec.ts:119:8
+
+    Error: page.waitForURL: Test timeout of 30000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation until "load"
+    ============================================================
+
+       at helpers\login.ts:56
+
+      54 |   // Wait for either successful redirect OR error message
+      55 |   try {
+    > 56 |     await page.waitForURL(/\/(collections|artifacts|$)/, { timeout: 30000 })
+         |                ^
+      57 |   } catch (error) {
+      58 |     // Check for error alert
+      59 |     const alertText = await page.locator('[role="alert"]').textContent({ timeout: 2000 }).catch(() => null)
+        at login (C:\dev\heirlooms-v0\__tests__\e2e\helpers\login.ts:56:16)
+        at Object.page (C:\dev\heirlooms-v0\__tests__\e2e\global.setup.ts:11:5)
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\ai-analysis-AI-Analysis-Fl-4562d--when-audio-file-is-missing-Mobile-Chrome\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\ai-analysis-AI-Analysis-Fl-4562d--when-audio-file-is-missing-Mobile-Chrome\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\ai-analysis-AI-Analysis-Fl-4562d--when-audio-file-is-missing-Mobile-Chrome\error-context.md
+
+  30) [Mobile Chrome] › __tests__\e2e\ai-analysis.spec.ts:304:7 › AI Analysis Flow › should show status badge changes during processing 
+
+    [31mTest timeout of 30000ms exceeded while running "beforeEach" hook.[39m
+
+      117 |   let testSlug: string
+      118 |
+    > 119 |   test.beforeEach(async ({ page }) => {
+          |        ^
+      120 |     // Setup API mocks before each test
+      121 |     await setupApiMocks(page)
+      122 |
+        at C:\dev\heirlooms-v0\__tests__\e2e\ai-analysis.spec.ts:119:8
+
+    Error: page.waitForURL: Test timeout of 30000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation until "load"
+    ============================================================
+
+       at helpers\login.ts:56
+
+      54 |   // Wait for either successful redirect OR error message
+      55 |   try {
+    > 56 |     await page.waitForURL(/\/(collections|artifacts|$)/, { timeout: 30000 })
+         |                ^
+      57 |   } catch (error) {
+      58 |     // Check for error alert
+      59 |     const alertText = await page.locator('[role="alert"]').textContent({ timeout: 2000 }).catch(() => null)
+        at login (C:\dev\heirlooms-v0\__tests__\e2e\helpers\login.ts:56:16)
+        at Object.page (C:\dev\heirlooms-v0\__tests__\e2e\global.setup.ts:11:5)
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\ai-analysis-AI-Analysis-Fl-d7630-e-changes-during-processing-Mobile-Chrome\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\ai-analysis-AI-Analysis-Fl-d7630-e-changes-during-processing-Mobile-Chrome\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\ai-analysis-AI-Analysis-Fl-d7630-e-changes-during-processing-Mobile-Chrome\error-context.md
+
+  31) [Mobile Chrome] › __tests__\e2e\ai-analysis.spec.ts:349:7 › AI Analysis Flow › should handle regenerate description action 
+
+    [31mTest timeout of 30000ms exceeded while running "beforeEach" hook.[39m
+
+      117 |   let testSlug: string
+      118 |
+    > 119 |   test.beforeEach(async ({ page }) => {
+          |        ^
+      120 |     // Setup API mocks before each test
+      121 |     await setupApiMocks(page)
+      122 |
+        at C:\dev\heirlooms-v0\__tests__\e2e\ai-analysis.spec.ts:119:8
+
+    Error: page.waitForURL: Test timeout of 30000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation until "load"
+    ============================================================
+
+       at helpers\login.ts:56
+
+      54 |   // Wait for either successful redirect OR error message
+      55 |   try {
+    > 56 |     await page.waitForURL(/\/(collections|artifacts|$)/, { timeout: 30000 })
+         |                ^
+      57 |   } catch (error) {
+      58 |     // Check for error alert
+      59 |     const alertText = await page.locator('[role="alert"]').textContent({ timeout: 2000 }).catch(() => null)
+        at login (C:\dev\heirlooms-v0\__tests__\e2e\helpers\login.ts:56:16)
+        at Object.page (C:\dev\heirlooms-v0\__tests__\e2e\global.setup.ts:11:5)
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\ai-analysis-AI-Analysis-Fl-f0901-generate-description-action-Mobile-Chrome\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\ai-analysis-AI-Analysis-Fl-f0901-generate-description-action-Mobile-Chrome\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\ai-analysis-AI-Analysis-Fl-f0901-generate-description-action-Mobile-Chrome\error-context.md
+
+  32) [Mobile Chrome] › __tests__\e2e\ai-analysis.spec.ts:390:7 › AI Analysis Flow › should display collapsible sections for AI results 
+
+    [31mTest timeout of 30000ms exceeded while running "beforeEach" hook.[39m
+
+      117 |   let testSlug: string
+      118 |
+    > 119 |   test.beforeEach(async ({ page }) => {
+          |        ^
+      120 |     // Setup API mocks before each test
+      121 |     await setupApiMocks(page)
+      122 |
+        at C:\dev\heirlooms-v0\__tests__\e2e\ai-analysis.spec.ts:119:8
+
+    Error: page.waitForURL: Test timeout of 30000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation until "load"
+    ============================================================
+
+       at helpers\login.ts:56
+
+      54 |   // Wait for either successful redirect OR error message
+      55 |   try {
+    > 56 |     await page.waitForURL(/\/(collections|artifacts|$)/, { timeout: 30000 })
+         |                ^
+      57 |   } catch (error) {
+      58 |     // Check for error alert
+      59 |     const alertText = await page.locator('[role="alert"]').textContent({ timeout: 2000 }).catch(() => null)
+        at login (C:\dev\heirlooms-v0\__tests__\e2e\helpers\login.ts:56:16)
+        at Object.page (C:\dev\heirlooms-v0\__tests__\e2e\global.setup.ts:11:5)
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\ai-analysis-AI-Analysis-Fl-490de-ble-sections-for-AI-results-Mobile-Chrome\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\ai-analysis-AI-Analysis-Fl-490de-ble-sections-for-AI-results-Mobile-Chrome\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\ai-analysis-AI-Analysis-Fl-490de-ble-sections-for-AI-results-Mobile-Chrome\error-context.md
+
+  33) [Mobile Safari] › __tests__\e2e\ai-analysis.spec.ts:126:7 › AI Analysis Flow › should transcribe audio file successfully 
+
+    [31mTest timeout of 30000ms exceeded while running "beforeEach" hook.[39m
+
+      117 |   let testSlug: string
+      118 |
+    > 119 |   test.beforeEach(async ({ page }) => {
+          |        ^
+      120 |     // Setup API mocks before each test
+      121 |     await setupApiMocks(page)
+      122 |
+        at C:\dev\heirlooms-v0\__tests__\e2e\ai-analysis.spec.ts:119:8
+
+    Error: page.waitForURL: Test timeout of 30000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation until "load"
+    ============================================================
+
+       at helpers\login.ts:56
+
+      54 |   // Wait for either successful redirect OR error message
+      55 |   try {
+    > 56 |     await page.waitForURL(/\/(collections|artifacts|$)/, { timeout: 30000 })
+         |                ^
+      57 |   } catch (error) {
+      58 |     // Check for error alert
+      59 |     const alertText = await page.locator('[role="alert"]').textContent({ timeout: 2000 }).catch(() => null)
+        at login (C:\dev\heirlooms-v0\__tests__\e2e\helpers\login.ts:56:16)
+        at Object.page (C:\dev\heirlooms-v0\__tests__\e2e\global.setup.ts:11:5)
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\ai-analysis-AI-Analysis-Fl-260cd-ibe-audio-file-successfully-Mobile-Safari\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\ai-analysis-AI-Analysis-Fl-260cd-ibe-audio-file-successfully-Mobile-Safari\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\ai-analysis-AI-Analysis-Fl-260cd-ibe-audio-file-successfully-Mobile-Safari\error-context.md
+
+  34) [Mobile Safari] › __tests__\e2e\ai-analysis.spec.ts:170:7 › AI Analysis Flow › should generate image captions successfully 
+
+    [31mTest timeout of 30000ms exceeded while running "beforeEach" hook.[39m
+
+      117 |   let testSlug: string
+      118 |
+    > 119 |   test.beforeEach(async ({ page }) => {
+          |        ^
+      120 |     // Setup API mocks before each test
+      121 |     await setupApiMocks(page)
+      122 |
+        at C:\dev\heirlooms-v0\__tests__\e2e\ai-analysis.spec.ts:119:8
+
+    Error: page.waitForURL: Test timeout of 30000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation until "load"
+    ============================================================
+
+       at helpers\login.ts:56
+
+      54 |   // Wait for either successful redirect OR error message
+      55 |   try {
+    > 56 |     await page.waitForURL(/\/(collections|artifacts|$)/, { timeout: 30000 })
+         |                ^
+      57 |   } catch (error) {
+      58 |     // Check for error alert
+      59 |     const alertText = await page.locator('[role="alert"]').textContent({ timeout: 2000 }).catch(() => null)
+        at login (C:\dev\heirlooms-v0\__tests__\e2e\helpers\login.ts:56:16)
+        at Object.page (C:\dev\heirlooms-v0\__tests__\e2e\global.setup.ts:11:5)
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\ai-analysis-AI-Analysis-Fl-11ca0-image-captions-successfully-Mobile-Safari\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\ai-analysis-AI-Analysis-Fl-11ca0-image-captions-successfully-Mobile-Safari\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\ai-analysis-AI-Analysis-Fl-11ca0-image-captions-successfully-Mobile-Safari\error-context.md
+
+  35) [Mobile Safari] › __tests__\e2e\ai-analysis.spec.ts:199:7 › AI Analysis Flow › should generate AI description successfully 
+
+    [31mTest timeout of 30000ms exceeded while running "beforeEach" hook.[39m
+
+      117 |   let testSlug: string
+      118 |
+    > 119 |   test.beforeEach(async ({ page }) => {
+          |        ^
+      120 |     // Setup API mocks before each test
+      121 |     await setupApiMocks(page)
+      122 |
+        at C:\dev\heirlooms-v0\__tests__\e2e\ai-analysis.spec.ts:119:8
+
+    Error: page.waitForURL: Test timeout of 30000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation until "load"
+    ============================================================
+
+       at helpers\login.ts:56
+
+      54 |   // Wait for either successful redirect OR error message
+      55 |   try {
+    > 56 |     await page.waitForURL(/\/(collections|artifacts|$)/, { timeout: 30000 })
+         |                ^
+      57 |   } catch (error) {
+      58 |     // Check for error alert
+      59 |     const alertText = await page.locator('[role="alert"]').textContent({ timeout: 2000 }).catch(() => null)
+        at login (C:\dev\heirlooms-v0\__tests__\e2e\helpers\login.ts:56:16)
+        at Object.page (C:\dev\heirlooms-v0\__tests__\e2e\global.setup.ts:11:5)
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\ai-analysis-AI-Analysis-Fl-cb634-AI-description-successfully-Mobile-Safari\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\ai-analysis-AI-Analysis-Fl-cb634-AI-description-successfully-Mobile-Safari\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\ai-analysis-AI-Analysis-Fl-cb634-AI-description-successfully-Mobile-Safari\error-context.md
+
+  36) [Mobile Safari] › __tests__\e2e\ai-analysis.spec.ts:234:7 › AI Analysis Flow › should run all AI analysis steps successfully 
+
+    [31mTest timeout of 30000ms exceeded while running "beforeEach" hook.[39m
+
+      117 |   let testSlug: string
+      118 |
+    > 119 |   test.beforeEach(async ({ page }) => {
+          |        ^
+      120 |     // Setup API mocks before each test
+      121 |     await setupApiMocks(page)
+      122 |
+        at C:\dev\heirlooms-v0\__tests__\e2e\ai-analysis.spec.ts:119:8
+
+    Error: page.waitForURL: Test timeout of 30000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation until "load"
+    ============================================================
+
+       at helpers\login.ts:56
+
+      54 |   // Wait for either successful redirect OR error message
+      55 |   try {
+    > 56 |     await page.waitForURL(/\/(collections|artifacts|$)/, { timeout: 30000 })
+         |                ^
+      57 |   } catch (error) {
+      58 |     // Check for error alert
+      59 |     const alertText = await page.locator('[role="alert"]').textContent({ timeout: 2000 }).catch(() => null)
+        at login (C:\dev\heirlooms-v0\__tests__\e2e\helpers\login.ts:56:16)
+        at Object.page (C:\dev\heirlooms-v0\__tests__\e2e\global.setup.ts:11:5)
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\ai-analysis-AI-Analysis-Fl-32ea6-analysis-steps-successfully-Mobile-Safari\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\ai-analysis-AI-Analysis-Fl-32ea6-analysis-steps-successfully-Mobile-Safari\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\ai-analysis-AI-Analysis-Fl-32ea6-analysis-steps-successfully-Mobile-Safari\error-context.md
+
+  37) [Mobile Safari] › __tests__\e2e\ai-analysis.spec.ts:268:7 › AI Analysis Flow › should show error when audio file is missing 
+
+    [31mTest timeout of 30000ms exceeded while running "beforeEach" hook.[39m
+
+      117 |   let testSlug: string
+      118 |
+    > 119 |   test.beforeEach(async ({ page }) => {
+          |        ^
+      120 |     // Setup API mocks before each test
+      121 |     await setupApiMocks(page)
+      122 |
+        at C:\dev\heirlooms-v0\__tests__\e2e\ai-analysis.spec.ts:119:8
+
+    Error: page.waitForURL: Test timeout of 30000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation until "load"
+    ============================================================
+
+       at helpers\login.ts:56
+
+      54 |   // Wait for either successful redirect OR error message
+      55 |   try {
+    > 56 |     await page.waitForURL(/\/(collections|artifacts|$)/, { timeout: 30000 })
+         |                ^
+      57 |   } catch (error) {
+      58 |     // Check for error alert
+      59 |     const alertText = await page.locator('[role="alert"]').textContent({ timeout: 2000 }).catch(() => null)
+        at login (C:\dev\heirlooms-v0\__tests__\e2e\helpers\login.ts:56:16)
+        at Object.page (C:\dev\heirlooms-v0\__tests__\e2e\global.setup.ts:11:5)
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\ai-analysis-AI-Analysis-Fl-4562d--when-audio-file-is-missing-Mobile-Safari\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\ai-analysis-AI-Analysis-Fl-4562d--when-audio-file-is-missing-Mobile-Safari\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\ai-analysis-AI-Analysis-Fl-4562d--when-audio-file-is-missing-Mobile-Safari\error-context.md
+
+  38) [Mobile Safari] › __tests__\e2e\ai-analysis.spec.ts:304:7 › AI Analysis Flow › should show status badge changes during processing 
+
+    [31mTest timeout of 30000ms exceeded while running "beforeEach" hook.[39m
+
+      117 |   let testSlug: string
+      118 |
+    > 119 |   test.beforeEach(async ({ page }) => {
+          |        ^
+      120 |     // Setup API mocks before each test
+      121 |     await setupApiMocks(page)
+      122 |
+        at C:\dev\heirlooms-v0\__tests__\e2e\ai-analysis.spec.ts:119:8
+
+    Error: page.waitForURL: Test timeout of 30000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation until "load"
+    ============================================================
+
+       at helpers\login.ts:56
+
+      54 |   // Wait for either successful redirect OR error message
+      55 |   try {
+    > 56 |     await page.waitForURL(/\/(collections|artifacts|$)/, { timeout: 30000 })
+         |                ^
+      57 |   } catch (error) {
+      58 |     // Check for error alert
+      59 |     const alertText = await page.locator('[role="alert"]').textContent({ timeout: 2000 }).catch(() => null)
+        at login (C:\dev\heirlooms-v0\__tests__\e2e\helpers\login.ts:56:16)
+        at Object.page (C:\dev\heirlooms-v0\__tests__\e2e\global.setup.ts:11:5)
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\ai-analysis-AI-Analysis-Fl-d7630-e-changes-during-processing-Mobile-Safari\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\ai-analysis-AI-Analysis-Fl-d7630-e-changes-during-processing-Mobile-Safari\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\ai-analysis-AI-Analysis-Fl-d7630-e-changes-during-processing-Mobile-Safari\error-context.md
+
+  39) [Mobile Safari] › __tests__\e2e\ai-analysis.spec.ts:349:7 › AI Analysis Flow › should handle regenerate description action 
+
+    [31mTest timeout of 30000ms exceeded while running "beforeEach" hook.[39m
+
+      117 |   let testSlug: string
+      118 |
+    > 119 |   test.beforeEach(async ({ page }) => {
+          |        ^
+      120 |     // Setup API mocks before each test
+      121 |     await setupApiMocks(page)
+      122 |
+        at C:\dev\heirlooms-v0\__tests__\e2e\ai-analysis.spec.ts:119:8
+
+    Error: page.waitForURL: Test timeout of 30000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation until "load"
+    ============================================================
+
+       at helpers\login.ts:56
+
+      54 |   // Wait for either successful redirect OR error message
+      55 |   try {
+    > 56 |     await page.waitForURL(/\/(collections|artifacts|$)/, { timeout: 30000 })
+         |                ^
+      57 |   } catch (error) {
+      58 |     // Check for error alert
+      59 |     const alertText = await page.locator('[role="alert"]').textContent({ timeout: 2000 }).catch(() => null)
+        at login (C:\dev\heirlooms-v0\__tests__\e2e\helpers\login.ts:56:16)
+        at Object.page (C:\dev\heirlooms-v0\__tests__\e2e\global.setup.ts:11:5)
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\ai-analysis-AI-Analysis-Fl-f0901-generate-description-action-Mobile-Safari\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\ai-analysis-AI-Analysis-Fl-f0901-generate-description-action-Mobile-Safari\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\ai-analysis-AI-Analysis-Fl-f0901-generate-description-action-Mobile-Safari\error-context.md
+
+  40) [Mobile Safari] › __tests__\e2e\ai-analysis.spec.ts:390:7 › AI Analysis Flow › should display collapsible sections for AI results 
+
+    [31mTest timeout of 30000ms exceeded while running "beforeEach" hook.[39m
+
+      117 |   let testSlug: string
+      118 |
+    > 119 |   test.beforeEach(async ({ page }) => {
+          |        ^
+      120 |     // Setup API mocks before each test
+      121 |     await setupApiMocks(page)
+      122 |
+        at C:\dev\heirlooms-v0\__tests__\e2e\ai-analysis.spec.ts:119:8
+
+    Error: page.waitForURL: Test timeout of 30000ms exceeded.
+    =========================== logs ===========================
+    waiting for navigation until "load"
+    ============================================================
+
+       at helpers\login.ts:56
+
+      54 |   // Wait for either successful redirect OR error message
+      55 |   try {
+    > 56 |     await page.waitForURL(/\/(collections|artifacts|$)/, { timeout: 30000 })
+         |                ^
+      57 |   } catch (error) {
+      58 |     // Check for error alert
+      59 |     const alertText = await page.locator('[role="alert"]').textContent({ timeout: 2000 }).catch(() => null)
+        at login (C:\dev\heirlooms-v0\__tests__\e2e\helpers\login.ts:56:16)
+        at Object.page (C:\dev\heirlooms-v0\__tests__\e2e\global.setup.ts:11:5)
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\ai-analysis-AI-Analysis-Fl-490de-ble-sections-for-AI-results-Mobile-Safari\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: video (video/webm) ──────────────────────────────────────────────────────────────
+    test-results\ai-analysis-AI-Analysis-Fl-490de-ble-sections-for-AI-results-Mobile-Safari\video.webm
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\ai-analysis-AI-Analysis-Fl-490de-ble-sections-for-AI-results-Mobile-Safari\error-context.md
+
+  40 failed
+    [chromium] › __tests__\e2e\ai-analysis.spec.ts:126:7 › AI Analysis Flow › should transcribe audio file successfully 
+    [chromium] › __tests__\e2e\ai-analysis.spec.ts:170:7 › AI Analysis Flow › should generate image captions successfully 
+    [chromium] › __tests__\e2e\ai-analysis.spec.ts:199:7 › AI Analysis Flow › should generate AI description successfully 
+    [chromium] › __tests__\e2e\ai-analysis.spec.ts:234:7 › AI Analysis Flow › should run all AI analysis steps successfully 
+    [chromium] › __tests__\e2e\ai-analysis.spec.ts:268:7 › AI Analysis Flow › should show error when audio file is missing 
+    [chromium] › __tests__\e2e\ai-analysis.spec.ts:304:7 › AI Analysis Flow › should show status badge changes during processing 
+    [chromium] › __tests__\e2e\ai-analysis.spec.ts:349:7 › AI Analysis Flow › should handle regenerate description action 
+    [chromium] › __tests__\e2e\ai-analysis.spec.ts:390:7 › AI Analysis Flow › should display collapsible sections for AI results 
+    [firefox] › __tests__\e2e\ai-analysis.spec.ts:126:7 › AI Analysis Flow › should transcribe audio file successfully 
+    [firefox] › __tests__\e2e\ai-analysis.spec.ts:170:7 › AI Analysis Flow › should generate image captions successfully 
+    [firefox] › __tests__\e2e\ai-analysis.spec.ts:199:7 › AI Analysis Flow › should generate AI description successfully 
+    [firefox] › __tests__\e2e\ai-analysis.spec.ts:234:7 › AI Analysis Flow › should run all AI analysis steps successfully 
+    [firefox] › __tests__\e2e\ai-analysis.spec.ts:268:7 › AI Analysis Flow › should show error when audio file is missing 
+    [firefox] › __tests__\e2e\ai-analysis.spec.ts:304:7 › AI Analysis Flow › should show status badge changes during processing 
+    [firefox] › __tests__\e2e\ai-analysis.spec.ts:349:7 › AI Analysis Flow › should handle regenerate description action 
+    [firefox] › __tests__\e2e\ai-analysis.spec.ts:390:7 › AI Analysis Flow › should display collapsible sections for AI results 
+    [webkit] › __tests__\e2e\ai-analysis.spec.ts:126:7 › AI Analysis Flow › should transcribe audio file successfully 
+    [webkit] › __tests__\e2e\ai-analysis.spec.ts:170:7 › AI Analysis Flow › should generate image captions successfully 
+    [webkit] › __tests__\e2e\ai-analysis.spec.ts:199:7 › AI Analysis Flow › should generate AI description successfully 
+    [webkit] › __tests__\e2e\ai-analysis.spec.ts:234:7 › AI Analysis Flow › should run all AI analysis steps successfully 
+    [webkit] › __tests__\e2e\ai-analysis.spec.ts:268:7 › AI Analysis Flow › should show error when audio file is missing 
+    [webkit] › __tests__\e2e\ai-analysis.spec.ts:304:7 › AI Analysis Flow › should show status badge changes during processing 
+    [webkit] › __tests__\e2e\ai-analysis.spec.ts:349:7 › AI Analysis Flow › should handle regenerate description action 
+    [webkit] › __tests__\e2e\ai-analysis.spec.ts:390:7 › AI Analysis Flow › should display collapsible sections for AI results 
+    [Mobile Chrome] › __tests__\e2e\ai-analysis.spec.ts:126:7 › AI Analysis Flow › should transcribe audio file successfully 
+    [Mobile Chrome] › __tests__\e2e\ai-analysis.spec.ts:170:7 › AI Analysis Flow › should generate image captions successfully 
+    [Mobile Chrome] › __tests__\e2e\ai-analysis.spec.ts:199:7 › AI Analysis Flow › should generate AI description successfully 
+    [Mobile Chrome] › __tests__\e2e\ai-analysis.spec.ts:234:7 › AI Analysis Flow › should run all AI analysis steps successfully 
+    [Mobile Chrome] › __tests__\e2e\ai-analysis.spec.ts:268:7 › AI Analysis Flow › should show error when audio file is missing 
+    [Mobile Chrome] › __tests__\e2e\ai-analysis.spec.ts:304:7 › AI Analysis Flow › should show status badge changes during processing 
+    [Mobile Chrome] › __tests__\e2e\ai-analysis.spec.ts:349:7 › AI Analysis Flow › should handle regenerate description action 
+    [Mobile Chrome] › __tests__\e2e\ai-analysis.spec.ts:390:7 › AI Analysis Flow › should display collapsible sections for AI results 
+    [Mobile Safari] › __tests__\e2e\ai-analysis.spec.ts:126:7 › AI Analysis Flow › should transcribe audio file successfully 
+    [Mobile Safari] › __tests__\e2e\ai-analysis.spec.ts:170:7 › AI Analysis Flow › should generate image captions successfully 
+    [Mobile Safari] › __tests__\e2e\ai-analysis.spec.ts:199:7 › AI Analysis Flow › should generate AI description successfully 
+    [Mobile Safari] › __tests__\e2e\ai-analysis.spec.ts:234:7 › AI Analysis Flow › should run all AI analysis steps successfully 
+    [Mobile Safari] › __tests__\e2e\ai-analysis.spec.ts:268:7 › AI Analysis Flow › should show error when audio file is missing 
+    [Mobile Safari] › __tests__\e2e\ai-analysis.spec.ts:304:7 › AI Analysis Flow › should show status badge changes during processing 
+    [Mobile Safari] › __tests__\e2e\ai-analysis.spec.ts:349:7 › AI Analysis Flow › should handle regenerate description action 
+    [Mobile Safari] › __tests__\e2e\ai-analysis.spec.ts:390:7 › AI Analysis Flow › should display collapsible sections for AI results 
+ ELIFECYCLE  Command failed with exit code 1.
