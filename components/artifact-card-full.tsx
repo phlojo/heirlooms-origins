@@ -16,6 +16,7 @@ interface ArtifactCardFullProps {
     year_acquired?: number
     origin?: string
     media_urls?: string[]
+    media_derivatives?: Record<string, any> | null
     thumbnail_url?: string | null
     user_id?: string
     artifact_type?: {
@@ -33,7 +34,8 @@ interface ArtifactCardFullProps {
 }
 
 export function ArtifactCardFull({ artifact, showAuthor = false, authorName }: ArtifactCardFullProps) {
-  const thumbnailUrl = artifact.thumbnail_url ? getThumbnailUrl(artifact.thumbnail_url) : null
+  // PHASE 1: Pass media_derivatives to getThumbnailUrl for stored derivative usage
+  const thumbnailUrl = artifact.thumbnail_url ? getThumbnailUrl(artifact.thumbnail_url, artifact.media_derivatives) : null
 
   return (
     <Link href={`/artifacts/${artifact.slug}`} data-testid="artifact-link">
