@@ -24,49 +24,83 @@ export async function login(page: Page): Promise<void> {
   // Wait for the login form to load
   await page.waitForSelector('input[type="email"]', { timeout: 10000 })
 
-  // Fill in the email field using placeholder selector
+  // Fill in the email field
   await page.getByPlaceholder("you@example.com").fill(email)
-
-  // Wait a moment for the form to process
   await page.waitForTimeout(500)
 
-  // Check if password field already exists (might default to password login)
-  let passwordFieldExists = await page
-    .locator('input[type="password"]')
-    .isVisible({ timeout: 2000 })
-    .catch(() => false)
+  // Click "Use password instead" to switch from magic link to password login
+  const usePasswordButton = page.getByRole("button", { name: "Use password instead" })
+  await usePasswordButton.waitFor({ state: "visible", timeout: 5000 })
+  await usePasswordButton.click()
 
-  // If password field doesn't exist, click "Use password instead" button
-  if (!passwordFieldExists) {
-    const usePasswordButton = page.getByRole("button", { name: /Use password instead/i })
-    if (await usePasswordButton.isVisible({ timeout: 2000 }).catch(() => false)) {
-      await usePasswordButton.click()
-      await page.waitForTimeout(500)
-    }
-  }
-
-  // Wait for password field to appear with longer timeout
+  // Wait for password field to appear (give it more time after button click)
+  await page.waitForTimeout(500)
   await page.waitForSelector('input[type="password"]', { timeout: 10000 })
 
   // Fill in the password field
-  await page.getByLabel("Password").fill(password)
+  const passwordInput = page.getByLabel("Password")
+  await passwordInput.waitFor({ state: "visible", timeout: 5000 })
+  await passwordInput.fill(password)
+  await page.waitForTimeout(300)
 
-  // Click the Sign In button
-  const signInButton = page.getByRole("button", { name: /Sign In/i })
+  // Click the Sign In button (it will be enabled once both fields are filled)
+  const signInButton = page.locator('button[type="submit"], button:has-text("Sign In")')
+  await signInButton.waitFor({ state: "visible", timeout: 5000 })
   await signInButton.click()
 
-  // Wait for successful redirect - use longer timeout and more flexible URL matching
-  await page.waitForURL(/\/(collections|artifacts|profile|login.*)?$/, { timeout: 30000 })
+  // Wait for button to show loading state (indicates form is processing)
+  await page.waitForTimeout(1000)
 
-  // Wait for navigation to complete
-  await page.waitForLoadState("networkidle")
+  // Check if page actually navigated away from login within a short timeout
+  const maxAttempts = 3
+  let navigated = false
 
-  // Additional verification: ensure we're not still on the login page
-  const currentUrl = page.url()
-  if (currentUrl.includes("/login") && !currentUrl.includes("returnTo")) {
-    throw new Error("Login failed: Still on login page after submitting credentials")
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    try {
+      // Try a shorter timeout first to fail fast if credentials are wrong
+      await page.waitForURL((url) => !url.pathname.includes("/login"), {
+        timeout: 10000,
+      })
+      navigated = true
+      break
+    } catch (e) {
+      // Diagnosis on intermediate attempts
+      if (attempt < maxAttempts - 1) {
+        const currentUrl = page.url()
+        console.log(`[v0] Login attempt ${attempt + 1} still on: ${currentUrl}`)
+
+        // Check for errors
+        const alertText = await page.locator('[role="alert"]').textContent({ timeout: 1000 }).catch(() => null)
+        if (alertText) {
+          throw new Error(`Login failed with error: ${alertText.trim()}`)
+        }
+
+        // Wait a bit before retry
+        await page.waitForTimeout(500)
+      }
+    }
   }
 
-  // Wait a moment for auth state to fully settle
-  await page.waitForTimeout(1000)
+  if (!navigated) {
+    const currentUrl = page.url()
+    console.error("[v0] Login failed - still on login page after retries")
+    console.error("[v0] Final URL:", currentUrl)
+
+    // Provide helpful diagnostics
+    const alertText = await page.locator('[role="alert"]').textContent({ timeout: 1000 }).catch(() => null)
+    const isStillLoading = await page.locator('button:has-text("Loading")').isVisible({ timeout: 500 }).catch(() => false)
+    const errorText = await page.locator('form [class*="error"], form [class*="destructive"]').textContent({ timeout: 1000 }).catch(() => null)
+
+    const details = []
+    if (alertText) details.push(`Alert: ${alertText.trim()}`)
+    if (isStillLoading) details.push("Button still in Loading state")
+    if (errorText) details.push(`Form error: ${errorText.trim()}`)
+
+    throw new Error(
+      `Login failed. Still on /login after 30 seconds. ${details.length > 0 ? "Details: " + details.join("; ") : "Check that E2E_EMAIL and E2E_PASSWORD are correct."}`
+    )
+  }
+
+  await page.waitForLoadState("domcontentloaded")
+  await page.waitForTimeout(500)
 }
