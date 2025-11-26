@@ -1,6 +1,6 @@
 # Heirlooms Media Architecture
 
-_Last updated: 2025-11-25 – Media Pipeline v1 (Cloudinary originals + pre-generated derivatives)_
+_Last updated: 2025-11-25 – **Phase 1 Complete:** Media Pipeline v1 (Cloudinary originals + pre-generated derivatives)_
 
 This document describes how media (images and videos) are stored, transformed, and delivered in the Heirlooms app.
 
@@ -28,30 +28,54 @@ It is intentionally **implementation-aware** (reflecting how the code works toda
 
 ---
 
-## 2. Current State (Baseline Mental Model)
+## 2. Current State (Phase 1 Implementation - Nov 2025)
 
-> NOTE: This section should describe how things actually work **today**. Update it when you change the pipeline.
+> NOTE: This section describes how things **actually work today** after Phase 1 implementation.
 
-At the time of this writing, the app:
+**✅ Phase 1 Complete:** The app now implements predictable, controlled Cloudinary usage.
 
-- Uses **Cloudinary** for:
-  - Uploading original files
-  - Generating on-the-fly transformations for thumbnails and resized images
-- Uses **the database** to:
-  - Store at least one Cloudinary URL or public_id per media item
-- Has some logic to:
-  - Delete/cleanup unused Cloudinary media when artifacts/media records are removed
+### 2.1 What we store
 
-Problems with this baseline:
+- **Cloudinary** for:
+  - Uploading and storing original media files
+  - Serving derivative transformations (thumb, medium, large)
+- **Database** (`artifacts` table):
+  - `media_urls` (array) - Original Cloudinary URLs in user's chosen order
+  - `media_derivatives` (JSONB) - Pre-generated derivative URLs keyed by original URL:
+    ```json
+    {
+      "https://res.cloudinary.com/.../image.jpg": {
+        "thumb": "https://res.cloudinary.com/.../w_400,h_400,c_fill,q_auto,f_auto/.../image.jpg",
+        "medium": "https://res.cloudinary.com/.../w_1024,c_limit,q_auto,f_auto/.../image.jpg",
+        "large": "https://res.cloudinary.com/.../w_1600,c_limit,q_auto,f_auto/.../image.jpg"
+      }
+    }
+    ```
 
-- **Too many unique transformations**:
-  - Dynamic `w_XXX,h_YYY,...` URLs can create new Cloudinary transformations per usage.
-- **Unpredictable cost / quota usage**:
-  - Every new size or crop counts as a new transformation.
-- **Risk of broken UI** when hitting Cloudinary limits:
-  - Thumbnails or resized images may fail to generate.
-- **Tightly coupled UI and transformation logic**:
-  - Components may embed Cloudinary transformation strings directly.
+### 2.2 How it works
+
+1. **At artifact creation** (`lib/actions/artifacts.ts`):
+   - Derivatives are generated as **constructed URLs** (not API calls)
+   - Stored in `media_derivatives` column
+   - Cloudinary generates actual derivatives on first request (lazy generation)
+
+2. **In UI components**:
+   - Components pass `artifact.media_derivatives` to utility functions
+   - `lib/cloudinary.ts` utilities prioritize stored derivatives over dynamic generation
+   - **Backwards compatible:** Falls back to dynamic transformation for old artifacts
+
+3. **Transformation control**:
+   - Only 3 derivative sizes per media item: thumb (400x400), medium (1024px), large (1600px)
+   - **Predictable quota usage:** New artifacts create exactly 3 transformations per image
+   - Old artifacts continue using dynamic transformations until backfilled (future task)
+
+### 2.3 Problems solved
+
+✅ **Controlled transformations:** New artifacts use exactly 3 derivatives per image
+✅ **Predictable costs:** No unbounded transformation creation
+✅ **Backwards compatible:** Old artifacts still work (fallback to dynamic generation)
+✅ **Decoupled UI:** Components don't construct transformation URLs
+✅ **Rollback ready:** Can revert safely if needed (see `ROLLBACK-GUIDE.md`)
 
 ---
 
@@ -153,61 +177,85 @@ If actual values differ in code, update them here and treat this doc as the sour
 
 ---
 
-## 5. Media Pipeline v1 (Cloudinary-first with Safety Layer)
+## 5. Media Pipeline v1 (Phase 1 Implementation)
 
-> v1 focuses on making Cloudinary usage safe and predictable **without** yet moving originals to another storage provider.
+> ✅ **Implemented Nov 2025:** v1 makes Cloudinary usage safe and predictable **without** yet moving originals to another storage provider.
 
-### 5.1 Upload flow
+### 5.1 Upload flow (as implemented)
 
-When a user uploads a media file (image/video) to an artifact:
+When a user creates an artifact with media:
 
-1. **Client-side (optional, later)**
-   - (Future enhancement) Basic compression:
-     - Resize very large images down to a maximum dimension (e.g., 2000–3000 px).
-     - Reduce file size to a reasonable target (e.g., 1.5–2 MB for most images).
+1. **Client-side upload**
+   - User uploads media files via artifact creation/edit form
+   - Files sent to Cloudinary upload API endpoint
 
-2. **Server-side**
-   - Upload the original file to Cloudinary.
+2. **Server-side upload** (`lib/actions/cloudinary.ts`)
+   - Upload original file to Cloudinary
    - Cloudinary returns:
      - `public_id`
-     - `secure_url` (original)
+     - `secure_url` (original URL)
+   - Original URL added to `media_urls` array
 
-3. **Derivative generation (critical step)**
-   - Immediately create **thumb**, **medium**, and optionally **large** variants using Cloudinary’s API.
-   - Save their URLs (or public_ids) into the database as:
-     - `thumbUrl`
-     - `mediumUrl`
-     - `largeUrl`
-   - These derivatives are created **once** at upload time, not on the fly.
+3. **Artifact creation** (`lib/actions/artifacts.ts`)
+   - **Derivative URL generation:**
+     - `generateDerivativesMap()` constructs derivative URLs for each media item:
+       - `thumb`: `w_400,h_400,c_fill,q_auto,f_auto` (or f_jpg for videos)
+       - `medium`: `w_1024,c_limit,q_auto,f_auto`
+       - `large`: `w_1600,c_limit,q_auto,f_auto`
+     - URLs are **constructed**, not fetched via API
+     - Cloudinary generates actual derivatives lazily on first request
 
-4. **Database record**
-   - Store:
-     - `originalUrl` (Cloudinary)
-     - `thumbUrl`
-     - `mediumUrl`
-     - `largeUrl`
-     - Metadata (type, order, etc.)
+4. **Database storage**
+   - Store in `artifacts` table:
+     - `media_urls`: Array of original Cloudinary URLs
+     - `media_derivatives`: JSONB map of `{ originalUrl: { thumb, medium, large } }`
+     - `thumbnail_url`: First image or video URL for artifact card display
+   - **Note:** Media is stored in `artifacts` table, not separate `media` table (simplified model)
 
-### 5.2 Consumption in the UI
+### 5.2 Consumption in the UI (as implemented)
 
-- **Artifact list / collection views**
-  - Always use `thumbUrl`.
-- **Artifact detail / gallery grid**
-  - Use `thumbUrl` in the grid.
-- **Lightbox / full image view**
-  - Use `mediumUrl` by default.
-  - Optionally use `largeUrl` for zoom or large desktop displays.
+**Utility functions** (`lib/cloudinary.ts`):
+- `getThumbnailUrl(url, mediaDerivatives)` - Returns thumb derivative or falls back to dynamic
+- `getMediumUrl(url, mediaDerivatives)` - Returns medium derivative or falls back
+- `getLargeUrl(url, mediaDerivatives)` - Returns large derivative or falls back
+- `getDetailUrl(url, mediaDerivatives)` - Deprecated, redirects to large
+- `getCardUrl(url, mediaDerivatives)` - Deprecated, redirects to medium
 
-**Important:**  
-> The UI should not construct new Cloudinary transformation URLs dynamically. It should rely on the URLs stored in the database.
+**Components** (updated to pass derivatives):
+- `artifact-card.tsx` - Uses `getThumbnailUrl()` for card thumbnails
+- `artifact-card-compact.tsx` - Uses `getThumbnailUrl()` for list view
+- `artifact-card-full.tsx` - Uses `getThumbnailUrl()` for grid view
+- `artifact-detail-view.tsx` - Uses `getDetailUrl()` for full image display
 
-### 5.3 Backwards compatibility for legacy media
+**Flow:**
+1. Component receives `artifact` with `media_derivatives` field
+2. Passes `media_derivatives` to utility function
+3. Utility checks for stored derivative URL first
+4. Falls back to dynamic transformation if derivative not found (backwards compatibility)
+5. Logs which path was taken for debugging
 
-For media created **before** v1 derivatives exist:
+**Important:**
+> ✅ UI components now pass stored derivatives to utility functions instead of constructing URLs dynamically.
 
-- If `thumbUrl` / `mediumUrl` / `largeUrl` are missing:
-  - Fallback to the original Cloudinary URL or existing transformation pattern.
-  - Consider adding a background job or admin action to gradually generate missing derivatives for older media.
+### 5.3 Backwards compatibility for legacy media (implemented)
+
+For artifacts created **before** Phase 1 (with `media_derivatives = null`):
+
+**How it works:**
+1. Component passes `null` or `undefined` for `mediaDerivatives` parameter
+2. Utility functions check: `if (mediaDerivatives && mediaDerivatives[url]?.thumb)`
+3. If check fails, falls back to dynamic transformation generation:
+   ```typescript
+   // lib/cloudinary.ts
+   console.log("[cloudinary] getThumbnailUrl: Generating dynamic transformation (fallback)")
+   return getCloudinaryUrl(url, "w_400,h_400,c_fill,q_auto,f_auto")
+   ```
+4. Old artifacts continue to work exactly as before
+
+**Future task (Phase 2+):**
+- Add background job or admin action to backfill `media_derivatives` for old artifacts
+- This will gradually migrate all artifacts to use stored derivatives
+- See `PHASE-1-IMPLEMENTATION-SUMMARY.md` for backfill script ideas
 
 ---
 
