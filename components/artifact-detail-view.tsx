@@ -714,7 +714,7 @@ export function ArtifactDetailView({
                       </div>
                     )}
                     <ArtifactImageWithViewer
-                      src={getDetailUrl(url) || "/placeholder.svg"}
+                      src={getDetailUrl(url, artifact.media_derivatives) || "/placeholder.svg"}
                       alt={`${artifact.title} - Image ${imageUrlsFiltered.indexOf(url) + 1}`}
                       setIsImageFullscreen={setIsImageFullscreen}
                     />

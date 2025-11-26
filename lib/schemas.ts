@@ -16,6 +16,16 @@ export const collectionSchema = z.object({
 
 export type CollectionInput = z.infer<typeof collectionSchema>
 
+// Media derivatives schema for pre-generated Cloudinary transformations
+export const mediaDerivativesSchema = z.record(
+  z.string().url(), // original URL
+  z.object({
+    thumb: z.string().url(),
+    medium: z.string().url(),
+    large: z.string().url().optional(),
+  })
+)
+
 export const createArtifactSchema = z.object({
   title: z
     .string()
@@ -29,6 +39,7 @@ export const createArtifactSchema = z.object({
   origin: z.string().max(200, "Origin must be less than 200 characters").nullable().optional(),
   media_urls: z.array(z.string().url("Invalid media URL")).nullable().optional(),
   thumbnail_url: z.string().url("Invalid thumbnail URL").nullable().optional(),
+  media_derivatives: mediaDerivativesSchema.nullable().optional(),
   image_captions: z.record(z.string().url(), z.string()).optional(),
   video_summaries: z.record(z.string().url(), z.string()).optional(),
   audio_transcripts: z.record(z.string().url(), z.string()).optional(),
@@ -51,6 +62,7 @@ export const updateArtifactSchema = z.object({
     .transform((val) => val ?? undefined),
   origin: z.string().max(200, "Origin must be less than 200 characters").optional(),
   media_urls: z.array(z.string().url("Invalid media URL")).optional(),
+  media_derivatives: mediaDerivativesSchema.nullable().optional(),
   image_captions: z.record(z.string().url(), z.string()).optional(),
   video_summaries: z.record(z.string().url(), z.string()).optional(),
   thumbnail_url: z.string().url("Invalid thumbnail URL").nullable().optional(),

@@ -13,6 +13,7 @@ import { deleteCloudinaryMedia, extractPublicIdFromUrl } from "./cloudinary"
 import { generateSlug, generateUniqueSlug } from "@/lib/utils/slug"
 import { isCurrentUserAdmin } from "@/lib/utils/admin"
 import { hasVisualMedia, getPrimaryVisualMediaUrl } from "@/lib/media"
+import { generateDerivativesMap } from "@/lib/utils/media-derivatives"
 
 export async function createArtifact(
   input: CreateArtifactInput,
@@ -115,6 +116,13 @@ export async function createArtifact(
     thumbnailUrl: thumbnailUrl || "NONE",
   })
 
+  // PHASE 1: Generate media derivatives for predictable Cloudinary usage
+  const mediaDerivatives = validMediaUrls.length > 0 ? generateDerivativesMap(validMediaUrls) : null
+  console.log("[v0] CREATE ARTIFACT - Generated derivatives:", {
+    mediaCount: validMediaUrls.length,
+    derivativeCount: mediaDerivatives ? Object.keys(mediaDerivatives).length : 0,
+  })
+
   const insertData: any = {
     title: validatedFields.data.title,
     description: validatedFields.data.description,
@@ -122,6 +130,7 @@ export async function createArtifact(
     year_acquired: validatedFields.data.year_acquired,
     origin: validatedFields.data.origin,
     media_urls: validMediaUrls,
+    media_derivatives: mediaDerivatives,
     user_id: user.id,
     slug,
     thumbnail_url: thumbnailUrl,
@@ -224,6 +233,7 @@ export async function getArtifactsByCollection(collectionId: string) {
       year_acquired,
       origin,
       media_urls,
+      media_derivatives,
       thumbnail_url,
       user_id,
       collection_id,
