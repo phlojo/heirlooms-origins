@@ -145,3 +145,35 @@ export function hasVisualMedia(urls?: string[] | null): boolean {
 export function getArtifactPlaceholder(): string {
   return "/artifact-placeholder.jpg"
 }
+
+/**
+ * Detects if a URL points to Supabase Storage
+ * Phase 2: Support for Supabase Storage originals
+ */
+export function isSupabaseStorageUrl(url: string): boolean {
+  if (!url) return false
+  return url.includes("supabase.co/storage/v1/object/public/")
+}
+
+/**
+ * Detects if a URL points to Cloudinary
+ */
+export function isCloudinaryUrl(url: string): boolean {
+  if (!url) return false
+  return url.includes("cloudinary.com")
+}
+
+/**
+ * Get storage type for a media URL
+ * Phase 2: Supports both Cloudinary and Supabase Storage
+ *
+ * @returns 'cloudinary' | 'supabase' | 'unknown'
+ */
+export function getStorageType(url: string): "cloudinary" | "supabase" | "unknown" {
+  if (!url) return "unknown"
+
+  if (isSupabaseStorageUrl(url)) return "supabase"
+  if (isCloudinaryUrl(url)) return "cloudinary"
+
+  return "unknown"
+}

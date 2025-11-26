@@ -6,9 +6,40 @@
  * - Prioritizes stored derivative URLs from media_derivatives
  * - Falls back to dynamic transformation for backwards compatibility
  * - Aligns with MEDIA-ARCHITECTURE.md Phase 1 goals
+ *
+ * PHASE 2 ARCHITECTURE UPDATE (Option 2: Cloudinary Fetch/Auto-Upload):
+ * - Originals stored in Supabase Storage
+ * - Cloudinary fetches from Supabase URLs and generates derivatives
+ * - Derivatives cached in Cloudinary CDN (not originals)
+ * - ~80-90% reduction in Cloudinary storage costs
  */
 
 import type { MediaDerivatives } from "./utils/media-derivatives"
+import { isCloudinaryUrl, isSupabaseStorageUrl, isVideoUrl } from "./media"
+
+/**
+ * Generate a Cloudinary fetch URL for remote media
+ * Phase 2: Allows Cloudinary to fetch from Supabase Storage and generate derivatives
+ *
+ * @param remoteUrl - URL of the remote media (e.g., Supabase Storage URL)
+ * @param transformations - Cloudinary transformation string
+ * @returns Cloudinary fetch URL
+ */
+function getCloudinaryFetchUrl(remoteUrl: string, transformations: string): string {
+  const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME
+
+  if (!cloudName) {
+    console.error('[cloudinary] Missing NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME')
+    return remoteUrl
+  }
+
+  // Determine resource type based on URL
+  const resourceType = isVideoUrl(remoteUrl) ? 'video' : 'image'
+
+  // Format: https://res.cloudinary.com/{cloud_name}/{resource_type}/fetch/{transformations}/{remote_url}
+  // Note: Cloudinary will URL-encode the remote URL automatically
+  return `https://res.cloudinary.com/${cloudName}/${resourceType}/fetch/${transformations}/${remoteUrl}`
+}
 
 /**
  * Transforms a Cloudinary URL with specified parameters
@@ -70,19 +101,33 @@ export function getThumbnailUrl(
     return '/placeholder.svg'
   }
 
-  // PHASE 1: Try to use stored derivative first
+  // PHASE 2: Use Cloudinary fetch for Supabase Storage URLs
+  if (isSupabaseStorageUrl(url)) {
+    console.log("[cloudinary] getThumbnailUrl: Using Cloudinary fetch for Supabase Storage")
+    const transformations = isVideoUrl(url)
+      ? "w_400,h_400,c_fill,q_auto,f_jpg,so_1.0,du_0"
+      : "w_400,h_400,c_fill,q_auto,f_auto"
+    return getCloudinaryFetchUrl(url, transformations)
+  }
+
+  // PHASE 1: Try to use stored derivative first (Cloudinary originals)
   if (mediaDerivatives && mediaDerivatives[url]?.thumb) {
     console.log("[cloudinary] getThumbnailUrl: Using stored derivative")
     return mediaDerivatives[url].thumb
   }
 
-  // Backwards compatibility: Generate dynamically
-  console.log("[cloudinary] getThumbnailUrl: Generating dynamic transformation (fallback)")
-  const result = isVideoFile(url)
-    ? getCloudinaryUrl(url, "w_400,h_400,c_fill,q_auto,f_jpg,so_1.0,du_0")
-    : getCloudinaryUrl(url, "w_400,h_400,c_fill,q_auto,f_auto")
+  // Backwards compatibility: Generate dynamically (Cloudinary originals)
+  if (isCloudinaryUrl(url)) {
+    console.log("[cloudinary] getThumbnailUrl: Generating dynamic transformation (fallback)")
+    const result = isVideoFile(url)
+      ? getCloudinaryUrl(url, "w_400,h_400,c_fill,q_auto,f_jpg,so_1.0,du_0")
+      : getCloudinaryUrl(url, "w_400,h_400,c_fill,q_auto,f_auto")
+    return result
+  }
 
-  return result
+  // Unknown URL type, return original
+  console.log("[cloudinary] getThumbnailUrl: Unknown URL type, returning original")
+  return url
 }
 
 /**
@@ -103,14 +148,23 @@ export function getCardUrl(
     return '/placeholder.svg'
   }
 
-  // PHASE 1: Try to use stored medium derivative
+  // PHASE 2: Use Cloudinary fetch for Supabase Storage URLs
+  if (isSupabaseStorageUrl(url)) {
+    return getCloudinaryFetchUrl(url, "w_800,h_600,c_fit,q_auto,f_auto")
+  }
+
+  // PHASE 1: Try to use stored medium derivative (Cloudinary originals)
   if (mediaDerivatives && mediaDerivatives[url]?.medium) {
     console.log("[cloudinary] getCardUrl: Using stored medium derivative")
     return mediaDerivatives[url].medium
   }
 
-  // Backwards compatibility: Generate dynamically
-  return getCloudinaryUrl(url, "w_800,h_600,c_fit,q_auto,f_auto")
+  // Backwards compatibility: Generate dynamically (Cloudinary originals)
+  if (isCloudinaryUrl(url)) {
+    return getCloudinaryUrl(url, "w_800,h_600,c_fit,q_auto,f_auto")
+  }
+
+  return url
 }
 
 /**
@@ -131,15 +185,25 @@ export function getMediumUrl(
     return '/placeholder.svg'
   }
 
-  // PHASE 1: Try to use stored derivative first
+  // PHASE 2: Use Cloudinary fetch for Supabase Storage URLs
+  if (isSupabaseStorageUrl(url)) {
+    console.log("[cloudinary] getMediumUrl: Using Cloudinary fetch for Supabase Storage")
+    return getCloudinaryFetchUrl(url, "w_1024,c_limit,q_auto,f_auto")
+  }
+
+  // PHASE 1: Try to use stored derivative first (Cloudinary originals)
   if (mediaDerivatives && mediaDerivatives[url]?.medium) {
     console.log("[cloudinary] getMediumUrl: Using stored derivative")
     return mediaDerivatives[url].medium
   }
 
-  // Backwards compatibility: Generate dynamically
-  console.log("[cloudinary] getMediumUrl: Generating dynamic transformation (fallback)")
-  return getCloudinaryUrl(url, "w_1024,c_limit,q_auto,f_auto")
+  // Backwards compatibility: Generate dynamically (Cloudinary originals)
+  if (isCloudinaryUrl(url)) {
+    console.log("[cloudinary] getMediumUrl: Generating dynamic transformation (fallback)")
+    return getCloudinaryUrl(url, "w_1024,c_limit,q_auto,f_auto")
+  }
+
+  return url
 }
 
 /**
@@ -160,14 +224,23 @@ export function getDetailUrl(
     return '/placeholder.svg'
   }
 
-  // PHASE 1: Try to use stored large derivative
+  // PHASE 2: Use Cloudinary fetch for Supabase Storage URLs
+  if (isSupabaseStorageUrl(url)) {
+    return getCloudinaryFetchUrl(url, "w_1200,h_1200,c_limit,q_auto,f_auto")
+  }
+
+  // PHASE 1: Try to use stored large derivative (Cloudinary originals)
   if (mediaDerivatives && mediaDerivatives[url]?.large) {
     console.log("[cloudinary] getDetailUrl: Using stored large derivative")
     return mediaDerivatives[url].large
   }
 
-  // Backwards compatibility: Generate dynamically
-  return getCloudinaryUrl(url, "w_1200,h_1200,c_limit,q_auto,f_auto")
+  // Backwards compatibility: Generate dynamically (Cloudinary originals)
+  if (isCloudinaryUrl(url)) {
+    return getCloudinaryUrl(url, "w_1200,h_1200,c_limit,q_auto,f_auto")
+  }
+
+  return url
 }
 
 /**
@@ -188,15 +261,25 @@ export function getLargeUrl(
     return '/placeholder.svg'
   }
 
-  // PHASE 1: Try to use stored derivative first
+  // PHASE 2: Use Cloudinary fetch for Supabase Storage URLs
+  if (isSupabaseStorageUrl(url)) {
+    console.log("[cloudinary] getLargeUrl: Using Cloudinary fetch for Supabase Storage")
+    return getCloudinaryFetchUrl(url, "w_1600,c_limit,q_auto,f_auto")
+  }
+
+  // PHASE 1: Try to use stored derivative first (Cloudinary originals)
   if (mediaDerivatives && mediaDerivatives[url]?.large) {
     console.log("[cloudinary] getLargeUrl: Using stored derivative")
     return mediaDerivatives[url].large
   }
 
-  // Backwards compatibility: Generate dynamically
-  console.log("[cloudinary] getLargeUrl: Generating dynamic transformation (fallback)")
-  return getCloudinaryUrl(url, "w_1600,c_limit,q_auto,f_auto")
+  // Backwards compatibility: Generate dynamically (Cloudinary originals)
+  if (isCloudinaryUrl(url)) {
+    console.log("[cloudinary] getLargeUrl: Generating dynamic transformation (fallback)")
+    return getCloudinaryUrl(url, "w_1600,c_limit,q_auto,f_auto")
+  }
+
+  return url
 }
 
 /**
@@ -210,5 +293,17 @@ export function getFullResUrl(url: string): string {
   if (!url || typeof url !== 'string' || url.trim() === '') {
     return '/placeholder.svg'
   }
-  return getCloudinaryUrl(url, "q_auto,f_auto")
+
+  // PHASE 2: For Supabase Storage URLs, return original (no transformation needed for full-res)
+  // User can download directly from Supabase Storage
+  if (isSupabaseStorageUrl(url)) {
+    return url
+  }
+
+  // For Cloudinary originals, apply auto quality/format optimizations
+  if (isCloudinaryUrl(url)) {
+    return getCloudinaryUrl(url, "q_auto,f_auto")
+  }
+
+  return url
 }

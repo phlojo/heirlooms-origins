@@ -8,9 +8,13 @@ import { Button } from "@/components/ui/button"
 import { Camera, Video, Mic, Upload } from "lucide-react"
 import { AudioRecorder } from "@/components/audio-recorder"
 import { generateCloudinarySignature, generateCloudinaryAudioSignature } from "@/lib/actions/cloudinary"
+import { uploadMediaToSupabase } from "@/lib/actions/media-upload"
 import { trackPendingUpload } from "@/lib/actions/pending-uploads"
 import { getFileSizeLimit, formatFileSize } from "@/lib/media"
 import { Progress } from "@/components/ui/progress"
+
+// Phase 2: Feature flag for storage backend
+const USE_SUPABASE_STORAGE = process.env.NEXT_PUBLIC_USE_SUPABASE_STORAGE === "true"
 
 interface AddMediaModalProps {
   open: boolean
@@ -67,6 +71,107 @@ export function AddMediaModal({ open, onOpenChange, artifactId, userId, onMediaA
     }
   }
 
+  /**
+   * Phase 2: Upload a single file to either Supabase or Cloudinary
+   * Routes based on USE_SUPABASE_STORAGE feature flag
+   */
+  const uploadSingleFile = async (
+    file: File,
+    onProgress?: (percent: number) => void
+  ): Promise<string> => {
+    if (USE_SUPABASE_STORAGE) {
+      // Phase 2: Upload to Supabase Storage via server action
+      console.log("[v0] Phase 2: Uploading to Supabase Storage:", file.name)
+
+      const formData = new FormData()
+      formData.append("file", file)
+      formData.append("artifactId", artifactId || "")
+
+      const result = await uploadMediaToSupabase(formData)
+
+      if (result.error || !result.url) {
+        throw new Error(result.error || "Supabase upload failed")
+      }
+
+      console.log("[v0] Supabase upload successful:", result.url)
+      return result.url
+    } else {
+      // Current behavior: Upload to Cloudinary with client-side direct upload
+      console.log("[v0] Uploading to Cloudinary:", file.name)
+
+      let uploadUrl: string
+      let signatureResult: any
+
+      if (selectedType === "audio" || file.type.startsWith("audio/")) {
+        signatureResult = await generateCloudinaryAudioSignature(userId, file.name)
+        uploadUrl = `https://api.cloudinary.com/v1_1/${signatureResult.cloudName}/video/upload`
+      } else if (selectedType === "video" || file.type.startsWith("video/")) {
+        signatureResult = await generateCloudinarySignature(userId, file.name)
+        uploadUrl = `https://api.cloudinary.com/v1_1/${signatureResult.cloudName}/video/upload`
+      } else {
+        signatureResult = await generateCloudinarySignature(userId, file.name)
+        uploadUrl = `https://api.cloudinary.com/v1_1/${signatureResult.cloudName}/image/upload`
+      }
+
+      if (signatureResult.error || !signatureResult.signature) {
+        throw new Error(signatureResult.error || "Failed to generate upload signature")
+      }
+
+      const formData = new FormData()
+      formData.append("file", file)
+      formData.append("api_key", signatureResult.apiKey!)
+      formData.append("timestamp", signatureResult.timestamp!.toString())
+      formData.append("signature", signatureResult.signature)
+      formData.append("public_id", signatureResult.publicId!)
+
+      if (selectedType === "audio" || file.type.startsWith("audio/")) {
+        formData.append("resource_type", "video")
+      } else if (selectedType === "video" || file.type.startsWith("video/")) {
+        formData.append("resource_type", "video")
+      }
+
+      if (signatureResult.eager) {
+        formData.append("eager", signatureResult.eager)
+      }
+
+      return new Promise<string>((resolve, reject) => {
+        const xhr = new XMLHttpRequest()
+
+        xhr.upload.addEventListener("progress", (event) => {
+          if (event.lengthComputable && onProgress) {
+            const percentComplete = (event.loaded / event.total) * 100
+            onProgress(percentComplete)
+          }
+        })
+
+        xhr.addEventListener("load", () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            try {
+              const data = JSON.parse(xhr.responseText)
+              resolve(data.secure_url)
+            } catch (err) {
+              reject(new Error("Failed to parse upload response"))
+            }
+          } else {
+            try {
+              const errorData = JSON.parse(xhr.responseText)
+              reject(new Error(errorData.error?.message || errorData.message || "Unknown error"))
+            } catch {
+              reject(new Error(`Upload failed (${xhr.status})`))
+            }
+          }
+        })
+
+        xhr.addEventListener("error", () => {
+          reject(new Error("Network error during upload"))
+        })
+
+        xhr.open("POST", uploadUrl)
+        xhr.send(formData)
+      })
+    }
+  }
+
   const handleMediaUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files
     if (!files || files.length === 0) return
@@ -116,116 +221,28 @@ export function AddMediaModal({ open, onOpenChange, artifactId, userId, onMediaA
 
         console.log("[v0] Uploading file:", file.name, file.type, formatFileSize(file.size))
 
-        let uploadUrl: string
-        let signatureResult: any
+        // Phase 2: Upload via helper that routes to correct backend
+        const secureUrl = await uploadSingleFile(file, (percentComplete) => {
+          // Calculate estimated time remaining based on current file progress
+          const elapsed = Date.now() - fileStartTime
+          const uploadSpeed = (percentComplete / 100) * file.size / elapsed // bytes per ms
+          const remaining = file.size - (percentComplete / 100) * file.size
+          const estimatedMs = remaining / uploadSpeed
 
-        if (selectedType === "audio" || file.type.startsWith("audio/")) {
-          signatureResult = await generateCloudinaryAudioSignature(userId, file.name)
-          uploadUrl = `https://api.cloudinary.com/v1_1/${signatureResult.cloudName}/video/upload`
-        } else if (selectedType === "video" || file.type.startsWith("video/")) {
-          signatureResult = await generateCloudinarySignature(userId, file.name)
-          uploadUrl = `https://api.cloudinary.com/v1_1/${signatureResult.cloudName}/video/upload`
-        } else {
-          signatureResult = await generateCloudinarySignature(userId, file.name)
-          uploadUrl = `https://api.cloudinary.com/v1_1/${signatureResult.cloudName}/image/upload`
-        }
+          // Calculate overall time remaining including remaining files
+          const filesRemaining = filesArray.length - (i + 1)
+          const avgFileSize = totalSize / filesArray.length
+          const avgTimePerFile = elapsed / (percentComplete / 100)
+          const totalEstimatedMs = estimatedMs + filesRemaining * avgTimePerFile
 
-        if (signatureResult.error || !signatureResult.signature) {
-          console.error("[v0] Signature generation failed:", signatureResult.error)
-          throw new Error(signatureResult.error || "Failed to generate upload signature")
-        }
-
-        console.log("[v0] Signature generated successfully, public_id:", signatureResult.publicId)
-
-        const formData = new FormData()
-        formData.append("file", file)
-        formData.append("api_key", signatureResult.apiKey!)
-        formData.append("timestamp", signatureResult.timestamp!.toString())
-        formData.append("signature", signatureResult.signature)
-        formData.append("public_id", signatureResult.publicId!)
-
-        if (selectedType === "audio" || file.type.startsWith("audio/")) {
-          formData.append("resource_type", "video")
-        } else if (selectedType === "video" || file.type.startsWith("video/")) {
-          formData.append("resource_type", "video")
-        }
-
-        if (signatureResult.eager) {
-          formData.append("eager", signatureResult.eager)
-        }
-
-        console.log("[v0] Uploading to:", uploadUrl)
-        console.log("[v0] FormData keys:", Array.from(formData.keys()))
-
-        const uploadPromise = new Promise<string>((resolve, reject) => {
-          const xhr = new XMLHttpRequest()
-
-          xhr.upload.addEventListener("progress", (event) => {
-            if (event.lengthComputable) {
-              const percentComplete = (event.loaded / event.total) * 100
-
-              // Calculate estimated time remaining based on current file progress
-              const elapsed = Date.now() - fileStartTime
-              const uploadSpeed = event.loaded / elapsed // bytes per ms
-              const remaining = event.total - event.loaded
-              const estimatedMs = remaining / uploadSpeed
-
-              // Calculate overall time remaining including remaining files
-              const filesRemaining = filesArray.length - (i + 1)
-              const avgFileSize = totalSize / filesArray.length
-              const avgTimePerFile = elapsed / (event.loaded / file.size)
-              const totalEstimatedMs = estimatedMs + filesRemaining * avgTimePerFile
-
-              setUploadProgress({
-                currentFile: i + 1,
-                totalFiles: filesArray.length,
-                currentFileName: file.name,
-                currentFileProgress: Math.round(percentComplete),
-                estimatedTimeRemaining: Math.round(totalEstimatedMs / 1000), // convert to seconds
-              })
-            }
+          setUploadProgress({
+            currentFile: i + 1,
+            totalFiles: filesArray.length,
+            currentFileName: file.name,
+            currentFileProgress: Math.round(percentComplete),
+            estimatedTimeRemaining: Math.round(totalEstimatedMs / 1000), // convert to seconds
           })
-
-          xhr.addEventListener("load", async () => {
-            if (xhr.status >= 200 && xhr.status < 300) {
-              try {
-                const data = JSON.parse(xhr.responseText)
-                console.log("[v0] Upload successful!")
-                console.log("[v0] Response data:", {
-                  public_id: data.public_id,
-                  secure_url: data.secure_url,
-                  format: data.format,
-                  resource_type: data.resource_type,
-                  width: data.width,
-                  height: data.height,
-                })
-                resolve(data.secure_url)
-              } catch (err) {
-                reject(new Error("Failed to parse upload response"))
-              }
-            } else {
-              try {
-                const errorData = JSON.parse(xhr.responseText)
-                reject(
-                  new Error(
-                    `Failed to upload ${file.name}: ${errorData.error?.message || errorData.message || "Unknown error"}`,
-                  ),
-                )
-              } catch {
-                reject(new Error(`Upload failed (${xhr.status}): ${xhr.responseText.substring(0, 200)}`))
-              }
-            }
-          })
-
-          xhr.addEventListener("error", () => {
-            reject(new Error(`Network error while uploading ${file.name}`))
-          })
-
-          xhr.open("POST", uploadUrl)
-          xhr.send(formData)
         })
-
-        const secureUrl = await uploadPromise
         urls.push(secureUrl)
 
         const resourceType =

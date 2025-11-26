@@ -6,6 +6,13 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+  // Phase 2: Increase body size limit for Supabase Storage uploads via Server Actions
+  // Supports up to 500MB for video uploads
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '500mb',
+    },
+  },
   async headers() {
     return [
       {

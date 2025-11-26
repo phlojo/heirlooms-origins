@@ -60,22 +60,39 @@ All data mutations use Next.js Server Actions in `lib/actions/`:
 
 **Pattern**: Server Actions validate with Zod schemas (`lib/schemas.ts`), use `createClient()` from `lib/supabase/server.ts`, and call `revalidatePath()` after mutations.
 
-### Media System
-**Critical principles** (see `ARCHITECTURE.md` for full details):
+### Media System (Phase 2 - Supabase Storage + Cloudinary Fetch)
+**Architecture:** Originals in Supabase Storage, derivatives via Cloudinary fetch (80-90% cost reduction)
+
+**Critical principles** (see `MEDIA-ARCHITECTURE.md` for full details):
 1. **Media order is sacred** - User insertion order must be preserved
 2. **URL is the stable identifier** - Never use array indices for media references
 3. **AI metadata uses JSONB maps** - `{ url: caption }` format in `image_captions`, `video_summaries`, `audio_transcripts`
 4. **Cleanup is defensive** - `pending_uploads` table tracks temporary media, cron job audits orphaned files
+5. **Two-phase upload** - Files upload to temp, reorganize to artifact folder after save
+6. **On-demand derivatives** - Cloudinary fetches from Supabase and caches transformations
+
+**Storage routing** (feature flag: `NEXT_PUBLIC_USE_SUPABASE_STORAGE`):
+- `true` → New uploads go to Supabase Storage (current default)
+- `false` → Legacy mode, uploads go to Cloudinary
 
 **Key utilities** (`lib/media.ts`):
 - `isImageUrl(url)` / `isVideoUrl(url)` / `isAudioUrl(url)` - Canonical media type detection
+- `isSupabaseStorageUrl(url)` / `isCloudinaryUrl(url)` - Storage backend detection
+- `getStorageType(url)` - Returns 'supabase' | 'cloudinary' | 'unknown'
 - `getPrimaryVisualMediaUrl(urls)` - Get thumbnail (first image > first video)
 - `hasVisualMedia(urls)` - Check if artifact has displayable media
 
+**Supabase Storage** (`lib/actions/supabase-storage.ts`):
+- `uploadToSupabaseStorage(file, folder)` - Upload originals to Supabase
+- `deleteFromSupabaseStorage(url)` - Delete from Supabase Storage
+- `moveSupabaseFile(url, userId, artifactId)` - Reorganize from temp to artifact folder
+- Files organized: `{userId}/{artifactId}/{timestamp}-{filename}`
+
 **Cloudinary integration** (`lib/cloudinary.ts`):
-- `uploadToCloudinary(file, folder)` - Upload media files
-- `deleteCloudinaryMedia(publicId)` - Delete from Cloudinary
-- Public IDs are permanent identifiers (never change)
+- `getThumbnailUrl(url)` / `getMediumUrl(url)` / `getLargeUrl(url)` - Generate derivative URLs
+- For Supabase URLs: Returns Cloudinary fetch URL (on-demand transformation)
+- For Cloudinary URLs: Returns stored derivative or dynamic transformation
+- `deleteCloudinaryMedia(publicId)` - Delete Cloudinary media (legacy)
 
 ### URL Routing (Hybrid ID + Slug)
 **Decision**: Use UUID + slug pattern for stable, shareable URLs.

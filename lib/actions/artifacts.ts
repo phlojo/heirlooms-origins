@@ -13,6 +13,7 @@ import { deleteCloudinaryMedia, extractPublicIdFromUrl } from "./cloudinary"
 import { generateSlug, generateUniqueSlug } from "@/lib/utils/slug"
 import { isCurrentUserAdmin } from "@/lib/utils/admin"
 import { hasVisualMedia, getPrimaryVisualMediaUrl } from "@/lib/media"
+import { reorganizeArtifactMedia } from "./media-reorganize"
 import { generateDerivativesMap } from "@/lib/utils/media-derivatives"
 
 export async function createArtifact(
@@ -209,6 +210,21 @@ export async function createArtifact(
     // Don't fail the artifact creation, but log the error
   } else {
     console.log("[v0] CREATE ARTIFACT - Successfully removed pending uploads from tracking table")
+  }
+
+  // Phase 2: Reorganize Supabase Storage media from temp to artifact folder
+  if (uniqueMediaUrls.length > 0) {
+    console.log("[v0] CREATE ARTIFACT - Reorganizing media files...")
+    const reorganizeResult = await reorganizeArtifactMedia(data.id)
+
+    if (reorganizeResult.error) {
+      console.error("[v0] CREATE ARTIFACT - Failed to reorganize media (non-fatal):", reorganizeResult.error)
+      // Don't fail artifact creation, files are still accessible from temp
+    } else if (reorganizeResult.movedCount && reorganizeResult.movedCount > 0) {
+      console.log("[v0] CREATE ARTIFACT - Successfully reorganized", reorganizeResult.movedCount, "media files")
+    } else {
+      console.log("[v0] CREATE ARTIFACT - No media files needed reorganization (likely Cloudinary)")
+    }
   }
 
   revalidatePath("/artifacts")

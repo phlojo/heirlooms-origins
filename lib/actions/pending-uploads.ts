@@ -2,6 +2,8 @@
 
 import { createClient } from "@/lib/supabase/server"
 import { deleteCloudinaryMedia, extractPublicIdFromUrl } from "./cloudinary"
+import { deleteFromSupabaseStorage, extractSupabaseStoragePath } from "./supabase-storage"
+import { isSupabaseStorageUrl } from "@/lib/media"
 
 export interface PendingUpload {
   id: string
@@ -15,13 +17,14 @@ export interface PendingUpload {
 
 /**
  * Track a newly uploaded file so we can clean it up if not saved
+ * Phase 2: Tracks both Cloudinary and Supabase Storage URLs
  */
 export async function trackPendingUpload(url: string, resourceType: 'image' | 'video' | 'raw') {
   console.log('[v0] trackPendingUpload called with:', { url, resourceType })
-  
+
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  
+
   if (!user) {
     console.error('[v0] trackPendingUpload: No user found')
     return { error: "Unauthorized" }
@@ -29,13 +32,28 @@ export async function trackPendingUpload(url: string, resourceType: 'image' | 'v
 
   console.log('[v0] trackPendingUpload: User ID:', user.id)
 
-  const publicId = await extractPublicIdFromUrl(url)
-  if (!publicId) {
-    console.error('[v0] trackPendingUpload: Could not extract public ID from URL:', url)
-    return { error: "Could not extract public ID from URL" }
+  // Extract identifier (Cloudinary public ID or Supabase path)
+  let storageIdentifier: string
+  if (isSupabaseStorageUrl(url)) {
+    // For Supabase, use the file path as identifier
+    const path = await extractSupabaseStoragePath(url)
+    if (!path) {
+      console.error('[v0] trackPendingUpload: Could not extract path from Supabase URL:', url)
+      return { error: "Could not extract path from Supabase URL" }
+    }
+    storageIdentifier = path
+    console.log('[v0] trackPendingUpload: Extracted Supabase path:', storageIdentifier)
+  } else {
+    // For Cloudinary, use public ID
+    const publicId = await extractPublicIdFromUrl(url)
+    if (!publicId) {
+      console.error('[v0] trackPendingUpload: Could not extract public ID from URL:', url)
+      return { error: "Could not extract public ID from URL" }
+    }
+    storageIdentifier = publicId
+    console.log('[v0] trackPendingUpload: Extracted Cloudinary public ID:', storageIdentifier)
   }
 
-  console.log('[v0] trackPendingUpload: Extracted public ID:', publicId)
   console.log('[v0] trackPendingUpload: Inserting into pending_uploads table...')
 
   // Set expiry to 24 hours from now
@@ -45,8 +63,8 @@ export async function trackPendingUpload(url: string, resourceType: 'image' | 'v
     .from("pending_uploads")
     .insert({
       user_id: user.id,
-      cloudinary_url: url,
-      cloudinary_public_id: publicId,
+      cloudinary_url: url, // Generic field - stores any media URL
+      cloudinary_public_id: storageIdentifier, // Generic field - stores Cloudinary ID or Supabase path
       resource_type: resourceType,
       expires_at: expiresAt,
     })
@@ -93,12 +111,13 @@ export async function markUploadsAsSaved(urls: string[]) {
 
 /**
  * Clean up all pending uploads for current user
+ * Phase 2: Handles both Cloudinary and Supabase Storage deletions
  * Returns the number of files deleted
  */
 export async function cleanupPendingUploads() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  
+
   if (!user) {
     return { error: "Unauthorized" }
   }
@@ -126,8 +145,17 @@ export async function cleanupPendingUploads() {
 
   // Process each upload individually to ensure transactionality
   for (const upload of uploads) {
-    const result = await deleteCloudinaryMedia(upload.cloudinary_public_id, upload.resource_type as 'image' | 'video' | 'raw')
-    
+    let result: { error?: string }
+
+    // Phase 2: Route deletion to correct storage backend
+    if (isSupabaseStorageUrl(upload.cloudinary_url)) {
+      console.log(`[v0] Deleting from Supabase Storage: ${upload.cloudinary_url}`)
+      result = await deleteFromSupabaseStorage(upload.cloudinary_url)
+    } else {
+      console.log(`[v0] Deleting from Cloudinary: ${upload.cloudinary_url}`)
+      result = await deleteCloudinaryMedia(upload.cloudinary_public_id, upload.resource_type as 'image' | 'video' | 'raw')
+    }
+
     if (!result.error) {
       successCount++
       successfulIds.push(upload.id)
@@ -151,10 +179,10 @@ export async function cleanupPendingUploads() {
 
   console.log(`[v0] Cleanup complete: ${successCount} deleted, ${failCount} failed (will retry later)`)
 
-  return { 
-    success: true, 
+  return {
+    success: true,
     deletedCount: successCount,
-    failedCount: failCount 
+    failedCount: failCount
   }
 }
 

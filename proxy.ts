@@ -8,8 +8,8 @@ export async function proxy(request: NextRequest) {
     "default-src 'self'",
     "base-uri 'self'",
     "font-src 'self' data: https://fonts.gstatic.com",
-    "img-src 'self' data: blob: https://res.cloudinary.com https://*.cloudinary.com https://vercel.live https://vercel.com https://*.vercel.com",
-    "media-src 'self' data: blob: https://res.cloudinary.com https://*.cloudinary.com",
+    "img-src 'self' data: blob: https://res.cloudinary.com https://*.cloudinary.com https://*.supabase.co https://vercel.live https://vercel.com https://*.vercel.com",
+    "media-src 'self' data: blob: https://res.cloudinary.com https://*.cloudinary.com https://*.supabase.co",
     "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://vercel.live https://*.vercel-scripts.com", // Next dev/previews may need 'unsafe-eval'
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "connect-src 'self' https://*.supabase.co https://res.cloudinary.com https://api.cloudinary.com https://*.cloudinary.com https://*.vercel.app",
