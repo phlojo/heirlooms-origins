@@ -13,7 +13,47 @@ import { deleteCloudinaryMedia, extractPublicIdFromUrl } from "./cloudinary"
 import { generateSlug, generateUniqueSlug } from "@/lib/utils/slug"
 import { isCurrentUserAdmin } from "@/lib/utils/admin"
 import { hasVisualMedia, getPrimaryVisualMediaUrl } from "@/lib/media"
-import { generateDerivativesMap } from "@/lib/utils/media-derivatives"
+
+// PHASE 1: Inline utility to avoid Vercel build import issues
+interface MediaDerivatives {
+  thumb: string
+  medium: string
+  large?: string
+}
+
+function generateMediaDerivatives(mediaUrls: string[]): Record<string, MediaDerivatives> {
+  const derivativesMap: Record<string, MediaDerivatives> = {}
+
+  for (const url of mediaUrls) {
+    if (!url || !url.includes("cloudinary.com")) continue
+
+    const parts = url.split("/upload/")
+    if (parts.length !== 2) continue
+
+    const baseUrl = parts[0]
+    const path = parts[1]
+    const isVideo = url.includes("/video/upload/") &&
+                    (url.toLowerCase().includes(".mp4") || url.toLowerCase().includes(".mov") ||
+                     url.toLowerCase().includes(".avi") || url.toLowerCase().includes(".webm") ||
+                     url.toLowerCase().includes(".mkv"))
+
+    if (isVideo) {
+      derivativesMap[url] = {
+        thumb: `${baseUrl}/upload/w_400,h_400,c_fill,q_auto,f_jpg,so_1.0,du_0/${path}`,
+        medium: `${baseUrl}/upload/w_1024,c_limit,q_auto,f_jpg,so_1.0,du_0/${path}`,
+        large: `${baseUrl}/upload/w_1600,c_limit,q_auto,f_jpg,so_1.0,du_0/${path}`,
+      }
+    } else {
+      derivativesMap[url] = {
+        thumb: `${baseUrl}/upload/w_400,h_400,c_fill,q_auto,f_auto/${path}`,
+        medium: `${baseUrl}/upload/w_1024,c_limit,q_auto,f_auto/${path}`,
+        large: `${baseUrl}/upload/w_1600,c_limit,q_auto,f_auto/${path}`,
+      }
+    }
+  }
+
+  return derivativesMap
+}
 
 export async function createArtifact(
   input: CreateArtifactInput,
