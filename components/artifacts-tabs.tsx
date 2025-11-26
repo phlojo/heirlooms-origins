@@ -8,6 +8,7 @@ import { ArtifactCard } from "@/components/artifact-card"
 import { ArtifactCardCompact } from "@/components/artifact-card-compact"
 import { LoginModule } from "@/components/login-module"
 import { FilterBar } from "@/components/artifacts/filter-bar"
+import { MasonryGrid } from "@/components/masonry-grid"
 import { useEffect, useState, useTransition } from "react"
 import { usePathname, useSearchParams, useRouter } from "next/navigation"
 import { getAllPublicArtifactsPaginated, getMyArtifactsPaginated } from "@/lib/actions/artifacts"
@@ -16,12 +17,23 @@ import { parseSortParam, parseTypeParams, hasActiveFilters, type SortOption } fr
 
 interface Artifact {
   id: string
+  slug: string
   title: string
   description: string | null
   media_urls: string[]
-  author_name: string | null
   created_at: string
   updated_at: string
+  year_acquired?: number | null
+  origin?: string | null
+  thumbnail_url?: string | null
+  media_derivatives?: Record<string, any> | null
+  user_id?: string
+  author_name?: string | null
+  artifact_type?: {
+    id: string
+    name: string
+    icon_name: string
+  } | null
   collection: {
     id: string
     title: string
@@ -285,26 +297,20 @@ export function ArtifactsTabs({
 
         {allArtifactsList.length > 0 ? (
           <>
-            <div
-              className={
-                viewType === "standard"
-                  ? "grid gap-2 grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6"
-                  : "grid gap-2 grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8"
-              }
-            >
+            <MasonryGrid isCompact={viewType === "compact"} gutter={8}>
               {allArtifactsList.map((artifact) =>
                 viewType === "standard" ? (
                   <ArtifactCard
                     key={artifact.id}
-                    artifact={artifact}
+                    artifact={artifact as any}
                     showAuthor={true}
                     authorName={artifact.author_name}
                   />
                 ) : (
-                  <ArtifactCardCompact key={artifact.id} artifact={artifact} showAuthor={false} />
+                  <ArtifactCardCompact key={artifact.id} artifact={artifact as any} showAuthor={false} />
                 ),
               )}
-            </div>
+            </MasonryGrid>
             {allHasMore ? (
               <div className="mt-8 pb-12 flex justify-center">
                 <Button
@@ -362,21 +368,15 @@ export function ArtifactsTabs({
 
             {myArtifactsList.length > 0 ? (
               <>
-                <div
-                  className={
-                    viewType === "standard"
-                      ? "grid gap-2 grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6"
-                      : "grid gap-2 grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8"
-                  }
-                >
+                <MasonryGrid isCompact={viewType === "compact"} gutter={8}>
                   {myArtifactsList.map((artifact) =>
                     viewType === "standard" ? (
-                      <ArtifactCard key={artifact.id} artifact={artifact} showAuthor={false} />
+                      <ArtifactCard key={artifact.id} artifact={artifact as any} showAuthor={false} />
                     ) : (
-                      <ArtifactCardCompact key={artifact.id} artifact={artifact} showAuthor={false} />
+                      <ArtifactCardCompact key={artifact.id} artifact={artifact as any} showAuthor={false} />
                     ),
                   )}
-                </div>
+                </MasonryGrid>
                 {myHasMore ? (
                   <div className="mt-8 pb-12 flex justify-center">
                     <Button

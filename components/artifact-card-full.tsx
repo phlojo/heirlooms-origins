@@ -39,7 +39,7 @@ export function ArtifactCardFull({ artifact, showAuthor = false, authorName }: A
 
   return (
     <Link href={`/artifacts/${artifact.slug}`} data-testid="artifact-link">
-      <Card className="group overflow-hidden border p-0 transition-all hover:shadow-lg">
+      <Card className="group overflow-hidden border p-0 transition-all hover:shadow-lg flex flex-col">
         <div className="relative aspect-square overflow-hidden bg-muted">
           {thumbnailUrl ? (
             <>
@@ -60,7 +60,7 @@ export function ArtifactCardFull({ artifact, showAuthor = false, authorName }: A
           )}
         </div>
 
-        <CardHeader className="pb-3">
+        <CardHeader className="pb-3 flex-none">
           {artifact.collection ? (
             <div className="mb-2">
               <CollectionLabel
@@ -75,10 +75,10 @@ export function ArtifactCardFull({ artifact, showAuthor = false, authorName }: A
               <CollectionLabel collectionId="unsorted" collectionName="Unsorted" size="sm" clickable={false} />
             </div>
           )}
-          <h3 className="font-semibold leading-tight line-clamp-1">{artifact.title}</h3>
+          <h3 className="font-semibold leading-tight line-clamp-5">{artifact.title}</h3>
         </CardHeader>
 
-        <CardContent className="space-y-2 pt-0 pb-4">
+        <CardContent className="space-y-2 pt-0 pb-5 flex-none">
           {artifact.description && <p className="text-sm text-muted-foreground line-clamp-2">{artifact.description}</p>}
           <div className="flex gap-2 text-xs text-muted-foreground">
             {artifact.year_acquired && <span>{artifact.year_acquired}</span>}

@@ -29,15 +29,16 @@ interface ArtifactCardCompactProps {
   }
   showAuthor?: boolean
   authorName?: string | null
+  style?: React.CSSProperties
 }
 
-export function ArtifactCardCompact({ artifact, showAuthor = false, authorName }: ArtifactCardCompactProps) {
+export function ArtifactCardCompact({ artifact, showAuthor = false, authorName, style }: ArtifactCardCompactProps) {
   // PHASE 1: Pass media_derivatives to getThumbnailUrl for stored derivative usage
   const thumbnailUrl = artifact.thumbnail_url ? getThumbnailUrl(artifact.thumbnail_url, artifact.media_derivatives) : null
 
   return (
-    <Link href={`/artifacts/${artifact.slug}`} data-testid="artifact-link">
-      <Card className="group overflow-hidden border p-0 transition-all hover:shadow-md rounded-md">
+    <Link href={`/artifacts/${artifact.slug}`} data-testid="artifact-link" style={style}>
+      <Card className="group overflow-hidden border p-0 transition-all hover:shadow-md rounded-md flex flex-col h-full">
         <div className="relative aspect-square overflow-hidden bg-muted">
           {thumbnailUrl ? (
             <>
@@ -59,8 +60,8 @@ export function ArtifactCardCompact({ artifact, showAuthor = false, authorName }
           )}
         </div>
 
-        <div className="p-1.5">
-          <h3 className="font-medium text-xs leading-tight truncate">{artifact.title}</h3>
+        <div className="px-1.5 pt-1.5 pb-2 flex-none">
+          <h3 className="font-medium text-xs leading-tight line-clamp-5">{artifact.title}</h3>
         </div>
       </Card>
     </Link>

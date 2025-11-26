@@ -169,6 +169,17 @@ See `TESTING.md` for comprehensive testing guide.
 - Add component tests in `__tests__/components/`
 - Use `useSupabase()` hook from `components/supabase-provider.tsx` for client-side Supabase access
 
+### Artifact Grid Layout (Masonry)
+The artifact grid uses **Masonry.js** for optimal item arrangement with variable heights:
+- **Component**: `components/masonry-grid.tsx` - Core layout engine
+- **Card types**: `artifact-card.tsx` (standard), `artifact-card-compact.tsx` (compact), `artifact-card-full.tsx` (full)
+- **Features**:
+  - Flows top-down, column-by-column (no gaps)
+  - Titles wrap up to 5 lines with variable card heights
+  - Responsive: 2-6 cols (standard), 3-8 cols (compact) based on breakpoint
+  - Reflows on window resize, image load, and content changes
+- **See**: `docs/guides/artifact-grid-layout.md` and `docs/guides/card-design-updates.md`
+
 ### Modifying Database Schema
 1. Update schema in Supabase dashboard
 2. Regenerate types: `pnpm supabase gen types typescript` (if setup)
@@ -233,7 +244,13 @@ See `docs/operations/bug-tracker.md` for active bugs and workarounds.
 ## Documentation Structure
 - `ARCHITECTURE.md` - Architectural decisions and rationale
 - `TESTING.md` - Comprehensive testing guide
-- `docs/guides/` - Feature guides (navigation, artifact types, OAuth, media audit)
+- `docs/guides/` - Feature guides
+  - `navigation.md` - Artifact page routing
+  - `artifact-types.md` - Type system and badges
+  - `media-audit.md` - Media cleanup and monitoring
+  - `artifact-grid-layout.md` - Masonry grid system and responsive columns
+  - `card-design-updates.md` - Card grounding and variable-height titles
+  - `google-oauth-*.md` - OAuth setup and branding
 - `docs/operations/` - Operational runbooks (bug tracker, cron jobs)
 - `docs/planning/` - Future features
 - `docs/archive/` - Historical decisions and snapshots

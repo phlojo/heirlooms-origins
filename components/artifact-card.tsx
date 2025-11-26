@@ -30,15 +30,16 @@ interface ArtifactCardProps {
   }
   showAuthor?: boolean
   authorName?: string | null
+  style?: React.CSSProperties
 }
 
-export function ArtifactCard({ artifact, showAuthor = false, authorName }: ArtifactCardProps) {
+export function ArtifactCard({ artifact, showAuthor = false, authorName, style }: ArtifactCardProps) {
   // PHASE 1: Pass media_derivatives to getThumbnailUrl for stored derivative usage
   const thumbnailUrl = artifact.thumbnail_url ? getThumbnailUrl(artifact.thumbnail_url, artifact.media_derivatives) : null
 
   return (
-    <Link href={`/artifacts/${artifact.slug}`} data-testid="artifact-link">
-      <Card className="group overflow-hidden border p-0 transition-all hover:shadow-lg rounded-md animate-fade-in">
+    <Link href={`/artifacts/${artifact.slug}`} data-testid="artifact-link" style={style}>
+      <Card className="group overflow-hidden border p-0 transition-all hover:shadow-lg rounded-md animate-fade-in flex flex-col h-full">
         <div className="relative aspect-square overflow-hidden bg-muted">
           {thumbnailUrl ? (
             <>
@@ -63,11 +64,11 @@ export function ArtifactCard({ artifact, showAuthor = false, authorName }: Artif
           )}
         </div>
 
-        <CardHeader className="pb-1.5 pt-2 px-2">
-          <h3 className="font-semibold text-sm leading-tight truncate">{artifact.title}</h3>
+        <CardHeader className="pb-1.5 pt-2 px-2 flex-none">
+          <h3 className="font-semibold text-sm leading-tight line-clamp-5">{artifact.title}</h3>
         </CardHeader>
 
-        <CardContent className="pt-0 pb-2 px-2">
+        <CardContent className="pt-0 pb-3 px-2 flex-none">
           {showAuthor && artifact.user_id && (
             <div className="flex justify-end overflow-hidden">
               <Author userId={artifact.user_id} authorName={authorName} size="sm" />
