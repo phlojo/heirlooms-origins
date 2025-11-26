@@ -15,7 +15,7 @@ import { normalizeMediaUrls, isImageUrl, isVideoUrl, isAudioUrl } from "@/lib/me
 import { TranscriptionInput } from "@/components/transcription-input"
 import { AddMediaModal } from "@/components/add-media-modal"
 import { AudioPlayer } from "@/components/audio-player"
-import { getThumbnailUrl } from "@/lib/cloudinary"
+import { getMediumUrl } from "@/lib/cloudinary"
 import { GenerateImageCaptionButton } from "@/components/artifact/GenerateImageCaptionButton"
 import { GenerateVideoSummaryButton } from "@/components/artifact/GenerateVideoSummaryButton"
 import { TranscribeAudioButtonPerMedia } from "@/components/artifact/TranscribeAudioButtonPerMedia"
@@ -489,7 +489,7 @@ export default function NewArtifactForm({ collectionId, userId }: NewArtifactFor
                       </div>
                       <div className="space-y-3">
                         <img
-                          src={getThumbnailUrl(url, null) || "/placeholder.svg"}
+                          src={getMediumUrl(url, null) || "/placeholder.svg"}
                           alt={`Artifact media ${idx + 1}`}
                           className="w-full rounded shadow-md"
                         />
