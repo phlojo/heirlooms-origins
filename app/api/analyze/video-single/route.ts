@@ -6,20 +6,43 @@ import { revalidatePath } from "next/cache"
 import { rateLimit } from "@/lib/utils/rate-limit"
 
 function isVideoUrl(url: string): boolean {
-  const lower = url.toLowerCase()
-  return (
-    (lower.includes("/video/upload/") && 
-    (lower.includes(".mp4") || lower.includes(".mov") || lower.includes(".avi") || lower.includes(".webm"))) ||
-    lower.includes("video")
-  )
+  if (!url) return false
+
+  const lowerUrl = url.toLowerCase()
+
+  // Define extensions
+  const videoExtensions = [".mp4", ".mov", ".avi", ".mkv", ".m4v", ".flv", ".wmv", ".webm"]
+  const audioExtensions = [".mp3", ".wav", ".m4a", ".aac", ".ogg", ".opus"]
+
+  // Exclude audio files first (they might have .webm which could be video or audio)
+  if (audioExtensions.some((ext) => lowerUrl.includes(ext))) {
+    return false
+  }
+
+  // Check for video extensions (works for both Supabase Storage and Cloudinary)
+  return videoExtensions.some((ext) => lowerUrl.includes(ext))
 }
 
 function extractVideoFrame(videoUrl: string): string {
-  // Use Cloudinary transformations to extract a frame at 1 second and convert to jpg
+  const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME
+
+  // Check if it's a Supabase Storage URL
+  if (videoUrl.includes('supabase.co/storage/v1/object/public/')) {
+    // Use Cloudinary fetch to extract frame from Supabase video
+    // Format: https://res.cloudinary.com/{cloud}/video/fetch/so_1.0,f_jpg/{supabase_url}
+    if (!cloudName) {
+      console.error('[video-single] Missing CLOUDINARY_CLOUD_NAME, cannot extract frame from Supabase video')
+      return videoUrl
+    }
+    return `https://res.cloudinary.com/${cloudName}/video/fetch/so_1.0,f_jpg/${videoUrl}`
+  }
+
+  // Handle Cloudinary URLs (legacy)
   const urlParts = videoUrl.split('/upload/')
   if (urlParts.length === 2) {
     return `${urlParts[0]}/upload/so_1.0,f_jpg/${urlParts[1]}`
   }
+
   return videoUrl
 }
 

@@ -29,7 +29,7 @@ export function isAudioUrl(url: string): boolean {
 
 /**
  * Detects if a URL points to a video file.
- * Checks for common video extensions and Cloudinary video upload paths.
+ * Checks for common video extensions first (works for both Supabase Storage and Cloudinary).
  *
  * Made isVideoUrl the canonical source for video detection across the app
  */
@@ -38,20 +38,17 @@ export function isVideoUrl(url: string): boolean {
 
   const lowerUrl = url.toLowerCase()
 
-  // Check for Cloudinary video uploads first
-  if (lowerUrl.includes("/video/upload/")) {
-    // Exclude audio files that might also be in /video/upload/
-    const audioExtensions = [".mp3", ".wav", ".m4a", ".aac", ".ogg", ".opus", ".webm"]
-    if (audioExtensions.some((ext) => lowerUrl.includes(ext))) {
-      return false
-    }
+  // Define extensions
+  const videoExtensions = [".mp4", ".mov", ".avi", ".mkv", ".m4v", ".flv", ".wmv", ".webm"]
+  const audioExtensions = [".mp3", ".wav", ".m4a", ".aac", ".ogg", ".opus"]
 
-    // Check for video extensions
-    const videoExtensions = [".mp4", ".mov", ".avi", ".mkv", ".m4v", ".flv", ".wmv"]
-    return videoExtensions.some((ext) => lowerUrl.includes(ext))
+  // Exclude audio files first (they might have .webm which could be video or audio)
+  if (audioExtensions.some((ext) => lowerUrl.includes(ext))) {
+    return false
   }
 
-  return false
+  // Check for video extensions (works for both Supabase Storage and Cloudinary)
+  return videoExtensions.some((ext) => lowerUrl.includes(ext))
 }
 
 /**
@@ -111,11 +108,10 @@ export function normalizeMediaUrls(urls: string[]): string[] {
 
 /**
  * Get file size limit based on media type
- * Videos: 500MB, Images/Audio: 50MB
+ * All media: 50MB (Supabase Storage free tier limit)
  */
 export function getFileSizeLimit(file: File): number {
-  const isVideo = file.type.startsWith("video/")
-  return isVideo ? 500 * 1024 * 1024 : 50 * 1024 * 1024
+  return 50 * 1024 * 1024 // 50MB for all file types
 }
 
 /**

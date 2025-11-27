@@ -8,13 +8,20 @@ import { Button } from "@/components/ui/button"
 import { Camera, Video, Mic, Upload } from "lucide-react"
 import { AudioRecorder } from "@/components/audio-recorder"
 import { generateCloudinarySignature, generateCloudinaryAudioSignature } from "@/lib/actions/cloudinary"
-import { uploadMediaToSupabase } from "@/lib/actions/media-upload"
 import { trackPendingUpload } from "@/lib/actions/pending-uploads"
 import { getFileSizeLimit, formatFileSize } from "@/lib/media"
 import { Progress } from "@/components/ui/progress"
+import { createClient } from "@/lib/supabase/client"
 
 // Phase 2: Feature flag for storage backend
 const USE_SUPABASE_STORAGE = process.env.NEXT_PUBLIC_USE_SUPABASE_STORAGE === "true"
+
+// Debug: Log storage backend on component mount
+if (typeof window !== 'undefined') {
+  console.log("[add-media-modal] Storage backend:", USE_SUPABASE_STORAGE ? "Supabase" : "Cloudinary", {
+    envVar: process.env.NEXT_PUBLIC_USE_SUPABASE_STORAGE
+  })
+}
 
 interface AddMediaModalProps {
   open: boolean
@@ -80,21 +87,59 @@ export function AddMediaModal({ open, onOpenChange, artifactId, userId, onMediaA
     onProgress?: (percent: number) => void
   ): Promise<string> => {
     if (USE_SUPABASE_STORAGE) {
-      // Phase 2: Upload to Supabase Storage via server action
-      console.log("[v0] Phase 2: Uploading to Supabase Storage:", file.name)
+      // Phase 2: Direct client-side upload to Supabase Storage
+      // Bypasses Next.js entirely to avoid FormData/body parsing issues
+      console.log("[v0] Phase 2: Uploading to Supabase Storage (client-side):", {
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        sizeMB: (file.size / (1024 * 1024)).toFixed(2) + 'MB',
+        artifactId: artifactId || "temp"
+      })
 
-      const formData = new FormData()
-      formData.append("file", file)
-      formData.append("artifactId", artifactId || "")
+      const supabase = createClient()
 
-      const result = await uploadMediaToSupabase(formData)
+      // Generate unique filename with timestamp
+      const timestamp = Date.now()
+      const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_")
+      const folder = artifactId ? `${userId}/${artifactId}` : `${userId}/temp`
+      const filePath = `${folder}/${timestamp}-${sanitizedName}`
 
-      if (result.error || !result.url) {
-        throw new Error(result.error || "Supabase upload failed")
+      console.log("[v0] Uploading to path:", filePath)
+
+      // Upload directly to Supabase Storage from client
+      const { data, error: uploadError } = await supabase.storage
+        .from("heirlooms-media")
+        .upload(filePath, file, {
+          cacheControl: "3600",
+          upsert: false,
+        })
+
+      if (uploadError) {
+        console.error("[v0] Supabase upload failed:", uploadError)
+        const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2)
+
+        if (uploadError.message?.toLowerCase().includes('payload') ||
+            uploadError.message?.toLowerCase().includes('too large') ||
+            uploadError.message?.toLowerCase().includes('size')) {
+          throw new Error(`File "${file.name}" (${fileSizeMB}MB) exceeds the 50MB limit. Please reduce file size.`)
+        }
+        throw new Error(uploadError.message || "Upload failed")
       }
 
-      console.log("[v0] Supabase upload successful:", result.url)
-      return result.url
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from("heirlooms-media")
+        .getPublicUrl(data.path)
+
+      console.log("[v0] Supabase upload successful:", publicUrl)
+
+      // Report progress as complete since Supabase client doesn't support progress events
+      if (onProgress) {
+        onProgress(100)
+      }
+
+      return publicUrl
     } else {
       // Current behavior: Upload to Cloudinary with client-side direct upload
       console.log("[v0] Uploading to Cloudinary:", file.name)
@@ -429,7 +474,7 @@ export function AddMediaModal({ open, onOpenChange, artifactId, userId, onMediaA
                 <Video className="h-8 w-8" />
                 <div className="text-center">
                   <div className="font-semibold">Video</div>
-                  <div className="text-xs text-muted-foreground">Upload or record videos (up to 500MB)</div>
+                  <div className="text-xs text-muted-foreground">Upload or record videos (up to 50MB)</div>
                 </div>
               </Button>
 

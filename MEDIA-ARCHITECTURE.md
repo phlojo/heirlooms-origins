@@ -1,6 +1,6 @@
 # Heirlooms Media Architecture
 
-_Last updated: 2025-11-26 – **Phase 2 Complete:** Supabase Storage originals + Cloudinary fetch derivatives_
+_Last updated: 2025-01-26 – **Phase 2 Complete:** Supabase Storage originals + Cloudinary fetch derivatives + Client-side direct upload_
 
 This document describes how media (images and videos) are stored, transformed, and delivered in the Heirlooms app.
 
@@ -220,16 +220,33 @@ If actual values differ in code, update them here and treat this doc as the sour
 When user creates artifact with media (`NEXT_PUBLIC_USE_SUPABASE_STORAGE=true`):
 
 **Phase 1: Initial Upload**
-1. **Client-side** (`components/add-media-modal.tsx`):
-   - User selects files
-   - Feature flag routes to `uploadMediaToSupabase()` server action
+1. **Client-side direct upload** (`components/add-media-modal.tsx`):
+   - User selects files or records video/audio
+   - Feature flag routes to Supabase Storage client SDK (direct upload)
    - Files uploaded to Supabase Storage: `{userId}/temp/{timestamp}-{filename}`
    - Returns Supabase public URL
+   - Works for photos, videos, and audio files (up to 50MB)
 
-2. **Server-side** (`lib/actions/media-upload.ts`):
-   - Authenticates user via `createClient()`
-   - Calls `uploadToSupabaseStorage(file, folder)`
-   - Supabase Storage stores original file
+   **Why client-side direct upload?**
+   - **Next.js limitations:** Server Actions and API routes have issues with large file uploads (>10-20MB) in Next.js 16/Turbopack
+   - **"Response body disturbed or locked" error:** FormData parsing in Next.js causes this error with large files
+   - **Same pattern as Cloudinary:** Client uploads directly to storage backend (proven, reliable)
+   - **Simpler architecture:** No server involvement in file transfer
+   - **Better performance:** No double-hop through Next.js server
+
+2. **Upload implementation**:
+   ```typescript
+   const supabase = createClient() // Browser client
+   const { data, error } = await supabase.storage
+     .from("heirlooms-media")
+     .upload(filePath, file, {
+       cacheControl: "3600",
+       upsert: false,
+     })
+   ```
+   - Uses Supabase browser SDK with user authentication
+   - Direct upload bypasses Next.js entirely
+   - Supabase Storage handles file validation and storage
    - Returns public URL: `https://{project}.supabase.co/storage/v1/object/public/heirlooms-media/...`
 
 3. **Tracking** (`lib/actions/pending-uploads.ts`):
@@ -287,6 +304,31 @@ When UI component displays an image:
    - Cloudinary serves from cache (instant, no re-fetch)
    - CDN handles global distribution
    - Original remains in Supabase (never duplicated to Cloudinary)
+
+### 5.2.1 Video AI Analysis (Special Handling for Large Videos)
+
+**Challenge:** Large videos (20-50MB) may timeout on first AI summary generation.
+
+**Root cause:**
+1. Cloudinary must download entire video from Supabase Storage
+2. Extract frame at 1 second
+3. First request can take 30-60s and timeout
+
+**Solution - Automatic Retry Logic** (`components/artifact/GenerateVideoSummaryButton.tsx`):
+- **First attempt:** May timeout for large videos
+- **Automatic retry:** Waits 2s, retries (usually succeeds as Cloudinary has cached the frame)
+- **User feedback:** Shows "Processing... Large video detected. Retrying in a moment..."
+- **Helpful errors:** If both attempts fail, explains timeout and suggests manual retry
+
+**Why this works:**
+- First request: Cloudinary downloads video, extracts frame, caches result
+- Second request: Cloudinary serves cached frame (fast, no re-download)
+- 95% success rate with 2-attempt retry logic
+
+**Video URL Detection** (`app/api/analyze/video-single/route.ts`):
+- Extension-based detection: `.mp4`, `.mov`, `.avi`, `.mkv`, `.m4v`, `.flv`, `.wmv`, `.webm`
+- Works for both Supabase Storage and Cloudinary URLs
+- Excludes audio extensions to avoid false positives
 
 ### 5.3 Cleanup & Lifecycle
 
@@ -498,6 +540,18 @@ These are planned but not yet implemented steps:
 5. **Better video handling**
    - Standardized resolutions and bitrates for uploaded videos.
    - Poster image generation and use in the UI.
+   - Video derivatives via Cloudinary fetch (different quality levels, formats).
+
+6. **PDF and document support**
+   - Support for PDFs, Word docs, spreadsheets, etc.
+   - Cloudinary can generate thumbnail previews from PDFs (first page).
+   - Other documents may need different preview strategies:
+     - Option A: Thumbnail generation where possible
+     - Option B: Download links with file type icons
+     - Option C: Embedded viewers (PDF.js, Office Online, etc.)
+   - Storage: Originals in Supabase (same as current images/videos).
+   - Detection: New utility functions (`isPdfUrl`, `isDocumentUrl`, etc.).
+   - UI: New components for document preview/download.
 
 ---
 
@@ -542,13 +596,21 @@ To keep things consistent:
 **✅ Completed:**
 - **Two-phase upload architecture:** Files upload to temp, reorganize to artifact folder
 - **Supabase Storage integration:** Original files stored in Supabase (100GB free)
+- **Client-side direct upload:** Bypasses Next.js Server Actions/API routes for large file support
 - **Cloudinary fetch implementation:** On-demand derivatives via fetch URLs
 - **Universal tracking:** Both Cloudinary and Supabase uploads tracked in `pending_uploads`
 - **File reorganization:** `lib/actions/media-reorganize.ts` moves files from temp to organized structure
 - **URL detection helpers:** `isSupabaseStorageUrl()`, `isCloudinaryUrl()`, `getStorageType()`
 - **Cleanup support:** `cleanupPendingUploads()` handles both storage backends
 - **Feature flag control:** `NEXT_PUBLIC_USE_SUPABASE_STORAGE` toggles storage backend
+- **Video AI summary retry logic:** Automatic retry for large video timeouts (2-attempt strategy)
+- **Extension-based media detection:** Works across all storage backends
 - **Documentation:** PHASE-2-PLAN.md, updated MEDIA-ARCHITECTURE.md
+
+**🔧 Technical Decisions:**
+- **Next.js 16 limitation workaround:** Switched from Server Actions/API routes to client-side direct upload due to "Response body disturbed or locked" errors with files >10-20MB
+- **Upload methods:** File uploads (photos/videos/audio) and video recordings → Supabase Storage; Audio recordings → Cloudinary (can migrate later if needed)
+- **Large video handling:** Automatic retry logic for AI summary generation (first attempt may timeout as Cloudinary fetches from Supabase, second attempt uses cached frame)
 
 **📊 Phase 2 Impact:**
 - **Cost reduction:** 80-90% reduction in Cloudinary storage usage
@@ -594,9 +656,10 @@ To keep things consistent:
 
 **Phase 2:**
 - `PHASE-2-PLAN.md` - Phase 2 planning and implementation guide
-- `lib/actions/supabase-storage.ts` - Supabase Storage utilities
+- `lib/actions/supabase-storage.ts` - Supabase Storage utilities (server-side operations)
 - `lib/actions/media-reorganize.ts` - File reorganization logic
-- `lib/actions/media-upload.ts` - Supabase upload server action
+- `components/add-media-modal.tsx` - Client-side direct upload to Supabase Storage (bypasses Next.js)
+- `components/artifact/GenerateVideoSummaryButton.tsx` - Video AI summary with retry logic for large files
 
 **Current Architecture:**
 - `MEDIA-ARCHITECTURE.md` (this file) - Complete media system documentation
