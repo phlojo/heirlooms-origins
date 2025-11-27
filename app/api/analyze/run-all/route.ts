@@ -193,7 +193,6 @@ export async function POST(request: Request) {
     console.log(`[v0] All analysis steps completed successfully for artifact ${artifactId}`)
 
     revalidatePath(`/artifacts/${artifact.slug}`)
-    revalidatePath(`/artifacts/${artifact.slug}/edit`)
 
     return NextResponse.json({ ok: true })
   } catch (error) {

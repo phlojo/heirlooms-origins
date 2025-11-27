@@ -890,7 +890,6 @@ export async function deleteMediaFromArtifact(artifactId: string, mediaUrl: stri
   }
 
   revalidatePath(`/artifacts/${artifact.slug}`)
-  revalidatePath(`/artifacts/${artifact.slug}/edit`)
   revalidatePath("/collections")
   if (artifact.collection?.slug) {
     revalidatePath(`/collections/${artifact.collection.slug}`)
@@ -1084,7 +1083,6 @@ export async function updateMediaCaption(artifactId: string, mediaUrl: string, c
   }
 
   revalidatePath(`/artifacts/${artifact.slug}`)
-  revalidatePath(`/artifacts/${artifact.slug}/edit`)
   if (artifact.collection?.slug) {
     revalidatePath(`/collections/${artifact.collection.slug}`)
   }

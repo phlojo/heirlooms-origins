@@ -23,6 +23,7 @@ export async function POST(request: Request) {
     const body = await request.json()
     artifactId = body.artifactId
     const audioUrl = body.audioUrl
+    const skipSave = body.skipSave || false
 
     if (!artifactId) {
       return NextResponse.json({ error: "artifactId is required" }, { status: 400 })
@@ -133,26 +134,30 @@ export async function POST(request: Request) {
       }
     }
 
-    const existingTranscripts = artifact.audio_transcripts || {}
-    const updatedTranscripts = {
-      ...existingTranscripts,
-      [audioUrl]: transcript,
+    // Only save to database if skipSave is false (not in edit mode)
+    if (!skipSave) {
+      const existingTranscripts = artifact.audio_transcripts || {}
+      const updatedTranscripts = {
+        ...existingTranscripts,
+        [audioUrl]: transcript,
+      }
+
+      const { error: updateError } = await supabase
+        .from("artifacts")
+        .update({
+          audio_transcripts: updatedTranscripts,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", artifactId)
+
+      if (updateError) {
+        throw new Error(`Failed to save transcript: ${updateError.message}`)
+      }
+
+      revalidatePath(`/artifacts/${artifact.slug}`)
+    } else {
+      console.log("[v0] Skipping database save (edit mode)")
     }
-
-    const { error: updateError } = await supabase
-      .from("artifacts")
-      .update({
-        audio_transcripts: updatedTranscripts,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", artifactId)
-
-    if (updateError) {
-      throw new Error(`Failed to save transcript: ${updateError.message}`)
-    }
-
-    revalidatePath(`/artifacts/${artifact.slug}`)
-    revalidatePath(`/artifacts/${artifact.slug}/edit`)
 
     return NextResponse.json({ ok: true, transcript })
   } catch (error) {

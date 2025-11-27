@@ -46,11 +46,19 @@ function ArtifactTypeSelector({
       <CollapsibleTrigger className="flex w-full items-center justify-between hover:opacity-80 transition-opacity">
         <div className="flex items-center gap-2">
           <h2 className="text-sm font-medium text-foreground">
-            Type {required && <span className="text-destructive">*</span>}
+            Type:{required && <span className="text-destructive">*</span>}
           </h2>
-          {selectedTypeId && (
-            <span className="text-xs text-muted-foreground">({types.find((t) => t.id === selectedTypeId)?.name})</span>
-          )}
+          {selectedTypeId && (() => {
+            const selectedType = types.find((t) => t.id === selectedTypeId)
+            if (!selectedType) return null
+            const Icon = getDynamicLucideIcon(selectedType.icon_name)
+            return (
+              <div className="flex items-center gap-1.5">
+                {Icon && <Icon className="h-4 w-4 text-foreground" />}
+                <span className="text-sm font-medium text-foreground">{selectedType.name}</span>
+              </div>
+            )
+          })()}
         </div>
         <ChevronDown className={cn("h-5 w-5 text-muted-foreground transition-transform", isOpen && "rotate-180")} />
       </CollapsibleTrigger>

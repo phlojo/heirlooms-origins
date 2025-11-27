@@ -111,7 +111,6 @@ export async function POST(request: Request) {
     console.log("[v0] Successfully saved transcript for artifact:", artifactId)
 
     revalidatePath(`/artifacts/${artifact.slug}`)
-    revalidatePath(`/artifacts/${artifact.slug}/edit`)
 
     return NextResponse.json({ ok: true })
   } catch (error) {

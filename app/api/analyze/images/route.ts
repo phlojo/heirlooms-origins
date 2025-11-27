@@ -141,7 +141,6 @@ export async function POST(request: Request) {
     console.log("[v0] Successfully saved image captions for artifact:", artifactId)
 
     revalidatePath(`/artifacts/${artifact.slug}`)
-    revalidatePath(`/artifacts/${artifact.slug}/edit`)
 
     return NextResponse.json({ ok: true, captions })
   } catch (error) {

@@ -7,10 +7,10 @@ import { AudioPlayer } from "@/components/audio-player"
 import ReactMarkdown from "react-markdown"
 import { ArtifactSwipeWrapper } from "@/components/artifact-swipe-wrapper"
 import { ArtifactImageWithViewer } from "@/components/artifact-image-with-viewer"
-import { ArtifactStickyNav } from "@/components/artifact-sticky-nav"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible"
+import { Separator } from "@/components/ui/separator"
 import { AddMediaModal } from "@/components/add-media-modal"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import {
@@ -24,7 +24,7 @@ import {
   Share2,
   BarChart3,
   MessageSquare,
-  Star,
+  BookImage,
 } from "lucide-react"
 import { updateArtifact, deleteMediaFromArtifact, deleteArtifact } from "@/lib/actions/artifacts"
 import { getMyCollections } from "@/lib/actions/collections"
@@ -96,6 +96,8 @@ export function ArtifactDetailView({
   const [isProvenanceOpen, setIsProvenanceOpen] = useState(false)
   const [isAddMediaOpen, setIsAddMediaOpen] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [deleteMediaDialogOpen, setDeleteMediaDialogOpen] = useState(false)
+  const [mediaToDelete, setMediaToDelete] = useState<string | null>(null)
   const [comingSoonOpen, setComingSoonOpen] = useState(false)
   const [comingSoonFeature, setComingSoonFeature] = useState("")
 
@@ -118,6 +120,7 @@ export function ArtifactDetailView({
   const [editMediaUrls, setEditMediaUrls] = useState<string[]>(artifact.media_urls || [])
   const [editImageCaptions, setEditImageCaptions] = useState<Record<string, string>>(artifact.image_captions || {})
   const [editVideoSummaries, setEditVideoSummaries] = useState<Record<string, string>>(artifact.video_summaries || {})
+  const [editAudioTranscripts, setEditAudioTranscripts] = useState<Record<string, string>>(artifact.audio_transcripts || {})
   const [editThumbnailUrl, setEditThumbnailUrl] = useState<string>(artifact.thumbnail_url || "")
   const [editCollectionId, setEditCollectionId] = useState<string>(artifact.collection_id)
 
@@ -176,7 +179,7 @@ export function ArtifactDetailView({
 
   const imageCaptions = isEditMode ? editImageCaptions : artifact.image_captions || {}
   const videoSummaries = isEditMode ? editVideoSummaries : artifact.video_summaries || {}
-  const audioTranscripts = artifact.audio_transcripts || {}
+  const audioTranscripts = isEditMode ? editAudioTranscripts : artifact.audio_transcripts || {}
   const mediaUrls = isEditMode ? Array.from(new Set(editMediaUrls)) : Array.from(new Set(artifact.media_urls || []))
 
   const audioUrlsFiltered = mediaUrls.filter(isAudioUrl)
@@ -190,6 +193,7 @@ export function ArtifactDetailView({
       JSON.stringify(editMediaUrls) !== JSON.stringify(originalState.media_urls) ||
       JSON.stringify(editImageCaptions) !== JSON.stringify(originalState.image_captions) ||
       JSON.stringify(editVideoSummaries) !== JSON.stringify(originalState.video_summaries) ||
+      JSON.stringify(editAudioTranscripts) !== JSON.stringify(originalState.audio_transcripts) ||
       editThumbnailUrl !== originalState.thumbnail_url ||
       selectedTypeId !== originalState.type_id ||
       editCollectionId !== originalState.collection_id)
@@ -223,6 +227,7 @@ export function ArtifactDetailView({
           media_urls: editMediaUrls,
           image_captions: editImageCaptions,
           video_summaries: editVideoSummaries,
+          audio_transcripts: editAudioTranscripts,
           thumbnail_url: editThumbnailUrl || null,
           collectionId: editCollectionId,
           type_id: selectedTypeId,
@@ -242,35 +247,48 @@ export function ArtifactDetailView({
     }
   }
 
-  const handleDeleteMedia = async (urlToDelete: string) => {
-    if (!confirm("Are you sure you want to delete this media item?")) return
+  const handleDeleteMedia = (urlToDelete: string) => {
+    setMediaToDelete(urlToDelete)
+    setDeleteMediaDialogOpen(true)
+  }
+
+  const confirmDeleteMedia = async () => {
+    if (!mediaToDelete) return
 
     if (isEditMode) {
-      setEditMediaUrls((prev) => prev.filter((url) => url !== urlToDelete))
+      setEditMediaUrls((prev) => prev.filter((url) => url !== mediaToDelete))
       setEditImageCaptions((prev) => {
         const updated = { ...prev }
-        delete updated[urlToDelete]
+        delete updated[mediaToDelete]
         return updated
       })
       setEditVideoSummaries((prev) => {
         const updated = { ...prev }
-        delete updated[urlToDelete]
+        delete updated[mediaToDelete]
         return updated
       })
-      if (editThumbnailUrl === urlToDelete) {
-        const remainingUrls = editMediaUrls.filter((url) => url !== urlToDelete)
+      setEditAudioTranscripts((prev) => {
+        const updated = { ...prev }
+        delete updated[mediaToDelete]
+        return updated
+      })
+      if (editThumbnailUrl === mediaToDelete) {
+        const remainingUrls = editMediaUrls.filter((url) => url !== mediaToDelete)
         const newThumbnail = remainingUrls.find((url) => isImageUrl(url) || isVideoUrl(url))
         setEditThumbnailUrl(newThumbnail || "")
       }
     } else {
       try {
-        await deleteMediaFromArtifact(artifact.id, urlToDelete)
+        await deleteMediaFromArtifact(artifact.id, mediaToDelete)
         router.refresh()
       } catch (error) {
         console.error("[v0] Failed to delete media:", error)
         alert("Failed to delete media. Please try again.")
       }
     }
+
+    setDeleteMediaDialogOpen(false)
+    setMediaToDelete(null)
   }
 
   const handleDeleteArtifact = async () => {
@@ -375,6 +393,15 @@ export function ArtifactDetailView({
     }
   }
 
+  const handleTranscriptGenerated = (url: string, newTranscript: string) => {
+    if (isEditMode) {
+      setEditAudioTranscripts((prev) => ({
+        ...prev,
+        [url]: newTranscript,
+      }))
+    }
+  }
+
   const handleTypeChange = (typeId: string | null) => {
     setSelectedTypeId(typeId)
   }
@@ -385,34 +412,11 @@ export function ArtifactDetailView({
       nextUrl={isEditMode ? null : nextUrl}
       disableSwipe={isImageFullscreen || isEditMode}
     >
-      {!isEditMode && (
-        <ArtifactStickyNav
-          title={artifact.title}
-          backHref={collectionHref}
-          backLabel={`${artifact.collection?.title || "Uncategorized"} Collection`}
-          previousItem={previous}
-          nextItem={next}
-          editHref={`/artifacts/${artifact.slug}/edit`}
-          canEdit={canEdit}
-          isEditMode={isEditMode}
-          authorUserId={artifact.user_id}
-          authorName={artifact.author_name}
-          collectionId={artifact.collection_id}
-          collectionSlug={artifact.collection?.slug}
-          collectionName={artifact.collection?.title}
-          currentPosition={currentPosition}
-          totalCount={totalCount}
-          currentUserId={userId}
-          isCurrentUserAdmin={isAdmin}
-          contentOwnerId={artifact.user_id}
-        />
-      )}
-
-      <div className={`space-y-6 px-6 lg:px-8 overflow-x-hidden pb-20 ${isEditMode ? "pt-4" : "pt-2"}`}>
+      <div className={`space-y-6 px-6 lg:px-8 overflow-x-hidden pb-6 ${isEditMode ? "pt-4" : "pt-2"}`}>
         {!isEditMode && canEdit && (
           <div className="flex items-center justify-between gap-3">
             <Button asChild className="bg-purple-600 hover:bg-purple-700 text-white">
-              <Link href={`/artifacts/${artifact.slug}/edit`}>
+              <Link href={`/artifacts/${artifact.slug}?mode=edit`}>
                 <Pencil className="mr-2 h-4 w-4" />
                 Edit Artifact
               </Link>
@@ -523,7 +527,7 @@ export function ArtifactDetailView({
         )}
 
         {/* Attributes Section */}
-        <section className="space-y-2">
+        <section className="space-y-2 mb-0">
           <Collapsible open={isAttributesOpen} onOpenChange={setIsAttributesOpen}>
             <CollapsibleTrigger className="flex w-full items-center justify-between hover:opacity-80 transition-opacity">
               <h2 className="text-sm font-medium text-foreground">Attributes</h2>
@@ -543,8 +547,10 @@ export function ArtifactDetailView({
         </section>
       </div>
 
+      <Separator className="mb-4" />
+
       {/* Media Items Section */}
-      <section className="space-y-6 my-6 overflow-x-hidden">
+      <section className="space-y-6 mb-6 overflow-x-hidden">
         {isEditMode && (
           <div className="flex items-center justify-between px-6 lg:px-8">
             <h2 className="text-sm font-medium text-foreground">Media Items</h2>
@@ -588,7 +594,12 @@ export function ArtifactDetailView({
 
                       {isEditMode && (
                         <div className="mt-3">
-                          <TranscribeAudioButtonPerMedia artifactId={artifact.id} audioUrl={url} />
+                          <TranscribeAudioButtonPerMedia
+                            artifactId={artifact.id}
+                            audioUrl={url}
+                            onTranscriptGenerated={handleTranscriptGenerated}
+                            currentTranscript={transcript}
+                          />
                         </div>
                       )}
 
@@ -624,7 +635,7 @@ export function ArtifactDetailView({
                             }
                             title="Set as thumbnail"
                           >
-                            <Star className={`h-4 w-4 ${isSelectedThumbnail ? "fill-current" : ""}`} />
+                            <BookImage className="h-4 w-4" />
                           </Button>
                           <Button
                             variant="ghost"
@@ -661,7 +672,7 @@ export function ArtifactDetailView({
                               userId={userId}
                               entityType="artifact"
                               rows={3}
-                              className="text-sm italic"
+                              className="text-base md:text-sm italic"
                             />
                           </div>
                           <GenerateVideoSummaryButton
@@ -702,7 +713,7 @@ export function ArtifactDetailView({
                             }
                             title="Set as thumbnail"
                           >
-                            <Star className={`h-4 w-4 ${isSelectedThumbnail ? "fill-current" : ""}`} />
+                            <BookImage className="h-4 w-4" />
                           </Button>
                           <Button
                             variant="ghost"
@@ -739,7 +750,7 @@ export function ArtifactDetailView({
                               userId={userId}
                               entityType="artifact"
                               rows={3}
-                              className="text-sm italic"
+                              className="text-base md:text-sm italic"
                             />
                           </div>
                           <GenerateImageCaptionButton
@@ -940,6 +951,32 @@ export function ArtifactDetailView({
           </DialogHeader>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Media Confirmation Dialog */}
+      <AlertDialog open={deleteMediaDialogOpen} onOpenChange={setDeleteMediaDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove Media?</AlertDialogTitle>
+            <AlertDialogDescription className="space-y-2">
+              <span className="block">
+                This will remove the media from your artifact. The media will be permanently deleted once you save your changes.
+              </span>
+              <span className="block text-muted-foreground">
+                To undo this removal, simply click <strong>Cancel</strong> to discard all unsaved changes.
+              </span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Keep Media</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDeleteMedia}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Remove Media
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Save Module */}
       {isEditMode && canEdit && (

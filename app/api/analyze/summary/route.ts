@@ -126,7 +126,6 @@ Focus on creating a meaningful, warm description that captures the essence of th
       }
 
       revalidatePath(`/artifacts/${artifact.slug}`)
-      revalidatePath(`/artifacts/${artifact.slug}/edit`)
 
       return NextResponse.json({ ok: true, object: finalObject })
     } catch (aiError) {

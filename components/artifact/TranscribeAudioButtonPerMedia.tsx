@@ -31,7 +31,11 @@ export function TranscribeAudioButtonPerMedia({
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ artifactId: artifactId || "temp", audioUrl }),
+        body: JSON.stringify({
+          artifactId: artifactId || "temp",
+          audioUrl,
+          skipSave: !!onTranscriptGenerated  // Skip saving when in edit mode
+        }),
       })
 
       if (!response.ok) {

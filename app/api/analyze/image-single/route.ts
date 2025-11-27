@@ -41,7 +41,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const { artifactId, imageUrl } = await request.json()
+    const { artifactId, imageUrl, skipSave = false } = await request.json()
 
     if (!artifactId || !imageUrl) {
       return NextResponse.json({ error: "artifactId and imageUrl are required" }, { status: 400 })
@@ -125,30 +125,34 @@ export async function POST(request: Request) {
     console.log("[v0] Generated caption for URL:", imageUrl.substring(0, 50))
     console.log("[v0] Caption:", caption)
 
-    const existingCaptions = artifact.image_captions || {}
-    const updatedCaptions = {
-      ...existingCaptions,
-      [imageUrl]: caption, // imageUrl is the unique identifier
+    // Only save to database if skipSave is false (not in edit mode)
+    if (!skipSave) {
+      const existingCaptions = artifact.image_captions || {}
+      const updatedCaptions = {
+        ...existingCaptions,
+        [imageUrl]: caption, // imageUrl is the unique identifier
+      }
+
+      console.log("[v0] Storing caption with key:", imageUrl.substring(0, 50))
+
+      const { error: updateError } = await supabase
+        .from("artifacts")
+        .update({
+          image_captions: updatedCaptions,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", artifactId)
+
+      if (updateError) {
+        throw new Error(`Failed to save caption: ${updateError.message}`)
+      }
+
+      console.log("[v0] Successfully saved image caption")
+
+      revalidatePath(`/artifacts/${artifact.slug}`)
+    } else {
+      console.log("[v0] Skipping database save (edit mode)")
     }
-
-    console.log("[v0] Storing caption with key:", imageUrl.substring(0, 50))
-
-    const { error: updateError } = await supabase
-      .from("artifacts")
-      .update({
-        image_captions: updatedCaptions,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", artifactId)
-
-    if (updateError) {
-      throw new Error(`Failed to save caption: ${updateError.message}`)
-    }
-
-    console.log("[v0] Successfully saved image caption")
-
-    revalidatePath(`/artifacts/${artifact.slug}`)
-    revalidatePath(`/artifacts/${artifact.slug}/edit`)
 
     return NextResponse.json({ ok: true, caption })
   } catch (error) {

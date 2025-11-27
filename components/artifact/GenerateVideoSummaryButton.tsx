@@ -34,7 +34,11 @@ export function GenerateVideoSummaryButton({
         attempt++
         try {
           const data = await fetchJson("/api/analyze/video-single", {
-            body: { artifactId: artifactId || "temp", videoUrl },
+            body: {
+              artifactId: artifactId || "temp",
+              videoUrl,
+              skipSave: !!onSummaryGenerated  // Skip saving when in edit mode
+            },
           })
 
           toast({

@@ -28,7 +28,11 @@ export function GenerateImageCaptionButton({
     setIsGenerating(true)
     try {
       const data = await fetchJson("/api/analyze/image-single", {
-        body: { artifactId: artifactId || "temp", imageUrl },
+        body: {
+          artifactId: artifactId || "temp",
+          imageUrl,
+          skipSave: !!onCaptionGenerated  // Skip saving when in edit mode
+        },
       })
 
       toast({

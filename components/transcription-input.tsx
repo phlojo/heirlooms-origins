@@ -78,18 +78,38 @@ export function TranscriptionInput({
   const startRecording = async () => {
     try {
       setError(null)
-      
+
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
       streamRef.current = stream
 
-      const options = { mimeType: "audio/webm;codecs=opus" }
+      // Try formats in order of compatibility (MP4/AAC works best on iOS)
       let mediaRecorder: MediaRecorder
+      let actualMimeType = "audio/webm" // fallback
 
-      try {
-        mediaRecorder = new MediaRecorder(stream, options)
-      } catch (e) {
-        console.log("[v0] Opus codec not supported, using default")
+      const formats = [
+        "audio/mp4",
+        "audio/webm;codecs=opus",
+        "audio/webm",
+      ]
+
+      for (const format of formats) {
+        if (MediaRecorder.isTypeSupported(format)) {
+          try {
+            mediaRecorder = new MediaRecorder(stream, { mimeType: format })
+            actualMimeType = format
+            console.log("[v0] Using audio format for transcription:", format)
+            break
+          } catch (e) {
+            console.log("[v0] Format not supported:", format)
+          }
+        }
+      }
+
+      // If no format worked, use browser default
+      if (!mediaRecorder!) {
         mediaRecorder = new MediaRecorder(stream)
+        actualMimeType = mediaRecorder.mimeType || "audio/webm"
+        console.log("[v0] Using browser default format for transcription:", actualMimeType)
       }
 
       mediaRecorderRef.current = mediaRecorder
@@ -102,7 +122,7 @@ export function TranscriptionInput({
       }
 
       mediaRecorder.onstop = async () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" })
+        const audioBlob = new Blob(audioChunksRef.current, { type: actualMimeType })
         console.log("[v0] Recording stopped, blob size:", audioBlob.size)
         
         if (isMountedRef.current && audioBlob.size > 0) {

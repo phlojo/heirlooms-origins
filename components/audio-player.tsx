@@ -100,16 +100,36 @@ export function AudioPlayer({ src, title }: AudioPlayerProps) {
         <div className="text-center py-8">
           <p className="text-sm text-destructive">Failed to load audio file</p>
           <p className="text-xs text-muted-foreground mt-2">
-            The audio file may be corrupted or in an unsupported format
+            This audio format may not be supported on your device. Try playing it on a different browser or device.
+          </p>
+          <p className="text-xs text-muted-foreground mt-1">
+            Supported formats: MP3, M4A, WAV, OGG
           </p>
         </div>
       </div>
     )
   }
 
+  // Detect file extension to provide MIME type hint
+  const getAudioType = (url: string) => {
+    const extension = url.split('.').pop()?.toLowerCase()
+    const typeMap: Record<string, string> = {
+      'mp3': 'audio/mpeg',
+      'm4a': 'audio/mp4',
+      'mp4': 'audio/mp4',
+      'wav': 'audio/wav',
+      'ogg': 'audio/ogg',
+      'webm': 'audio/webm',
+    }
+    return extension ? typeMap[extension] : undefined
+  }
+
   return (
     <div className="rounded-2xl border bg-card p-6 shadow-md">
-      <audio ref={audioRef} src={src} preload="metadata" />
+      <audio ref={audioRef} preload="metadata">
+        <source src={src} type={getAudioType(src)} />
+        Your browser does not support the audio element.
+      </audio>
 
       {title && <p className="mb-4 text-sm font-medium text-foreground">{title}</p>}
 

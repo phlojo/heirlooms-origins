@@ -20,9 +20,39 @@ export function AudioRecorder({ onAudioRecorded, disabled }: AudioRecorderProps)
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-      const mediaRecorder = new MediaRecorder(stream, {
-        mimeType: "audio/webm",
-      })
+
+      // Try formats in order of compatibility (MP4/AAC works best on iOS)
+      let mediaRecorder: MediaRecorder
+      let actualMimeType = "audio/webm" // fallback
+      let fileExtension = "webm"
+
+      const formats = [
+        { mimeType: "audio/mp4", extension: "m4a" },
+        { mimeType: "audio/webm;codecs=opus", extension: "webm" },
+        { mimeType: "audio/webm", extension: "webm" },
+      ]
+
+      for (const format of formats) {
+        if (MediaRecorder.isTypeSupported(format.mimeType)) {
+          try {
+            mediaRecorder = new MediaRecorder(stream, { mimeType: format.mimeType })
+            actualMimeType = format.mimeType
+            fileExtension = format.extension
+            console.log("[v0] Using audio format:", format.mimeType)
+            break
+          } catch (e) {
+            console.log("[v0] Format not supported:", format.mimeType)
+          }
+        }
+      }
+
+      // If no format worked, use browser default
+      if (!mediaRecorder!) {
+        mediaRecorder = new MediaRecorder(stream)
+        actualMimeType = mediaRecorder.mimeType || "audio/webm"
+        fileExtension = actualMimeType.includes("mp4") ? "m4a" : "webm"
+        console.log("[v0] Using browser default format:", actualMimeType)
+      }
 
       mediaRecorderRef.current = mediaRecorder
       chunksRef.current = []
@@ -34,12 +64,12 @@ export function AudioRecorder({ onAudioRecorded, disabled }: AudioRecorderProps)
       }
 
       mediaRecorder.onstop = () => {
-        const audioBlob = new Blob(chunksRef.current, { type: "audio/webm" })
+        const audioBlob = new Blob(chunksRef.current, { type: actualMimeType })
         const url = URL.createObjectURL(audioBlob)
         setAudioURL(url)
 
-        // Generate filename with timestamp
-        const fileName = `recording_${Date.now()}.webm`
+        // Generate filename with timestamp and correct extension
+        const fileName = `recording_${Date.now()}.${fileExtension}`
         onAudioRecorded(audioBlob, fileName)
 
         // Stop all tracks

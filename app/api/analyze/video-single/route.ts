@@ -57,7 +57,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const { artifactId, videoUrl } = await request.json()
+    const { artifactId, videoUrl, skipSave = false } = await request.json()
 
     if (!artifactId || !videoUrl) {
       return NextResponse.json({ error: "artifactId and videoUrl are required" }, { status: 400 })
@@ -140,28 +140,32 @@ export async function POST(request: Request) {
     const summary = result.text.trim()
     console.log("[v0] Generated video summary:", summary)
 
-    const existingSummaries = artifact.video_summaries || {}
-    const updatedSummaries = {
-      ...existingSummaries,
-      [videoUrl]: summary,
+    // Only save to database if skipSave is false (not in edit mode)
+    if (!skipSave) {
+      const existingSummaries = artifact.video_summaries || {}
+      const updatedSummaries = {
+        ...existingSummaries,
+        [videoUrl]: summary,
+      }
+
+      const { error: updateError } = await supabase
+        .from("artifacts")
+        .update({
+          video_summaries: updatedSummaries,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", artifactId)
+
+      if (updateError) {
+        throw new Error(`Failed to save video summary: ${updateError.message}`)
+      }
+
+      console.log("[v0] Successfully saved video summary")
+
+      revalidatePath(`/artifacts/${artifact.slug}`)
+    } else {
+      console.log("[v0] Skipping database save (edit mode)")
     }
-
-    const { error: updateError } = await supabase
-      .from("artifacts")
-      .update({
-        video_summaries: updatedSummaries,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", artifactId)
-
-    if (updateError) {
-      throw new Error(`Failed to save video summary: ${updateError.message}`)
-    }
-
-    console.log("[v0] Successfully saved video summary")
-
-    revalidatePath(`/artifacts/${artifact.slug}`)
-    revalidatePath(`/artifacts/${artifact.slug}/edit`)
 
     return NextResponse.json({ ok: true, summary })
   } catch (error) {
