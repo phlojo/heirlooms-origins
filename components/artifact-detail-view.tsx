@@ -7,12 +7,16 @@ import { AudioPlayer } from "@/components/audio-player"
 import ReactMarkdown from "react-markdown"
 import { ArtifactSwipeWrapper } from "@/components/artifact-swipe-wrapper"
 import { ArtifactImageWithViewer } from "@/components/artifact-image-with-viewer"
+import { ArtifactMediaGallery } from "@/components/artifact-media-gallery"
+import { ArtifactGalleryEditor } from "@/components/artifact-gallery-editor"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible"
 import { Separator } from "@/components/ui/separator"
 import { AddMediaModal } from "@/components/add-media-modal"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { type ArtifactMediaWithDerivatives } from "@/lib/types/media"
+import { getArtifactGalleryMedia } from "@/lib/actions/media"
 import {
   ChevronDown,
   Plus,
@@ -69,6 +73,7 @@ interface ArtifactDetailViewProps {
   isEditMode?: boolean
   previousUrl: string | null
   nextUrl: string | null
+  galleryMedia?: ArtifactMediaWithDerivatives[]
 }
 
 export function ArtifactDetailView({
@@ -82,6 +87,7 @@ export function ArtifactDetailView({
   isEditMode = false,
   previousUrl,
   nextUrl,
+  galleryMedia,
 }: ArtifactDetailViewProps) {
   const [isSaving, setIsSaving] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
@@ -90,6 +96,9 @@ export function ArtifactDetailView({
   const [artifactTypes, setArtifactTypes] = useState<ArtifactType[]>([])
   const [selectedTypeId, setSelectedTypeId] = useState<string | null>(artifact.type_id || null)
   const shouldWarnOnUnloadRef = useRef(true)
+  const [currentGalleryMedia, setCurrentGalleryMedia] = useState<ArtifactMediaWithDerivatives[]>(
+    galleryMedia || []
+  )
 
   const [isImageFullscreen, setIsImageFullscreen] = useState(false)
   const [isAttributesOpen, setIsAttributesOpen] = useState(false)
@@ -406,6 +415,14 @@ export function ArtifactDetailView({
     setSelectedTypeId(typeId)
   }
 
+  const handleGalleryUpdate = async () => {
+    // Refetch gallery media after changes
+    const { data } = await getArtifactGalleryMedia(artifact.id)
+    if (data) {
+      setCurrentGalleryMedia(data)
+    }
+  }
+
   return (
     <ArtifactSwipeWrapper
       previousUrl={isEditMode ? null : previousUrl}
@@ -413,6 +430,19 @@ export function ArtifactDetailView({
       disableSwipe={isImageFullscreen || isEditMode}
     >
       <div className={`space-y-6 px-6 lg:px-8 overflow-x-hidden pb-6 ${isEditMode ? "pt-4" : "pt-2"}`}>
+        {/* Gallery Editor/Viewer - At the very top */}
+        {isEditMode ? (
+          <ArtifactGalleryEditor
+            artifactId={artifact.id}
+            galleryMedia={currentGalleryMedia}
+            onUpdate={handleGalleryUpdate}
+          />
+        ) : (
+          currentGalleryMedia && currentGalleryMedia.length > 0 && (
+            <ArtifactMediaGallery media={currentGalleryMedia} />
+          )
+        )}
+
         {!isEditMode && canEdit && (
           <div className="flex items-center justify-between gap-3">
             <Button asChild className="bg-purple-600 hover:bg-purple-700 text-white">

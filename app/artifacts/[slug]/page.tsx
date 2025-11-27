@@ -5,6 +5,7 @@ import { getArtifactBySlug, getAdjacentArtifacts } from "@/lib/actions/artifacts
 import { ArtifactDetailView } from "@/components/artifact-detail-view"
 import { ArtifactStickyNav } from "@/components/artifact-sticky-nav"
 import { isCurrentUserAdmin } from "@/lib/utils/admin"
+import { getArtifactGalleryMedia } from "@/lib/actions/media"
 
 export default async function ArtifactDetailPage({
   params,
@@ -52,6 +53,9 @@ export default async function ArtifactDetailPage({
     artifact.collection_id,
   )
 
+  // Fetch gallery media from new unified media model (optional - falls back to media_urls)
+  const { data: galleryMedia } = await getArtifactGalleryMedia(artifact.id)
+
   const collectionHref = artifact.collection?.slug
     ? `/collections/${artifact.collection.slug}`
     : `/collections/${artifact.collection_id}`
@@ -93,6 +97,7 @@ export default async function ArtifactDetailPage({
         isEditMode={isEditMode}
         previousUrl={previousUrl}
         nextUrl={nextUrl}
+        galleryMedia={galleryMedia || undefined}
       />
     </AppLayout>
   )

@@ -70,3 +70,70 @@ export const updateArtifactSchema = z.object({
 })
 
 export type UpdateArtifactInput = z.infer<typeof updateArtifactSchema>
+
+// ============================================================================
+// Media Management Schemas (Phase 2: Unified Media Model)
+// ============================================================================
+
+export const createUserMediaSchema = z.object({
+  user_id: z.string().uuid("Invalid user ID"),
+  storage_path: z.string().min(1, "Storage path is required"),
+  public_url: z.string().url("Invalid public URL"),
+  filename: z.string().min(1, "Filename is required"),
+  mime_type: z.string().min(1, "MIME type is required"),
+  file_size_bytes: z.number().int().min(0, "File size must be non-negative"),
+  width: z.number().int().positive().nullable().optional(),
+  height: z.number().int().positive().nullable().optional(),
+  duration_seconds: z.number().positive().nullable().optional(),
+  media_type: z.enum(["image", "video", "audio"]),
+  upload_source: z.enum(["artifact", "profile", "collection", "story", "gallery"]).optional(),
+})
+
+export type CreateUserMediaInput = z.infer<typeof createUserMediaSchema>
+
+export const updateUserMediaSchema = z.object({
+  id: z.string().uuid("Invalid media ID"),
+  storage_path: z.string().min(1).optional(),
+  width: z.number().int().positive().nullable().optional(),
+  height: z.number().int().positive().nullable().optional(),
+  duration_seconds: z.number().positive().nullable().optional(),
+  is_processed: z.boolean().optional(),
+})
+
+export type UpdateUserMediaInput = z.infer<typeof updateUserMediaSchema>
+
+export const createArtifactMediaSchema = z.object({
+  artifact_id: z.string().uuid("Invalid artifact ID"),
+  media_id: z.string().uuid("Invalid media ID"),
+  role: z.enum(["gallery", "inline_block", "cover"]).default("gallery"),
+  sort_order: z.number().int().min(0).default(0),
+  block_id: z.string().nullable().optional(),
+  caption_override: z.string().max(500).nullable().optional(),
+  is_primary: z.boolean().default(false),
+})
+
+export type CreateArtifactMediaInput = z.infer<typeof createArtifactMediaSchema>
+
+export const updateArtifactMediaSchema = z.object({
+  id: z.string().uuid("Invalid artifact media ID"),
+  role: z.enum(["gallery", "inline_block", "cover"]).optional(),
+  sort_order: z.number().int().min(0).optional(),
+  block_id: z.string().nullable().optional(),
+  caption_override: z.string().max(500).nullable().optional(),
+  is_primary: z.boolean().optional(),
+})
+
+export type UpdateArtifactMediaInput = z.infer<typeof updateArtifactMediaSchema>
+
+export const reorderMediaSchema = z.object({
+  artifact_id: z.string().uuid("Invalid artifact ID"),
+  role: z.enum(["gallery", "inline_block", "cover"]),
+  reorders: z.array(
+    z.object({
+      media_id: z.string().uuid("Invalid media ID"),
+      new_sort_order: z.number().int().min(0),
+    })
+  ),
+})
+
+export type ReorderMediaInput = z.infer<typeof reorderMediaSchema>
