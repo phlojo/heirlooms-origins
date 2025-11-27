@@ -47,7 +47,16 @@ export function AppLayout({ children, user, noBottomPadding = false }: AppLayout
         <SideNav isOpen={sidebarOpen} onClose={() => handleSidebarToggle(false)} isMobile={isMobile} />
 
         <main
-          className={`flex-1 transition-all duration-200 px-4 pt-4 max-w-full ${noBottomPadding ? "pb-0" : "pb-16"}`}
+          className={`flex-1 transition-all duration-200 px-4 pt-4 max-w-full ${noBottomPadding ? "pb-0" : ""}`}
+          style={
+            !noBottomPadding && isMobile
+              ? {
+                  // Use CSS variable for bottom nav height on mobile
+                  // This ensures content isn't hidden behind the fixed bottom nav
+                  paddingBottom: "var(--bottom-nav-height)",
+                }
+              : undefined
+          }
         >
           <PageTransition>{children}</PageTransition>
         </main>

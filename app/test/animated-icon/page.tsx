@@ -2,7 +2,7 @@ import { AnimatedArtifactsIcon } from "@/components/navigation/animated-artifact
 
 export default function AnimatedIconTestPage() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-8">
+    <div className="flex min-h-[100dvh] items-center justify-center bg-background p-8">
       <div className="flex flex-col items-center gap-8">
         <h1 className="text-2xl font-semibold">Animated Artifacts Icon Test</h1>
         

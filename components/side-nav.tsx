@@ -32,14 +32,19 @@ export function SideNav({ isOpen, onClose, isMobile }: SideNavProps) {
       {/* Sidebar */}
       <aside
         className={cn(
-          "h-[calc(100vh-4rem)] w-64 border-r bg-background transition-transform duration-200",
-          "fixed left-0 top-16 z-60 lg:sticky lg:top-16",
+          "w-64 border-r bg-background transition-transform duration-200",
+          "collection-sticky-nav sticky z-60",
           // Hide completely on mobile/tablet (below lg breakpoint)
           "hidden lg:block",
           // On desktop (lg+), respect the isOpen state
           !isOpen && "lg:-translate-x-full",
           isOpen && "lg:translate-x-0",
         )}
+        style={{
+          // Height: viewport - (TopNav height + safe-area-top)
+          // Using 100dvh for dynamic viewport on iOS
+          height: "calc(100dvh - 4rem - env(safe-area-inset-top, 0px))",
+        }}
       >
         <nav className="flex h-full flex-col gap-2 p-4">
           {navItems.map((item) => {

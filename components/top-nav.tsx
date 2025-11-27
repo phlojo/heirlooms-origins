@@ -54,7 +54,13 @@ export function TopNav({ onMenuClick, user }: TopNavProps) {
   }
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 hidden lg:flex">
+    <header
+      className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 hidden lg:flex"
+      style={{
+        // Respect safe area at top (e.g., notch on devices in landscape)
+        paddingTop: "env(safe-area-inset-top, 0px)",
+      }}
+    >
       <div className="flex h-16 w-full items-center gap-4 px-4 lg:px-6">
         <div className="flex items-center gap-2">
           <Button variant="ghost" size="icon" className="hidden lg:flex" onClick={onMenuClick}>

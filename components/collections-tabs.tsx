@@ -143,7 +143,7 @@ export function CollectionsTabs({
 
   return (
     <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-      <div className="sticky top-0 lg:top-16 z-10 -mx-3.5 lg:-mx-8 bg-background px-3.5 lg:px-8 py-4 flex items-center justify-between border-b opacity-95">
+      <div className="collection-sticky-nav sticky z-10 -mx-3.5 lg:-mx-8 bg-background px-3.5 lg:px-8 py-4 flex items-center justify-between border-b opacity-95">
         <div className="flex items-center gap-2">
           <TabsList>
             <TabsTrigger value="all">Community</TabsTrigger>

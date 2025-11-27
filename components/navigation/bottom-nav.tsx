@@ -68,18 +68,20 @@ export default function BottomNav() {
     <nav
       className={cn(
         "fixed left-0 right-0 bottom-0 z-50",
-        "border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80",
+        "border-t bg-background",
         "lg:hidden",
       )}
       style={{
         /* iOS-safe bottom padding with safe-area support */
-        paddingBottom: "max(env(safe-area-inset-bottom, 0px), 12px)",
-        height: "calc(80px + max(env(safe-area-inset-bottom, 0px), 12px))",
+        /* Simplified calculation to reduce browser reflow at scroll boundaries */
+        paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 12px)",
+        height: "calc(80px + env(safe-area-inset-bottom, 0px) + 12px)",
         /* Prevent momentum scroll from affecting nav */
         touchAction: "manipulation",
-        /* Prevent positioning shift during scroll */
-        transform: "translateZ(0)",
-        willChange: "auto",
+        /* Force GPU layer but prevent repaint flicker */
+        willChange: "contents",
+        /* Isolate rendering to prevent layout thrashing */
+        contentVisibility: "auto",
       }}
     >
       <div className="flex h-20 items-center justify-around px-2">

@@ -4,6 +4,10 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
+  /* iOS Safari viewport height variable - dynamically set via JS */
+  /* Fallback to 1vh for browsers without JS or during initial load */
+  --vh: 1vh;
+
   /* Light mode - Soft, modern iOS + Pinterest inspired palette */
   /* Updated to softer, more modern colors with better contrast */
   --background: oklch(0.99 0.005 280);
@@ -49,7 +53,8 @@
   --shadow-color: #000000;
 
   /* Updated bottom nav height to match dynamic calculation */
-  --bottom-nav-height: calc(80px + max(env(safe-area-inset-bottom, 0px), 12px));
+  /* Simplified to reduce browser reflow - removed max() */
+  --bottom-nav-height: calc(80px + env(safe-area-inset-bottom, 0px) + 12px);
 }
 
 .dark {
@@ -180,6 +185,10 @@
     text-size-adjust: 100%;
     /* Optimize tap highlighting */
     -webkit-tap-highlight-color: transparent;
+    /* Prevent elastic overscroll on iOS Safari - must be on html AND body */
+    overscroll-behavior-y: none;
+    /* Smooth scrolling for anchor links and programmatic scrolls */
+    scroll-behavior: smooth;
     /* Note: -webkit-overflow-scrolling: touch removed - it can cause sticky position jitter on iOS
        Modern iOS browsers handle momentum scrolling well without this property */
     /* Remove overflow-x: clip from html - it breaks sticky positioning */
@@ -189,7 +198,8 @@
     @apply bg-background text-foreground;
     /* Use dynamic viewport height for iOS Safari stability */
     min-height: 100dvh;
-    /* Prevent overscroll on iOS */
+    /* Completely prevent overscroll to eliminate bottom flicker */
+    /* This prevents elastic bounce but eliminates the layout shift/flicker issue */
     overscroll-behavior-y: none;
     /* Remove default tap delay on mobile */
     touch-action: manipulation;
@@ -211,18 +221,43 @@
     font-size: 16px; /* Prevents iOS zoom on focus */
   }
 
-  /* Ensure safe areas are respected */
-  @supports (padding: env(safe-area-inset-bottom)) {
-    body {
-      padding-top: env(safe-area-inset-top);
-      padding-bottom: env(safe-area-inset-bottom);
-      padding-left: env(safe-area-inset-left);
-      padding-right: env(safe-area-inset-right);
-    }
-  }
+  /* Safe-area inset strategy:
+   * DO NOT apply safe-area padding to body - this causes double-padding issues.
+   * Instead, each sticky/fixed component (TopNav, BottomNav, ArtifactStickyNav)
+   * manages its own safe-area padding to avoid overlap with notch/home indicator.
+   * This approach prevents double-compensation and keeps layout predictable.
+   */
 }
 
 @layer components {
+  /* Safe-area aware sticky positioning for artifact navigation */
+  .artifact-sticky-nav {
+    /* Mobile: 1rem (16px) from top + safe area */
+    top: calc(1rem + env(safe-area-inset-top, 0px));
+  }
+
+  @media (min-width: 1024px) {
+    .artifact-sticky-nav {
+      /* Desktop: 5rem (80px) from top + safe area
+       * This accounts for TopNav (64px) + spacing (16px) + safe area */
+      top: calc(5rem + env(safe-area-inset-top, 0px));
+    }
+  }
+
+  /* Safe-area aware sticky positioning for collection navigation */
+  .collection-sticky-nav {
+    /* Mobile: 0px from top + safe area */
+    top: env(safe-area-inset-top, 0px);
+  }
+
+  @media (min-width: 1024px) {
+    .collection-sticky-nav {
+      /* Desktop: 4rem (64px) from top + safe area
+       * This accounts for TopNav (64px) + safe area */
+      top: calc(4rem + env(safe-area-inset-top, 0px));
+    }
+  }
+
   /* Smooth page transition animations */
   @keyframes fadeIn {
     from {

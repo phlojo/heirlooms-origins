@@ -7,6 +7,7 @@ import { Geist, Geist_Mono, Source_Serif_4 } from "next/font/google"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Analytics } from "@vercel/analytics/react"
 import { SupabaseProvider } from "@/lib/supabase/browser-context"
+import { ViewportHeightManager } from "@/components/viewport-height-manager"
 
 // Initialize fonts
 const _geist = Geist({ subsets: ["latin"], weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"] })
@@ -56,6 +57,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`font-sans antialiased overflow-x-hidden`}>
+        <ViewportHeightManager />
         <SupabaseProvider>
           <ThemeProvider>
             {children}

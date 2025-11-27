@@ -45,7 +45,7 @@ export default async function StoriesPage() {
           </h1>
         </div>
 
-        <div className="flex min-h-[calc(100vh-20rem)] items-center justify-center lg:min-h-[calc(100vh-16rem)]">
+        <div className="flex min-h-[calc(100dvh-20rem)] items-center justify-center lg:min-h-[calc(100dvh-16rem)]">
           <div className="flex flex-col items-center gap-4">
             <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-chart-2 text-primary-foreground shadow-md">
               <svg
