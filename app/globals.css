@@ -193,9 +193,9 @@
     @apply bg-background text-foreground;
     /* Use dynamic viewport height for iOS Safari stability */
     min-height: 100dvh;
-    /* Prevent elastic overscroll flicker with fixed bottom nav */
-    /* 'contain' prevents scroll chaining while allowing smooth scroll end */
-    overscroll-behavior-y: contain;
+    /* Completely prevent overscroll to eliminate bottom flicker */
+    /* This prevents elastic bounce but eliminates the layout shift/flicker issue */
+    overscroll-behavior-y: none;
     /* Remove default tap delay on mobile */
     touch-action: manipulation;
     /* Ensure no horizontal overflow */
