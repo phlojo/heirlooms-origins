@@ -186,6 +186,33 @@ See `TESTING.md` for comprehensive testing guide.
 - Add component tests in `__tests__/components/`
 - Use `useSupabase()` hook from `components/supabase-provider.tsx` for client-side Supabase access
 
+### Mobile & iOS Safari Viewport Handling
+**Critical for mobile experience** - The app uses modern viewport strategies to handle iOS Safari's dynamic UI:
+
+**Viewport Units:**
+- Use `100dvh` (dynamic viewport height) instead of `100vh` for min-height
+- Custom `--vh` CSS variable available via `ViewportHeightManager` component
+- Handles browser UI appearing/disappearing smoothly
+
+**Safe-Area Strategy:**
+- **DO NOT** apply `env(safe-area-inset-*)` to body - causes double-padding
+- Each sticky/fixed component manages its own safe-area padding
+- Use pre-defined CSS classes: `.artifact-sticky-nav`, `.collection-sticky-nav`
+- BottomNav automatically handles safe-area-inset-bottom
+
+**Sticky Navigation Classes:**
+```css
+.artifact-sticky-nav   /* For artifact detail sticky nav (top: 1rem on mobile, 5rem on desktop + safe-area) */
+.collection-sticky-nav /* For collection nav, tabs (top: 0 on mobile, 4rem on desktop + safe-area) */
+```
+
+**Scroll Behavior:**
+- `overscroll-behavior-y: none` on html/body prevents elastic bounce (eliminates flicker)
+- `scroll-behavior: smooth` for smooth programmatic scrolls
+- Avoid scroll event listeners at scroll boundaries to prevent re-render flicker
+
+**See:** `docs/archive/2025-11-27-ios-safari-scroll-fixes.md` for complete implementation details
+
 ### Artifact Grid Layout (Masonry)
 The artifact grid uses **Masonry.js** for optimal item arrangement with variable heights:
 - **Component**: `components/masonry-grid.tsx` - Core layout engine
