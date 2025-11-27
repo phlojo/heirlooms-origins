@@ -193,8 +193,9 @@
     @apply bg-background text-foreground;
     /* Use dynamic viewport height for iOS Safari stability */
     min-height: 100dvh;
-    /* Prevent overscroll on iOS */
-    overscroll-behavior-y: none;
+    /* Allow natural iOS overscroll behavior - prevents flicker at bottom */
+    /* Using 'auto' instead of 'none' to allow elastic scrolling */
+    overscroll-behavior-y: auto;
     /* Remove default tap delay on mobile */
     touch-action: manipulation;
     /* Ensure no horizontal overflow */

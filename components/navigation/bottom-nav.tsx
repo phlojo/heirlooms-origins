@@ -77,9 +77,9 @@ export default function BottomNav() {
         height: "calc(80px + max(env(safe-area-inset-bottom, 0px), 12px))",
         /* Prevent momentum scroll from affecting nav */
         touchAction: "manipulation",
-        /* Prevent positioning shift during scroll */
-        transform: "translateZ(0)",
-        willChange: "auto",
+        /* Use containment instead of translateZ for better performance */
+        /* This prevents layout thrashing during scroll */
+        contain: "layout style paint",
       }}
     >
       <div className="flex h-20 items-center justify-around px-2">
