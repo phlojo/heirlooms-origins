@@ -185,6 +185,8 @@
     text-size-adjust: 100%;
     /* Optimize tap highlighting */
     -webkit-tap-highlight-color: transparent;
+    /* Prevent elastic overscroll on iOS Safari - must be on html AND body */
+    overscroll-behavior-y: none;
     /* Note: -webkit-overflow-scrolling: touch removed - it can cause sticky position jitter on iOS
        Modern iOS browsers handle momentum scrolling well without this property */
     /* Remove overflow-x: clip from html - it breaks sticky positioning */
