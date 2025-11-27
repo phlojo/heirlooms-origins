@@ -6,7 +6,6 @@ import { cn } from "@/lib/utils"
 import { Home, FolderOpen, BookOpen, User } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 import { AnimatedArtifactsIcon } from "./animated-artifacts-icon"
-import { useEffect, useState } from "react"
 
 interface NavItem {
   href: string
@@ -64,34 +63,6 @@ function track(event: string, data: Record<string, unknown>) {
  */
 export default function BottomNav() {
   const pathname = usePathname()
-  const [isViewportResizing, setIsViewportResizing] = useState(false)
-
-  useEffect(() => {
-    // Detect mobile browser UI appearing/disappearing
-    // This causes viewport height changes and can trigger layout flicker
-    if (typeof window === 'undefined' || !window.visualViewport) return
-
-    let resizeTimer: NodeJS.Timeout
-
-    const handleViewportResize = () => {
-      setIsViewportResizing(true)
-
-      // Clear existing timer
-      clearTimeout(resizeTimer)
-
-      // Wait for resize to stabilize before re-enabling
-      resizeTimer = setTimeout(() => {
-        setIsViewportResizing(false)
-      }, 150)
-    }
-
-    window.visualViewport.addEventListener('resize', handleViewportResize)
-
-    return () => {
-      window.visualViewport?.removeEventListener('resize', handleViewportResize)
-      clearTimeout(resizeTimer)
-    }
-  }, [])
 
   return (
     <nav
@@ -99,8 +70,6 @@ export default function BottomNav() {
         "fixed left-0 right-0 bottom-0 z-50",
         "border-t bg-background",
         "lg:hidden",
-        // Disable transitions during viewport resize to prevent flicker
-        isViewportResizing && "transition-none",
       )}
       style={{
         /* iOS-safe bottom padding with safe-area support */
@@ -109,10 +78,10 @@ export default function BottomNav() {
         height: "calc(80px + env(safe-area-inset-bottom, 0px) + 12px)",
         /* Prevent momentum scroll from affecting nav */
         touchAction: "manipulation",
-        /* Force GPU layer and prevent repaint during viewport resize */
-        willChange: isViewportResizing ? "transform" : "auto",
-        /* Create stacking context to isolate from viewport changes */
-        transform: "translateZ(0)",
+        /* Force GPU layer but prevent repaint flicker */
+        willChange: "contents",
+        /* Isolate rendering to prevent layout thrashing */
+        contentVisibility: "auto",
       }}
     >
       <div className="flex h-20 items-center justify-around px-2">
