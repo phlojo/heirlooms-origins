@@ -129,24 +129,24 @@ export function ArtifactMediaGallery({
           const mediaData = item.media
 
           return (
-            <div key={item.id} className="gallery-cell w-full">
+            <div key={item.id} className="gallery-cell w-full h-full flex flex-col">
               {isImageMedia(mediaData) && (
-                <div className="relative aspect-[4/3] w-full overflow-hidden rounded-lg bg-muted">
+                <div className="relative w-full flex-1 overflow-hidden rounded bg-muted flex items-center justify-center">
                   <img
                     src={mediaData.mediumUrl || mediaData.public_url}
                     alt={item.caption_override || `Media ${item.sort_order + 1}`}
-                    className="h-full w-full object-contain"
+                    className="max-h-full max-w-full object-contain"
                     loading={item.sort_order <= 1 ? "eager" : "lazy"}
                   />
                 </div>
               )}
 
               {isVideoMedia(mediaData) && (
-                <div className="relative aspect-video w-full overflow-hidden rounded-lg bg-black">
+                <div className="relative w-full flex-1 overflow-hidden rounded bg-black flex items-center justify-center">
                   <video
                     src={mediaData.public_url}
                     controls
-                    className="h-full w-full"
+                    className="max-h-full max-w-full"
                     preload={item.sort_order === 0 ? "metadata" : "none"}
                     poster={mediaData.thumbnailUrl}
                   >
@@ -164,12 +164,31 @@ export function ArtifactMediaGallery({
         })}
       </div>
 
-      {/* Media Counter */}
-      {media.length > 1 && (
-        <div className="mt-4 text-center text-sm text-muted-foreground">
-          {currentIndex + 1} / {media.length}
-        </div>
-      )}
+      <style dangerouslySetInnerHTML={{
+        __html: `
+          .artifact-media-gallery .flickity-viewport {
+            border-radius: 0.25rem !important;
+            overflow: hidden !important;
+          }
+          .artifact-media-gallery .flickity-page-dots {
+            margin-top: 8px !important;
+            bottom: auto !important;
+            position: relative !important;
+          }
+          .artifact-media-gallery .flickity-page-dot {
+            width: 8px !important;
+            height: 8px !important;
+            opacity: 0.4 !important;
+            background: #9ca3af !important;
+            border: 1px solid #d1d5db !important;
+          }
+          .artifact-media-gallery .flickity-page-dot.is-selected {
+            opacity: 1 !important;
+            background: #ffffff !important;
+            border-color: #ffffff !important;
+          }
+        `
+      }} />
     </div>
   )
 }

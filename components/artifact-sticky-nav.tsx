@@ -132,7 +132,7 @@ export function ArtifactStickyNav({
   const showSuperUserBadge = isCurrentUserAdmin && contentOwnerId && currentUserId && contentOwnerId !== currentUserId
 
   return (
-    <div className="artifact-sticky-nav sticky z-50 bg-background/90 border rounded-lg mb-4 py-2 will-change-transform">
+    <div className="artifact-sticky-nav sticky top-0 z-50 bg-background/90 border-b pb-2 will-change-transform -mx-4 overflow-x-hidden">
       <div className="container max-w-7xl mx-auto">
         <div className="flex flex-col gap-0">
           {/* First row: Navigation with left arrow, collection info, right arrow */}

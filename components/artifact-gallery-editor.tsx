@@ -181,10 +181,15 @@ export function ArtifactGalleryEditor({
     <div className="space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-lg font-semibold">Gallery</h3>
+        <div className="flex-1">
+          <div className="flex items-center gap-3">
+            <h3 className="text-lg font-semibold">Gallery</h3>
+            <span className="rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900/30 dark:text-green-400">
+              Auto-saved
+            </span>
+          </div>
           <p className="text-sm text-muted-foreground">
-            Media carousel displayed at the top of your artifact page
+            Media carousel displayed at the top of your artifact page. Changes save automatically.
           </p>
         </div>
         <Button onClick={() => setIsPickerOpen(true)} size="sm">
@@ -195,7 +200,7 @@ export function ArtifactGalleryEditor({
 
       {/* Gallery Items */}
       {galleryMedia.length === 0 ? (
-        <Card className="flex h-40 flex-col items-center justify-center gap-2 border-dashed">
+        <Card className="flex h-40 flex-col items-center justify-center gap-2 border-dashed rounded-sm">
           <ImageIcon className="h-8 w-8 text-muted-foreground" />
           <p className="text-sm text-muted-foreground">No media in gallery</p>
           <Button onClick={() => setIsPickerOpen(true)} size="sm" variant="outline">
@@ -210,7 +215,7 @@ export function ArtifactGalleryEditor({
             const isVideo = media.media_type === "video"
 
             return (
-              <Card key={item.id} className="flex items-center gap-3 p-3">
+              <Card key={item.id} className="flex items-center gap-3 p-3 rounded-sm">
                 {/* Thumbnail */}
                 <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-md bg-muted">
                   {isImage && (

@@ -66,7 +66,7 @@ export default async function ArtifactDetailPage({
   const nextUrl = next?.slug ? `/artifacts/${next.slug}${modeParam}` : null
 
   return (
-    <AppLayout user={user}>
+    <AppLayout user={user} noTopPadding>
       <ArtifactStickyNav
         title={artifact.title}
         backHref={isEditMode ? undefined : collectionHref}

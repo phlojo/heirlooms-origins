@@ -13,9 +13,10 @@ interface AppLayoutProps {
   children: React.ReactNode
   user?: SupabaseUser | null
   noBottomPadding?: boolean
+  noTopPadding?: boolean
 }
 
-export function AppLayout({ children, user, noBottomPadding = false }: AppLayoutProps) {
+export function AppLayout({ children, user, noBottomPadding = false, noTopPadding = false }: AppLayoutProps) {
   const isMobile = useIsMobile()
   const [sidebarOpen, setSidebarOpen] = useState(() => {
     if (typeof window === "undefined") return true
@@ -47,7 +48,7 @@ export function AppLayout({ children, user, noBottomPadding = false }: AppLayout
         <SideNav isOpen={sidebarOpen} onClose={() => handleSidebarToggle(false)} isMobile={isMobile} />
 
         <main
-          className={`flex-1 transition-all duration-200 px-4 pt-4 max-w-full ${noBottomPadding ? "pb-0" : ""}`}
+          className={`flex-1 transition-all duration-200 px-4 max-w-full ${noTopPadding ? "" : "pt-4"} ${noBottomPadding ? "pb-0" : ""}`}
           style={
             !noBottomPadding && isMobile
               ? {

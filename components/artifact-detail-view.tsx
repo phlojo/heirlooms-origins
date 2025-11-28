@@ -429,22 +429,9 @@ export function ArtifactDetailView({
       nextUrl={isEditMode ? null : nextUrl}
       disableSwipe={isImageFullscreen || isEditMode}
     >
-      <div className={`space-y-6 px-6 lg:px-8 overflow-x-hidden pb-6 ${isEditMode ? "pt-4" : "pt-2"}`}>
-        {/* Gallery Editor/Viewer - At the very top */}
-        {isEditMode ? (
-          <ArtifactGalleryEditor
-            artifactId={artifact.id}
-            galleryMedia={currentGalleryMedia}
-            onUpdate={handleGalleryUpdate}
-          />
-        ) : (
-          currentGalleryMedia && currentGalleryMedia.length > 0 && (
-            <ArtifactMediaGallery media={currentGalleryMedia} />
-          )
-        )}
-
+      <div className={`overflow-x-hidden pb-[240px]`}>
         {!isEditMode && canEdit && (
-          <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center justify-between gap-3 pt-4 mb-4">
             <Button asChild className="bg-purple-600 hover:bg-purple-700 text-white">
               <Link href={`/artifacts/${artifact.slug}?mode=edit`}>
                 <Pencil className="mr-2 h-4 w-4" />
@@ -471,6 +458,19 @@ export function ArtifactDetailView({
           </div>
         )}
 
+        {/* Gallery Editor/Viewer */}
+        {isEditMode ? (
+          <ArtifactGalleryEditor
+            artifactId={artifact.id}
+            galleryMedia={currentGalleryMedia}
+            onUpdate={handleGalleryUpdate}
+          />
+        ) : (
+          currentGalleryMedia && currentGalleryMedia.length > 0 && (
+            <ArtifactMediaGallery media={currentGalleryMedia} />
+          )
+        )}
+
         {isEditMode && (
           <section className="space-y-2">
             <label htmlFor="title" className="text-sm font-medium text-foreground">
@@ -489,7 +489,7 @@ export function ArtifactDetailView({
         )}
 
         {/* Description Section */}
-        <section className="space-y-4">
+        <section className="space-y-4 py-4">
           {isEditMode && <h2 className="text-sm font-medium text-foreground">Description</h2>}
           {isEditMode ? (
             <TranscriptionInput
@@ -575,27 +575,31 @@ export function ArtifactDetailView({
             </CollapsibleContent>
           </Collapsible>
         </section>
-      </div>
 
-      <Separator className="mb-4" />
+        <Separator className="mb-4" />
 
-      {/* Media Items Section */}
-      <section className="space-y-6 mb-6 overflow-x-hidden">
-        {isEditMode && (
-          <div className="flex items-center justify-between px-6 lg:px-8">
-            <h2 className="text-sm font-medium text-foreground">Media Items</h2>
-            {canEdit && (
-              <Button
-                onClick={() => setIsAddMediaOpen(true)}
-                className="bg-purple-600 hover:bg-purple-700 text-white"
-                size="sm"
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                Add Media
-              </Button>
-            )}
-          </div>
-        )}
+        {/* Media Items Section */}
+        <section className="space-y-6 mb-6 overflow-x-hidden">
+          {isEditMode && (
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-sm font-medium text-foreground">Media Items</h2>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Click "Save" at the bottom to persist changes
+                </p>
+              </div>
+              {canEdit && (
+                <Button
+                  onClick={() => setIsAddMediaOpen(true)}
+                  className="bg-purple-600 hover:bg-purple-700 text-white"
+                  size="sm"
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Media
+                </Button>
+              )}
+            </div>
+          )}
 
         {mediaUrls.length > 0 ? (
           <div className="space-y-6">
@@ -605,7 +609,7 @@ export function ArtifactDetailView({
                 return (
                   <div key={url} className="space-y-3">
                     {isEditMode && (
-                      <div className="flex items-center justify-between px-6 lg:px-8">
+                      <div className="flex items-center justify-between">
                         <h3 className="text-sm font-medium">
                           Audio{audioUrlsFiltered.length > 1 ? ` ${audioUrlsFiltered.indexOf(url) + 1}` : ""}
                         </h3>
@@ -619,7 +623,7 @@ export function ArtifactDetailView({
                         </Button>
                       </div>
                     )}
-                    <div className="px-6 lg:px-8 space-y-3">
+                    <div className="space-y-3">
                       <AudioPlayer src={url} title="Audio Recording" />
 
                       {isEditMode && (
@@ -650,7 +654,7 @@ export function ArtifactDetailView({
                 return (
                   <div key={url} className="space-y-3">
                     {isEditMode && (
-                      <div className="flex items-center justify-between px-6 lg:px-8">
+                      <div className="flex items-center justify-between">
                         <h3 className="text-sm font-medium">
                           Video{videoUrlsFiltered.length > 1 ? ` ${videoUrlsFiltered.indexOf(url) + 1}` : ""}
                         </h3>
@@ -683,7 +687,7 @@ export function ArtifactDetailView({
                         Your browser does not support the video tag.
                       </video>
                     </div>
-                    <div className="px-6 lg:px-8 space-y-3">
+                    <div className="space-y-3">
                       {isEditMode ? (
                         <>
                           <div className="space-y-2">
@@ -728,7 +732,7 @@ export function ArtifactDetailView({
                 return (
                   <div key={url} className="space-y-3">
                     {isEditMode && (
-                      <div className="flex items-center justify-between px-6 lg:px-8">
+                      <div className="flex items-center justify-between">
                         <h3 className="text-sm font-medium">
                           Photo{imageUrlsFiltered.length > 1 ? ` ${imageUrlsFiltered.indexOf(url) + 1}` : ""}
                         </h3>
@@ -761,7 +765,7 @@ export function ArtifactDetailView({
                       alt={`${artifact.title} - Image ${imageUrlsFiltered.indexOf(url) + 1}`}
                       setIsImageFullscreen={setIsImageFullscreen}
                     />
-                    <div className="px-6 lg:px-8 space-y-3">
+                    <div className="space-y-3">
                       {isEditMode ? (
                         <>
                           <div className="space-y-2">
@@ -808,10 +812,9 @@ export function ArtifactDetailView({
             <p className="text-sm text-muted-foreground">No media available</p>
           </div>
         )}
-      </section>
+        </section>
 
-      {/* Provenance Section */}
-      <div className="px-6 lg:px-8 pb-[240px] overflow-x-hidden">
+        {/* Provenance Section */}
         <section className="pb-8">
           <Collapsible open={isProvenanceOpen} onOpenChange={setIsProvenanceOpen}>
             <CollapsibleTrigger className="flex w-full items-center justify-between hover:opacity-80 transition-opacity">
