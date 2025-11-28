@@ -406,20 +406,23 @@ export async function getArtifactMediaByRole(
     return { error: "Failed to fetch artifact media" }
   }
 
-  // Add derivative URLs
-  const mediaWithDerivatives: ArtifactMediaWithDerivatives[] = (data || []).map((item) => {
-    const media = item.media as UserMedia
-    return {
-      ...item,
-      media: {
-        ...media,
-        thumbnailUrl: getThumbnailUrl(media.public_url),
-        mediumUrl: getMediumUrl(media.public_url),
-        largeUrl: getLargeUrl(media.public_url),
-        fullResUrl: media.public_url,
-      },
-    }
-  })
+  // Add derivative URLs, filtering out any items where the media join failed
+  // (can happen if artifact_media references a deleted user_media record)
+  const mediaWithDerivatives: ArtifactMediaWithDerivatives[] = (data || [])
+    .filter((item) => item.media !== null)
+    .map((item) => {
+      const media = item.media as UserMedia
+      return {
+        ...item,
+        media: {
+          ...media,
+          thumbnailUrl: getThumbnailUrl(media.public_url),
+          mediumUrl: getMediumUrl(media.public_url),
+          largeUrl: getLargeUrl(media.public_url),
+          fullResUrl: media.public_url,
+        },
+      }
+    })
 
   return { data: mediaWithDerivatives }
 }

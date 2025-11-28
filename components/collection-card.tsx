@@ -14,8 +14,8 @@ interface CollectionCardProps {
     id: string
     slug?: string
     title: string
-    description?: string
-    cover_image?: string
+    description?: string | null
+    cover_image?: string | null
     itemCount: number
     user_id: string
     authorName?: string | null

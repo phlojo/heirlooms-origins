@@ -51,7 +51,7 @@ export const mockSingleRowOperation = (data: any = null, error: any = null) => {
 /**
  * Create a custom mock Supabase client with specific table mocks
  */
-export const createMockSupabaseClient = (tables?: Record<string, any>) => {
+export const createMockSupabaseClient = (tables?: Record<string, any>): any => {
   const defaultTables = {
     artifacts: {
       select: vi.fn().mockReturnThis(),

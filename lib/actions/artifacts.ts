@@ -614,7 +614,7 @@ export async function updateArtifact(
   const { data: existingArtifact } = await supabase
     .from("artifacts")
     .select(
-      "user_id, collection_id, slug, title, media_urls, collection:collections(slug), image_captions, video_summaries, audio_transcripts, audio_summaries",
+      "user_id, collection_id, slug, title, media_urls, thumbnail_url, collection:collections(slug), image_captions, video_summaries, audio_transcripts, audio_summaries",
     )
     .eq("id", validatedFields.data.id)
     .single()
@@ -805,8 +805,8 @@ export async function updateArtifact(
   revalidatePath(`/artifacts/${updatedArtifact.slug}`)
   revalidatePath("/collections")
 
-  if (existingArtifact.collection?.slug) {
-    revalidatePath(`/collections/${existingArtifact.collection.slug}`)
+  if (existingArtifact.collection?.[0]?.slug) {
+    revalidatePath(`/collections/${existingArtifact.collection?.[0]?.slug}`)
   }
 
   if (collectionChanged) {
@@ -891,8 +891,8 @@ export async function deleteMediaFromArtifact(artifactId: string, mediaUrl: stri
 
   revalidatePath(`/artifacts/${artifact.slug}`)
   revalidatePath("/collections")
-  if (artifact.collection?.slug) {
-    revalidatePath(`/collections/${artifact.collection.slug}`)
+  if (artifact.collection?.[0]?.slug) {
+    revalidatePath(`/collections/${artifact.collection?.[0]?.slug}`)
   }
 
   return { success: true }
@@ -1030,8 +1030,8 @@ export async function deleteArtifact(artifactId: string) {
 
   revalidatePath(`/artifacts/${artifact.slug}`)
   revalidatePath("/collections")
-  if (artifact.collection?.slug) {
-    revalidatePath(`/collections/${artifact.collection.slug}`)
+  if (artifact.collection?.[0]?.slug) {
+    revalidatePath(`/collections/${artifact.collection?.[0]?.slug}`)
   }
 
   return { success: true }
@@ -1083,8 +1083,8 @@ export async function updateMediaCaption(artifactId: string, mediaUrl: string, c
   }
 
   revalidatePath(`/artifacts/${artifact.slug}`)
-  if (artifact.collection?.slug) {
-    revalidatePath(`/collections/${artifact.collection.slug}`)
+  if (artifact.collection?.[0]?.slug) {
+    revalidatePath(`/collections/${artifact.collection?.[0]?.slug}`)
   }
 
   return { success: true }

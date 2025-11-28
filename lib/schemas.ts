@@ -65,6 +65,7 @@ export const updateArtifactSchema = z.object({
   media_derivatives: mediaDerivativesSchema.nullable().optional(),
   image_captions: z.record(z.string().url(), z.string()).optional(),
   video_summaries: z.record(z.string().url(), z.string()).optional(),
+  audio_transcripts: z.record(z.string().url(), z.string()).optional(),
   thumbnail_url: z.string().url("Invalid thumbnail URL").nullable().optional(),
   collectionId: z.string().uuid("Invalid collection ID").optional(), // Added collectionId field to schema
 })

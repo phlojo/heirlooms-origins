@@ -52,6 +52,7 @@ pnpm test -t "should detect image URLs"    # Run tests matching pattern
 All data mutations use Next.js Server Actions in `lib/actions/`:
 - `artifacts.ts` - Create, update, delete artifacts
 - `collections.ts` - Collection CRUD operations
+- `media.ts` - Unified media model (user_media + artifact_media) ✨ NEW
 - `cloudinary.ts` - Media upload/deletion to Cloudinary
 - `pending-uploads.ts` - Track temporary uploads (24hr expiration)
 - `auth.ts` - Authentication flows
@@ -94,6 +95,52 @@ All data mutations use Next.js Server Actions in `lib/actions/`:
 - For Cloudinary URLs: Returns stored derivative or dynamic transformation
 - `deleteCloudinaryMedia(publicId)` - Delete Cloudinary media (legacy)
 
+### Artifact Gallery (Unified Media Model)
+**Status**: ✅ Implemented (Phase 2 complete, 2025-11-27)
+
+The artifact gallery is a horizontal carousel of media displayed at the top of artifact pages. It uses a unified media model with role-based linking.
+
+**Database Schema**:
+- `user_media` - Canonical storage for all user uploads (filename, type, URL, metadata)
+- `artifact_media` - Junction table linking artifacts to media with roles
+  - Roles: `gallery` (carousel), `inline_block` (future), `cover` (thumbnail)
+  - `sort_order` - Integer for ordering within role
+  - `caption_override` - Optional per-use caption
+
+**Dual-write pattern**: Maintains both new tables AND legacy `artifacts.media_urls` array for backward compatibility.
+
+**View Mode** (`components/artifact-media-gallery.tsx`):
+- Uses **Flickity** carousel library
+- Touch/swipe navigation with custom prev/next buttons
+- Lazy loading (2 ahead), adaptive height
+- Image fit toggle (tap to switch cover/contain)
+- Auto-pause videos on slide change
+- Page dots for position indicator
+
+**Edit Mode** (`components/artifact-gallery-editor.tsx`):
+- Uses **@dnd-kit** for React-first drag-and-drop
+- Horizontal sortable list with `horizontalListSortingStrategy`
+- Optimistic updates (instant UI feedback, no refetch on reorder)
+- Auto-save with two-phase database update
+- MediaPicker integration for selecting from library
+- Touch/keyboard/mouse support via sensors
+
+**Server Actions** (`lib/actions/media.ts`):
+- `createUserMedia()` - Create user_media record
+- `getUserMediaLibrary()` - Get user's media library with filtering
+- `createArtifactMediaLink()` - Link media to artifact with role
+- `getArtifactGalleryMedia()` - Get gallery media with derivatives
+- `reorderArtifactMedia()` - Reorder within role (two-phase update)
+- `removeArtifactMediaLink()` - Remove media from artifact
+- `getMediaUsage()` - Find where media is used
+
+**Key Implementation Details**:
+- Container height: 192px with hidden scrollbar
+- Card spacing: 4px gap, 12px padding, 64x64 thumbnails
+- Optimistic updates: Update UI immediately, save in background, revert on error
+- Two-phase reorder: Prevents unique constraint violations
+- See `docs/guides/artifact-gallery-editor.md` for complete guide
+
 ### URL Routing (Hybrid ID + Slug)
 **Decision**: Use UUID + slug pattern for stable, shareable URLs.
 
@@ -111,6 +158,8 @@ Key tables:
 - `artifacts` - Media items with title, description, media_urls (array), AI metadata (JSONB)
 - `collections` - Groups of artifacts, has privacy settings (is_public)
 - `artifact_types` - Dynamic type system (cars, watches, general, custom)
+- `user_media` - Canonical storage for all user uploads (unified media model) ✨ NEW
+- `artifact_media` - Junction table linking artifacts to media with roles ✨ NEW
 - `pending_uploads` - Temporary media tracking (expires after 24hr)
 - `profiles` - User profiles (extends Supabase auth.users)
 
@@ -185,6 +234,43 @@ See `TESTING.md` for comprehensive testing guide.
 - Follow mobile-first design (responsive with Tailwind)
 - Add component tests in `__tests__/components/`
 - Use `useSupabase()` hook from `components/supabase-provider.tsx` for client-side Supabase access
+
+### TypeScript: Database Types vs Component Props
+**Critical**: PostgreSQL `NULL` becomes JavaScript `null`, NOT `undefined`.
+
+When defining component prop types for database-sourced data:
+```typescript
+// ❌ WRONG - Will fail when database returns null
+interface Props {
+  year_acquired?: number      // Only accepts undefined
+  cover_image?: string        // Only accepts undefined
+}
+
+// ✅ CORRECT - Accepts both null and undefined
+interface Props {
+  year_acquired?: number | null
+  cover_image?: string | null
+}
+```
+
+### Supabase Joins Return Arrays
+When using Supabase PostgREST foreign key joins, the result is an **array**, not a single object:
+
+```typescript
+// Query with join
+const { data } = await supabase
+  .from("artifacts")
+  .select("*, collection:collections(slug)")
+  .single()
+
+// ❌ WRONG - collection is an array
+const slug = data.collection?.slug
+
+// ✅ CORRECT - Access first element
+const slug = data.collection?.[0]?.slug
+```
+
+To get a single object, use `!inner` join modifier (but still check for null).
 
 ### Mobile & iOS Safari Viewport Handling
 **Critical for mobile experience** - The app uses modern viewport strategies to handle iOS Safari's dynamic UI:

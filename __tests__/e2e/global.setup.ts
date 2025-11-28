@@ -1,4 +1,4 @@
-import { test as base, expect } from "@playwright/test"
+import { test as base, expect, type Page } from "@playwright/test"
 import { login } from "./helpers/login"
 
 /**
@@ -18,3 +18,4 @@ export const test = base.extend({
 })
 
 export { expect }
+export type { Page }
