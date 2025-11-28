@@ -545,6 +545,7 @@ export function ArtifactDetailView({
           </section>
         )}
 
+        {isEditMode && artifactTypes.length > 0 && <div className="pt-4" />}
         {isEditMode && artifactTypes.length > 0 && (
           <ArtifactTypeSelector
             types={artifactTypes}
@@ -555,6 +556,8 @@ export function ArtifactDetailView({
             storageKey="artifactTypeSelector_edit_open"
           />
         )}
+
+        {isEditMode && artifactTypes.length > 0 && <div className="pt-4" />}
 
         {/* Attributes Section */}
         <section className="space-y-2 mb-0">
@@ -576,7 +579,7 @@ export function ArtifactDetailView({
           </Collapsible>
         </section>
 
-        <Separator className="mb-4" />
+        <Separator className="my-4" />
 
         {/* Media Items Section */}
         <section className="space-y-6 mb-6 overflow-x-hidden">

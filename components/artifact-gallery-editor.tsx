@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { type ArtifactMediaWithDerivatives, type UserMediaWithDerivatives } from "@/lib/types/media"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { X, Plus, Image as ImageIcon, GripVertical } from "lucide-react"
+import { X, Image as ImageIcon, GripVertical, Pencil } from "lucide-react"
 import {
   createArtifactMediaLink,
   removeArtifactMediaLink,
@@ -50,8 +50,7 @@ interface SortableItemProps {
 
 function SortableItem({ item, onRemove }: SortableItemProps) {
   const media = item.media
-  const isImage = media.media_type === "image"
-  const isVideo = media.media_type === "video"
+  const thumbnailSrc = media.thumbnailUrl || media.public_url
 
   const {
     attributes,
@@ -62,71 +61,42 @@ function SortableItem({ item, onRemove }: SortableItemProps) {
     isDragging,
   } = useSortable({ id: item.id })
 
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : 1,
-  }
-
   return (
-    <Card
+    <div
       ref={setNodeRef}
-      style={style}
       data-media-id={item.media_id}
-      className="w-auto inline-flex items-center justify-center gap-1 p-3 rounded-sm"
+      className="flex flex-col items-center gap-1 p-2 border rounded bg-card shadow-sm w-24 shrink-0"
+      style={{
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.5 : 1,
+      }}
     >
-      {/* Drag Handle */}
+      {/* Draggable area */}
       <div
         {...attributes}
         {...listeners}
-        className="flex-shrink-0 flex items-center justify-center cursor-grab active:cursor-grabbing"
+        className="flex flex-col items-center gap-1 cursor-grab active:cursor-grabbing"
       >
         <GripVertical className="h-5 w-5 text-muted-foreground" />
-      </div>
-
-      {/* Thumbnail */}
-      <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded bg-muted flex items-center justify-center">
-        {isImage && (
-          <img
-            src={media.thumbnailUrl || media.public_url}
-            alt={media.filename}
-            className="h-full w-full object-cover"
-          />
-        )}
-        {isVideo && (
-          <div className="relative h-full w-full flex items-center justify-center">
-            {media.thumbnailUrl ? (
-              <img
-                src={media.thumbnailUrl}
-                alt={media.filename}
-                className="h-full w-full object-cover"
-              />
-            ) : (
-              <div className="flex h-full items-center justify-center bg-black">
-                <ImageIcon className="h-6 w-6 text-white/50" />
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* Info */}
-      <div className="flex-shrink-0 flex items-center justify-center">
-        <p className="text-xs text-muted-foreground capitalize">
+        <img
+          src={thumbnailSrc}
+          alt={media.filename}
+          className="h-16 w-16 rounded object-cover bg-muted"
+        />
+        <span className="text-xs text-muted-foreground capitalize">
           {media.media_type}
-        </p>
+        </span>
       </div>
 
-      {/* Remove Button */}
-      <Button
-        variant="ghost"
-        size="icon"
+      {/* Remove Button (not draggable) */}
+      <button
         onClick={() => onRemove(item.id, media.filename)}
-        className="text-destructive hover:bg-destructive/10 flex-shrink-0 inline-flex items-center justify-center"
+        className="p-2 text-destructive hover:bg-destructive/10 rounded"
       >
         <X className="h-4 w-4" />
-      </Button>
-    </Card>
+      </button>
+    </div>
   )
 }
 
@@ -207,14 +177,16 @@ export function ArtifactGalleryEditor({
   }
 
   const handleAddMedia = async (selectedMedia: UserMediaWithDerivatives[]) => {
+    console.log("[GalleryEditor] handleAddMedia called with:", selectedMedia.length, "items")
     try {
       // Add each selected media to gallery
-      for (const media of selectedMedia) {
+      for (let i = 0; i < selectedMedia.length; i++) {
+        const media = selectedMedia[i]
         const result = await createArtifactMediaLink({
           artifact_id: artifactId,
           media_id: media.id,
           role: "gallery",
-          sort_order: galleryMedia.length,
+          sort_order: galleryMedia.length + i,
         })
 
         if (result.error) {
@@ -250,23 +222,21 @@ export function ArtifactGalleryEditor({
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 pt-4">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex-1">
-          <div className="flex items-center gap-3">
-            <h3 className="text-lg font-semibold">Gallery</h3>
-            <span className="rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900/30 dark:text-green-400">
-              Auto-saved
-            </span>
-          </div>
-          <p className="text-sm text-muted-foreground">
-            Media carousel displayed at the top of your artifact page. Drag to reorder, changes save automatically.
-          </p>
-        </div>
-        <Button onClick={() => setIsPickerOpen(true)} size="sm">
-          <Plus className="mr-2 h-4 w-4" />
-          Add to Gallery
+      <div className="flex items-center gap-3">
+        <h3 className="text-lg font-semibold">Gallery</h3>
+        <span className="rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900/30 dark:text-green-400">
+          Auto-saved
+        </span>
+      </div>
+      <div className="flex items-end justify-between gap-4">
+        <p className="text-sm text-muted-foreground">
+          Media carousel displayed at the top of your artifact page. Drag to reorder, changes save automatically.
+        </p>
+        <Button onClick={() => setIsPickerOpen(true)} size="sm" className="bg-purple-600 hover:bg-purple-700 text-white flex-shrink-0">
+          <Pencil className="mr-2 h-4 w-4" />
+          Edit Gallery
         </Button>
       </div>
 
@@ -289,7 +259,7 @@ export function ArtifactGalleryEditor({
             items={items.map(item => item.id)}
             strategy={horizontalListSortingStrategy}
           >
-            <div className="gallery-grid h-[192px] relative overflow-x-auto overflow-y-hidden whitespace-nowrap">
+            <div className="gallery-grid relative overflow-x-auto overflow-y-hidden whitespace-nowrap">
               {items.map((item) => (
                 <SortableItem
                   key={item.id}
@@ -323,7 +293,7 @@ export function ArtifactGalleryEditor({
         __html: `
           .gallery-grid {
             display: flex;
-            gap: 4px;
+            gap: 8px;
           }
 
           /* Hide scrollbar but keep scrolling */

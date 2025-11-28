@@ -26,6 +26,7 @@ export function MediaPicker({
   const [allMedia, setAllMedia] = useState<UserMediaWithDerivatives[]>([])
   const [filteredMedia, setFilteredMedia] = useState<UserMediaWithDerivatives[]>([])
   const [selectedMedia, setSelectedMedia] = useState<Set<string>>(new Set())
+  const [brokenMediaIds, setBrokenMediaIds] = useState<Set<string>>(new Set())
   const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
   const [activeTab, setActiveTab] = useState<"all" | "image" | "video" | "audio">(
@@ -90,6 +91,11 @@ export function MediaPicker({
     }
 
     setSelectedMedia(newSelected)
+  }
+
+  // Handle broken media (404) - remove from display
+  const handleMediaError = (mediaId: string) => {
+    setBrokenMediaIds(prev => new Set([...prev, mediaId]))
   }
 
   const handleConfirmSelection = () => {
@@ -168,11 +174,12 @@ export function MediaPicker({
           </div>
         ) : (
           <div className="grid grid-cols-3 gap-3 p-1">
-            {filteredMedia.map((media) => {
+            {filteredMedia.filter(m => !brokenMediaIds.has(m.id)).map((media) => {
               const isSelected = selectedMedia.has(media.id)
 
               return (
                 <button
+                  style={{ display: media.thumbnailUrl ? "block" : "none" }}
                   key={media.id}
                   onClick={() => handleToggleSelect(media)}
                   className={cn(
@@ -188,6 +195,7 @@ export function MediaPicker({
                       src={media.thumbnailUrl || media.public_url}
                       alt={media.filename}
                       className="h-full w-full object-cover"
+                      onError={() => handleMediaError(media.id)}
                     />
                   )}
                   {media.media_type === "video" && (
@@ -197,6 +205,7 @@ export function MediaPicker({
                           src={media.thumbnailUrl}
                           alt={media.filename}
                           className="h-full w-full object-cover"
+                          onError={() => handleMediaError(media.id)}
                         />
                       ) : (
                         <div className="flex h-full items-center justify-center">
