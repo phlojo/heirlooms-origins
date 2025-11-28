@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { ArrowLeft, ArrowRight } from "lucide-react"
+import { StepBack, StepForward } from "lucide-react"
 import { useRouter } from "next/navigation"
 
 const CYCLE_WORDS = ["Swipe", "to Navigate", "Artifacts"]
@@ -63,7 +63,7 @@ export function SwipeGuidance({ onDismiss, previousUrl, nextUrl }: SwipeGuidance
           }`}
           aria-label="Previous"
         >
-          <ArrowLeft className="h-5 w-5 flex-shrink-0" />
+          <StepBack className="h-5 w-5 flex-shrink-0" />
         </button>
         <span
           className={`text-center w-24 transition-opacity duration-400 ${isVisible ? 'opacity-100' : 'opacity-0'}`}
@@ -78,7 +78,7 @@ export function SwipeGuidance({ onDismiss, previousUrl, nextUrl }: SwipeGuidance
           }`}
           aria-label="Next"
         >
-          <ArrowRight className="h-5 w-5 flex-shrink-0" />
+          <StepForward className="h-5 w-5 flex-shrink-0" />
         </button>
       </div>
     </div>

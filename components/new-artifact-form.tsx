@@ -1,6 +1,7 @@
 "use client"
 import { createArtifact } from "@/lib/actions/artifacts"
 import { cleanupPendingUploads } from "@/lib/actions/pending-uploads"
+import { permanentlyDeleteMedia } from "@/lib/actions/media"
 import { createArtifactSchema } from "@/lib/schemas"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
@@ -8,7 +9,7 @@ import type { z } from "zod"
 import { Button } from "@/components/ui/button"
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form"
 import { useState, useEffect } from "react"
-import { ChevronDown, Trash2, Save, X, Plus, BookImage } from "lucide-react"
+import { ChevronDown, Save, X, Plus, BookImage, MoreVertical } from "lucide-react"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { normalizeMediaUrls, isAudioUrl, isImageUrl, isVideoUrl } from "@/lib/media"
 import { getMediumUrl } from "@/lib/cloudinary"
@@ -27,6 +28,7 @@ import { HelpText } from "@/components/ui/help-text"
 import { Separator } from "@/components/ui/separator"
 import { NewArtifactGalleryEditor } from "@/components/new-artifact-gallery-editor"
 import { AddMediaModal } from "@/components/add-media-modal"
+import { MediaActionModal } from "@/components/media-action-modal"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -37,6 +39,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import { toast } from "sonner"
 
 type FormData = z.infer<typeof createArtifactSchema>
 
@@ -56,8 +59,8 @@ export default function NewArtifactForm({ collectionId, userId }: NewArtifactFor
   const [selectedTypeId, setSelectedTypeId] = useState<string | null>(null)
   const [artifactTypes, setArtifactTypes] = useState<any[]>([])
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false)
-  const [deleteMediaDialogOpen, setDeleteMediaDialogOpen] = useState(false)
-  const [mediaToDelete, setMediaToDelete] = useState<string | null>(null)
+  const [mediaActionModalOpen, setMediaActionModalOpen] = useState(false)
+  const [mediaToAction, setMediaToAction] = useState<string | null>(null)
   const [isImageFullscreen, setIsImageFullscreen] = useState(false)
 
   const [imageCaptions, setImageCaptions] = useState<Record<string, string>>({})
@@ -156,43 +159,88 @@ export default function NewArtifactForm({ collectionId, userId }: NewArtifactFor
     }
   }
 
-  const handleDeleteMedia = (urlToDelete: string) => {
-    setMediaToDelete(urlToDelete)
-    setDeleteMediaDialogOpen(true)
+  const handleMediaAction = (urlToAction: string) => {
+    setMediaToAction(urlToAction)
+    setMediaActionModalOpen(true)
   }
 
-  const confirmDeleteMedia = () => {
-    if (!mediaToDelete) return
+  const handleRemoveMedia = () => {
+    if (!mediaToAction) return
 
-    // Remove from media blocks
-    setMediaBlockUrls((prev) => prev.filter((url) => url !== mediaToDelete))
+    // Remove from media blocks only
+    setMediaBlockUrls((prev) => prev.filter((url) => url !== mediaToAction))
 
     // Clean up associated metadata
     setImageCaptions((prev) => {
       const updated = { ...prev }
-      delete updated[mediaToDelete]
+      delete updated[mediaToAction]
       return updated
     })
     setVideoSummaries((prev) => {
       const updated = { ...prev }
-      delete updated[mediaToDelete]
+      delete updated[mediaToAction]
       return updated
     })
     setAudioTranscripts((prev) => {
       const updated = { ...prev }
-      delete updated[mediaToDelete]
+      delete updated[mediaToAction]
       return updated
     })
 
-    // Update thumbnail if deleted
-    if (selectedThumbnailUrl === mediaToDelete) {
-      const remainingUrls = [...galleryUrls, ...mediaBlockUrls.filter((url) => url !== mediaToDelete)]
+    // Update thumbnail if removed
+    if (selectedThumbnailUrl === mediaToAction) {
+      const remainingUrls = [...galleryUrls, ...mediaBlockUrls.filter((url) => url !== mediaToAction)]
       const newThumbnail = remainingUrls.find((url) => isImageUrl(url) || isVideoUrl(url))
       setSelectedThumbnailUrl(newThumbnail || null)
     }
 
-    setDeleteMediaDialogOpen(false)
-    setMediaToDelete(null)
+    toast.success("Media removed from artifact")
+    setMediaToAction(null)
+  }
+
+  const handlePermanentlyDeleteMedia = async () => {
+    if (!mediaToAction) return
+
+    // Remove from both gallery and media blocks
+    setGalleryUrls((prev) => prev.filter((url) => url !== mediaToAction))
+    setMediaBlockUrls((prev) => prev.filter((url) => url !== mediaToAction))
+
+    // Clean up associated metadata
+    setImageCaptions((prev) => {
+      const updated = { ...prev }
+      delete updated[mediaToAction]
+      return updated
+    })
+    setVideoSummaries((prev) => {
+      const updated = { ...prev }
+      delete updated[mediaToAction]
+      return updated
+    })
+    setAudioTranscripts((prev) => {
+      const updated = { ...prev }
+      delete updated[mediaToAction]
+      return updated
+    })
+
+    // Update thumbnail if deleted
+    if (selectedThumbnailUrl === mediaToAction) {
+      const remainingUrls = [
+        ...galleryUrls.filter((url) => url !== mediaToAction),
+        ...mediaBlockUrls.filter((url) => url !== mediaToAction),
+      ]
+      const newThumbnail = remainingUrls.find((url) => isImageUrl(url) || isVideoUrl(url))
+      setSelectedThumbnailUrl(newThumbnail || null)
+    }
+
+    // Permanently delete from storage
+    const result = await permanentlyDeleteMedia(mediaToAction)
+    if (result.error) {
+      toast.error("Failed to delete media from storage")
+    } else {
+      toast.success("Media permanently deleted")
+    }
+
+    setMediaToAction(null)
   }
 
   const handleSelectThumbnail = (url: string) => {
@@ -429,10 +477,11 @@ export default function NewArtifactForm({ collectionId, userId }: NewArtifactFor
                           type="button"
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleDeleteMedia(url)}
-                          className="text-destructive hover:text-destructive"
+                          onClick={() => handleMediaAction(url)}
+                          className="text-muted-foreground hover:text-foreground"
+                          title="Media options"
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <MoreVertical className="h-4 w-4" />
                         </Button>
                       </div>
                       <div className="space-y-3">
@@ -481,10 +530,11 @@ export default function NewArtifactForm({ collectionId, userId }: NewArtifactFor
                             type="button"
                             variant="ghost"
                             size="sm"
-                            onClick={() => handleDeleteMedia(url)}
-                            className="text-destructive hover:text-destructive"
+                            onClick={() => handleMediaAction(url)}
+                            className="text-muted-foreground hover:text-foreground"
+                            title="Media options"
                           >
-                            <Trash2 className="h-4 w-4" />
+                            <MoreVertical className="h-4 w-4" />
                           </Button>
                         </div>
                       </div>
@@ -548,10 +598,11 @@ export default function NewArtifactForm({ collectionId, userId }: NewArtifactFor
                             type="button"
                             variant="ghost"
                             size="sm"
-                            onClick={() => handleDeleteMedia(url)}
-                            className="text-destructive hover:text-destructive"
+                            onClick={() => handleMediaAction(url)}
+                            className="text-muted-foreground hover:text-foreground"
+                            title="Media options"
                           >
-                            <Trash2 className="h-4 w-4" />
+                            <MoreVertical className="h-4 w-4" />
                           </Button>
                         </div>
                       </div>
@@ -640,28 +691,14 @@ export default function NewArtifactForm({ collectionId, userId }: NewArtifactFor
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Delete Media Confirmation Dialog */}
-      <AlertDialog open={deleteMediaDialogOpen} onOpenChange={setDeleteMediaDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Remove Media?</AlertDialogTitle>
-            <AlertDialogDescription className="space-y-2">
-              <span className="block">
-                This will remove the media from your artifact.
-              </span>
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Keep Media</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={confirmDeleteMedia}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Remove Media
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {/* Media Action Modal (Remove/Delete) */}
+      <MediaActionModal
+        open={mediaActionModalOpen}
+        onOpenChange={setMediaActionModalOpen}
+        mediaUrl={mediaToAction}
+        onRemove={handleRemoveMedia}
+        onDelete={handlePermanentlyDeleteMedia}
+      />
 
       {/* Add Media Modal for Media Blocks */}
       <AddMediaModal

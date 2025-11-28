@@ -192,6 +192,122 @@ export async function deleteUserMedia(mediaId: string): Promise<{ error?: string
   return {}
 }
 
+/**
+ * Permanently delete media from storage and all database references
+ * This removes:
+ * - The file from Supabase Storage or Cloudinary
+ * - The user_media record
+ * - All artifact_media links (cascade)
+ * - References in artifacts.media_urls arrays
+ * - References in AI metadata (image_captions, video_summaries, audio_transcripts)
+ */
+export async function permanentlyDeleteMedia(
+  mediaUrl: string
+): Promise<{ error?: string }> {
+  const supabase = await createClient()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    return { error: "Unauthorized" }
+  }
+
+  console.log("[permanentlyDeleteMedia] Starting deletion for URL:", mediaUrl)
+
+  // Import storage utilities dynamically to avoid circular dependencies
+  const { isSupabaseStorageUrl, isCloudinaryUrl } = await import("@/lib/media")
+  const { deleteFromSupabaseStorage } = await import("@/lib/actions/supabase-storage")
+  const { deleteCloudinaryMedia, extractPublicIdFromUrl } = await import("@/lib/actions/cloudinary")
+
+  // 1. Delete from storage
+  if (isSupabaseStorageUrl(mediaUrl)) {
+    console.log("[permanentlyDeleteMedia] Deleting from Supabase Storage")
+    const storageResult = await deleteFromSupabaseStorage(mediaUrl)
+    if (storageResult.error) {
+      console.error("[permanentlyDeleteMedia] Storage deletion error:", storageResult.error)
+      // Continue anyway - file might already be deleted
+    }
+  } else if (isCloudinaryUrl(mediaUrl)) {
+    console.log("[permanentlyDeleteMedia] Deleting from Cloudinary")
+    const publicId = await extractPublicIdFromUrl(mediaUrl)
+    if (publicId) {
+      await deleteCloudinaryMedia(publicId)
+    }
+  }
+
+  // 2. Find and delete user_media record (this will cascade delete artifact_media links)
+  const { data: userMedia } = await supabase
+    .from("user_media")
+    .select("id")
+    .eq("public_url", mediaUrl)
+    .eq("user_id", user.id)
+    .single()
+
+  if (userMedia) {
+    console.log("[permanentlyDeleteMedia] Deleting user_media record:", userMedia.id)
+    const { error: deleteError } = await supabase
+      .from("user_media")
+      .delete()
+      .eq("id", userMedia.id)
+
+    if (deleteError) {
+      console.error("[permanentlyDeleteMedia] Failed to delete user_media:", deleteError)
+    }
+  }
+
+  // 3. Remove from all artifacts.media_urls arrays and AI metadata
+  const { data: artifacts } = await supabase
+    .from("artifacts")
+    .select("id, slug, media_urls, thumbnail_url, image_captions, video_summaries, audio_transcripts")
+    .eq("user_id", user.id)
+    .contains("media_urls", [mediaUrl])
+
+  if (artifacts && artifacts.length > 0) {
+    console.log("[permanentlyDeleteMedia] Updating", artifacts.length, "artifacts")
+
+    for (const artifact of artifacts) {
+      const updatedMediaUrls = (artifact.media_urls || []).filter((url: string) => url !== mediaUrl)
+
+      const updatedImageCaptions = { ...(artifact.image_captions || {}) }
+      delete updatedImageCaptions[mediaUrl]
+
+      const updatedVideoSummaries = { ...(artifact.video_summaries || {}) }
+      delete updatedVideoSummaries[mediaUrl]
+
+      const updatedAudioTranscripts = { ...(artifact.audio_transcripts || {}) }
+      delete updatedAudioTranscripts[mediaUrl]
+
+      // Update thumbnail if it was the deleted media
+      let newThumbnailUrl = artifact.thumbnail_url
+      if (artifact.thumbnail_url === mediaUrl) {
+        const { getPrimaryVisualMediaUrl } = await import("@/lib/media")
+        newThumbnailUrl = getPrimaryVisualMediaUrl(updatedMediaUrls)
+      }
+
+      const { error: updateError } = await supabase
+        .from("artifacts")
+        .update({
+          media_urls: updatedMediaUrls,
+          thumbnail_url: newThumbnailUrl,
+          image_captions: updatedImageCaptions,
+          video_summaries: updatedVideoSummaries,
+          audio_transcripts: updatedAudioTranscripts,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", artifact.id)
+
+      if (updateError) {
+        console.error("[permanentlyDeleteMedia] Failed to update artifact", artifact.id, ":", updateError)
+      }
+    }
+  }
+
+  console.log("[permanentlyDeleteMedia] Deletion complete")
+  return {}
+}
+
 // ============================================================================
 // Artifact Media Link Operations
 // ============================================================================
@@ -321,8 +437,9 @@ export async function updateArtifactMediaLink(
 }
 
 /**
- * Remove media from artifact
- * Maintains dual-write: removes from artifact_media AND artifacts.media_urls
+ * Remove media from artifact's gallery (artifact_media link only)
+ * Does NOT remove from artifacts.media_urls - gallery and media blocks are independent
+ * Same media can exist in both gallery and media blocks
  */
 export async function removeArtifactMediaLink(linkId: string): Promise<{ error?: string }> {
   const supabase = await createClient()
@@ -335,10 +452,10 @@ export async function removeArtifactMediaLink(linkId: string): Promise<{ error?:
     return { error: "Unauthorized" }
   }
 
-  // Get link details before deletion
+  // Get link details before deletion (for revalidation path)
   const { data: link } = await supabase
     .from("artifact_media")
-    .select("artifact_id, media_id, role, media:user_media(public_url)")
+    .select("artifact_id")
     .eq("id", linkId)
     .single()
 
@@ -346,28 +463,13 @@ export async function removeArtifactMediaLink(linkId: string): Promise<{ error?:
     return { error: "Link not found" }
   }
 
-  const mediaUrl = (link.media as any)?.public_url
-
-  // Delete the link
+  // Delete the link from artifact_media table only
+  // artifacts.media_urls is NOT modified - media blocks are independent of gallery
   const { error } = await supabase.from("artifact_media").delete().eq("id", linkId)
 
   if (error) {
     console.error("[removeArtifactMediaLink] Database error:", error)
     return { error: "Failed to remove artifact media link" }
-  }
-
-  // DUAL-WRITE PATTERN: Remove from artifacts.media_urls if it was a gallery item
-  if (link.role === "gallery" && mediaUrl) {
-    const { data: artifact } = await supabase
-      .from("artifacts")
-      .select("media_urls")
-      .eq("id", link.artifact_id)
-      .single()
-
-    if (artifact?.media_urls) {
-      const updatedUrls = artifact.media_urls.filter((url: string) => url !== mediaUrl)
-      await supabase.from("artifacts").update({ media_urls: updatedUrls }).eq("id", link.artifact_id)
-    }
   }
 
   revalidatePath(`/artifacts/${link.artifact_id}`)

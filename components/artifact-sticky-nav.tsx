@@ -1,7 +1,7 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { ArrowRight, ArrowLeft, Heart, Pencil } from "lucide-react"
+import { StepForward, StepBack, Heart, Pencil } from "lucide-react"
 import Link from "next/link"
 import { CollectionLabel } from "@/components/collection-label"
 import { useState, useEffect } from "react"
@@ -159,11 +159,11 @@ export function ArtifactStickyNav({
             >
               {previousItem ? (
                 <Link href={getNavUrl(previousItem.slug)} title={previousItem.title}>
-                  <ArrowLeft className="h-6 w-6" strokeWidth={2.5} />
+                  <StepBack className="h-6 w-6" strokeWidth={2.5} />
                 </Link>
               ) : (
                 <span>
-                  <ArrowLeft className="h-6 w-6" strokeWidth={2.5} />
+                  <StepBack className="h-6 w-6" strokeWidth={2.5} />
                 </span>
               )}
             </Button>
@@ -199,11 +199,11 @@ export function ArtifactStickyNav({
             >
               {nextItem ? (
                 <Link href={getNavUrl(nextItem.slug)} title={nextItem.title}>
-                  <ArrowRight className="h-6 w-6" strokeWidth={2.5} />
+                  <StepForward className="h-6 w-6" strokeWidth={2.5} />
                 </Link>
               ) : (
                 <span>
-                  <ArrowRight className="h-6 w-6" strokeWidth={2.5} />
+                  <StepForward className="h-6 w-6" strokeWidth={2.5} />
                 </span>
               )}
             </Button>

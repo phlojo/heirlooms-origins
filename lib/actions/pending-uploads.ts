@@ -110,11 +110,12 @@ export async function markUploadsAsSaved(urls: string[]) {
 }
 
 /**
- * Clean up all pending uploads for current user
+ * Clean up pending uploads for current user
  * Phase 2: Handles both Cloudinary and Supabase Storage deletions
+ * @param specificUrls - Optional array of URLs to clean up. If not provided, cleans up ALL pending uploads.
  * Returns the number of files deleted
  */
-export async function cleanupPendingUploads() {
+export async function cleanupPendingUploads(specificUrls?: string[]) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
@@ -122,11 +123,17 @@ export async function cleanupPendingUploads() {
     return { error: "Unauthorized" }
   }
 
-  // Get all pending uploads for this user
-  const { data: uploads, error: fetchError } = await supabase
+  // Get pending uploads for this user - either specific URLs or all
+  let query = supabase
     .from("pending_uploads")
     .select("*")
     .eq("user_id", user.id)
+
+  if (specificUrls && specificUrls.length > 0) {
+    query = query.in("cloudinary_url", specificUrls)
+  }
+
+  const { data: uploads, error: fetchError } = await query
 
   if (fetchError) {
     console.error("[v0] Failed to fetch pending uploads:", fetchError)
@@ -137,7 +144,8 @@ export async function cleanupPendingUploads() {
     return { success: true, deletedCount: 0 }
   }
 
-  console.log(`[v0] Cleaning up ${uploads.length} pending uploads`)
+  const scope = specificUrls ? `specific (${specificUrls.length} requested)` : "all"
+  console.log(`[v0] Cleaning up ${uploads.length} pending uploads (${scope})`)
 
   let successCount = 0
   let failCount = 0

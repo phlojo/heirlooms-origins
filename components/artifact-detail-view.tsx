@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input"
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible"
 import { Separator } from "@/components/ui/separator"
 import { AddMediaModal } from "@/components/add-media-modal"
+import { MediaActionModal } from "@/components/media-action-modal"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { type ArtifactMediaWithDerivatives } from "@/lib/types/media"
 import { getArtifactGalleryMedia } from "@/lib/actions/media"
@@ -29,8 +30,11 @@ import {
   BarChart3,
   MessageSquare,
   BookImage,
+  MoreVertical,
 } from "lucide-react"
-import { updateArtifact, deleteMediaFromArtifact, deleteArtifact } from "@/lib/actions/artifacts"
+import { updateArtifact, deleteArtifact } from "@/lib/actions/artifacts"
+import { permanentlyDeleteMedia } from "@/lib/actions/media"
+import { cleanupPendingUploads } from "@/lib/actions/pending-uploads"
 import { getMyCollections } from "@/lib/actions/collections"
 import { useRouter } from "next/navigation"
 import { isImageUrl, isVideoUrl, isAudioUrl } from "@/lib/media"
@@ -111,8 +115,8 @@ export function ArtifactDetailView({
   const [isProvenanceOpen, setIsProvenanceOpen] = useState(false)
   const [isAddMediaOpen, setIsAddMediaOpen] = useState(false)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [deleteMediaDialogOpen, setDeleteMediaDialogOpen] = useState(false)
-  const [mediaToDelete, setMediaToDelete] = useState<string | null>(null)
+  const [mediaActionModalOpen, setMediaActionModalOpen] = useState(false)
+  const [mediaToAction, setMediaToAction] = useState<string | null>(null)
   const [comingSoonOpen, setComingSoonOpen] = useState(false)
   const [comingSoonFeature, setComingSoonFeature] = useState("")
 
@@ -138,6 +142,8 @@ export function ArtifactDetailView({
   const [editAudioTranscripts, setEditAudioTranscripts] = useState<Record<string, string>>(artifact.audio_transcripts || {})
   const [editThumbnailUrl, setEditThumbnailUrl] = useState<string>(artifact.thumbnail_url || "")
   const [editCollectionId, setEditCollectionId] = useState<string>(artifact.collection_id)
+  // Track URLs uploaded during this edit session (for cleanup on cancel)
+  const [pendingUploadUrls, setPendingUploadUrls] = useState<string[]>([])
 
   const router = useRouter()
   const supabase = useSupabase()
@@ -195,17 +201,17 @@ export function ArtifactDetailView({
   const imageCaptions = isEditMode ? editImageCaptions : artifact.image_captions || {}
   const videoSummaries = isEditMode ? editVideoSummaries : artifact.video_summaries || {}
   const audioTranscripts = isEditMode ? editAudioTranscripts : artifact.audio_transcripts || {}
-  const allMediaUrls = isEditMode ? Array.from(new Set(editMediaUrls)) : Array.from(new Set(artifact.media_urls || []))
+  const allMediaUrls: string[] = isEditMode ? Array.from(new Set(editMediaUrls)) : Array.from(new Set(artifact.media_urls || []))
 
-  // Extract gallery URLs from galleryMedia to exclude them from media blocks
+  // Gallery URLs (used to check if media is in gallery for delete warnings)
   const galleryUrls = new Set(currentGalleryMedia.map(gm => gm.media.public_url))
 
-  // Media blocks should only show URLs that are NOT in the gallery
-  const mediaUrls = allMediaUrls.filter(url => !galleryUrls.has(url))
+  // Media blocks show ALL media URLs - same media can be in both gallery and blocks
+  const mediaUrls: string[] = allMediaUrls
 
-  const audioUrlsFiltered = mediaUrls.filter(isAudioUrl)
-  const videoUrlsFiltered = mediaUrls.filter(isVideoUrl)
-  const imageUrlsFiltered = mediaUrls.filter((url) => isImageUrl(url))
+  const audioUrlsFiltered: string[] = mediaUrls.filter(isAudioUrl)
+  const videoUrlsFiltered: string[] = mediaUrls.filter(isVideoUrl)
+  const imageUrlsFiltered: string[] = mediaUrls.filter((url) => isImageUrl(url))
 
   const hasUnsavedChanges =
     isEditMode &&
@@ -268,48 +274,79 @@ export function ArtifactDetailView({
     }
   }
 
-  const handleDeleteMedia = (urlToDelete: string) => {
-    setMediaToDelete(urlToDelete)
-    setDeleteMediaDialogOpen(true)
+  const handleMediaAction = (urlToAction: string) => {
+    setMediaToAction(urlToAction)
+    setMediaActionModalOpen(true)
   }
 
-  const confirmDeleteMedia = async () => {
-    if (!mediaToDelete) return
+  const handleRemoveMedia = () => {
+    if (!mediaToAction) return
 
-    if (isEditMode) {
-      setEditMediaUrls((prev) => prev.filter((url) => url !== mediaToDelete))
-      setEditImageCaptions((prev) => {
-        const updated = { ...prev }
-        delete updated[mediaToDelete]
-        return updated
-      })
-      setEditVideoSummaries((prev) => {
-        const updated = { ...prev }
-        delete updated[mediaToDelete]
-        return updated
-      })
-      setEditAudioTranscripts((prev) => {
-        const updated = { ...prev }
-        delete updated[mediaToDelete]
-        return updated
-      })
-      if (editThumbnailUrl === mediaToDelete) {
-        const remainingUrls = editMediaUrls.filter((url) => url !== mediaToDelete)
-        const newThumbnail = remainingUrls.find((url) => isImageUrl(url) || isVideoUrl(url))
-        setEditThumbnailUrl(newThumbnail || "")
-      }
-    } else {
-      try {
-        await deleteMediaFromArtifact(artifact.id, mediaToDelete)
-        router.refresh()
-      } catch (error) {
-        console.error("[v0] Failed to delete media:", error)
-        alert("Failed to delete media. Please try again.")
-      }
+    // In edit mode, just remove from local state (changes applied on save)
+    setEditMediaUrls((prev) => prev.filter((url) => url !== mediaToAction))
+    setEditImageCaptions((prev) => {
+      const updated = { ...prev }
+      delete updated[mediaToAction]
+      return updated
+    })
+    setEditVideoSummaries((prev) => {
+      const updated = { ...prev }
+      delete updated[mediaToAction]
+      return updated
+    })
+    setEditAudioTranscripts((prev) => {
+      const updated = { ...prev }
+      delete updated[mediaToAction]
+      return updated
+    })
+    if (editThumbnailUrl === mediaToAction) {
+      const remainingUrls = editMediaUrls.filter((url) => url !== mediaToAction)
+      const newThumbnail = remainingUrls.find((url) => isImageUrl(url) || isVideoUrl(url))
+      setEditThumbnailUrl(newThumbnail || "")
     }
 
-    setDeleteMediaDialogOpen(false)
-    setMediaToDelete(null)
+    toast.success("Media removed from artifact")
+    setMediaToAction(null)
+  }
+
+  const handlePermanentlyDeleteMedia = async () => {
+    if (!mediaToAction) return
+
+    // Remove from local state
+    setEditMediaUrls((prev) => prev.filter((url) => url !== mediaToAction))
+    setEditImageCaptions((prev) => {
+      const updated = { ...prev }
+      delete updated[mediaToAction]
+      return updated
+    })
+    setEditVideoSummaries((prev) => {
+      const updated = { ...prev }
+      delete updated[mediaToAction]
+      return updated
+    })
+    setEditAudioTranscripts((prev) => {
+      const updated = { ...prev }
+      delete updated[mediaToAction]
+      return updated
+    })
+    if (editThumbnailUrl === mediaToAction) {
+      const remainingUrls = editMediaUrls.filter((url) => url !== mediaToAction)
+      const newThumbnail = remainingUrls.find((url) => isImageUrl(url) || isVideoUrl(url))
+      setEditThumbnailUrl(newThumbnail || "")
+    }
+
+    // Also remove from gallery display if present
+    setCurrentGalleryMedia((prev) => prev.filter(gm => gm.media.public_url !== mediaToAction))
+
+    // Permanently delete from storage
+    const result = await permanentlyDeleteMedia(mediaToAction)
+    if (result.error) {
+      toast.error("Failed to delete media from storage")
+    } else {
+      toast.success("Media permanently deleted")
+    }
+
+    setMediaToAction(null)
   }
 
   const handleDeleteArtifact = async () => {
@@ -339,6 +376,14 @@ export function ArtifactDetailView({
       const combinedUrls = [...editMediaUrls, ...newUrls]
       const uniqueUrls = Array.from(new Set(combinedUrls))
       setEditMediaUrls(uniqueUrls)
+
+      // Track newly uploaded URLs for cleanup on cancel
+      // Only track URLs that are actually new (not already in original artifact)
+      const originalUrls = artifact.media_urls || []
+      const trulyNewUrls = newUrls.filter(url => !originalUrls.includes(url))
+      if (trulyNewUrls.length > 0) {
+        setPendingUploadUrls(prev => [...prev, ...trulyNewUrls])
+      }
 
       if (!editThumbnailUrl && newUrls.length > 0) {
         const firstVisual = newUrls.find((url) => isImageUrl(url) || isVideoUrl(url))
@@ -388,9 +433,16 @@ export function ArtifactDetailView({
     setEditThumbnailUrl(url)
   }
 
-  const confirmCancel = () => {
+  const confirmCancel = async () => {
     setCancelDialogOpen(false)
     setSelectedTypeId(originalState.type_id)
+
+    // Clean up any newly uploaded media that wasn't saved
+    if (pendingUploadUrls.length > 0) {
+      console.log("[v0] CANCEL EDIT - Cleaning up", pendingUploadUrls.length, "pending uploads")
+      await cleanupPendingUploads(pendingUploadUrls)
+    }
+
     // Disable beforeunload warning before redirecting
     shouldWarnOnUnloadRef.current = false
     window.location.href = `/artifacts/${artifact.slug}`
@@ -642,10 +694,11 @@ export function ArtifactDetailView({
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleDeleteMedia(url)}
-                          className="text-destructive hover:text-destructive"
+                          onClick={() => handleMediaAction(url)}
+                          className="text-muted-foreground hover:text-foreground"
+                          title="Media options"
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <MoreVertical className="h-4 w-4" />
                         </Button>
                       </div>
                     )}
@@ -700,10 +753,11 @@ export function ArtifactDetailView({
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => handleDeleteMedia(url)}
-                            className="text-destructive hover:text-destructive"
+                            onClick={() => handleMediaAction(url)}
+                            className="text-muted-foreground hover:text-foreground"
+                            title="Media options"
                           >
-                            <Trash2 className="h-4 w-4" />
+                            <MoreVertical className="h-4 w-4" />
                           </Button>
                         </div>
                       </div>
@@ -778,10 +832,11 @@ export function ArtifactDetailView({
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => handleDeleteMedia(url)}
-                            className="text-destructive hover:text-destructive"
+                            onClick={() => handleMediaAction(url)}
+                            className="text-muted-foreground hover:text-foreground"
+                            title="Media options"
                           >
-                            <Trash2 className="h-4 w-4" />
+                            <MoreVertical className="h-4 w-4" />
                           </Button>
                         </div>
                       </div>
@@ -1013,31 +1068,14 @@ export function ArtifactDetailView({
         </DialogContent>
       </Dialog>
 
-      {/* Delete Media Confirmation Dialog */}
-      <AlertDialog open={deleteMediaDialogOpen} onOpenChange={setDeleteMediaDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Remove Media?</AlertDialogTitle>
-            <AlertDialogDescription className="space-y-2">
-              <span className="block">
-                This will remove the media from your artifact. The media will be permanently deleted once you save your changes.
-              </span>
-              <span className="block text-muted-foreground">
-                To undo this removal, simply click <strong>Cancel</strong> to discard all unsaved changes.
-              </span>
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Keep Media</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={confirmDeleteMedia}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Remove Media
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {/* Media Action Modal (Remove/Delete) */}
+      <MediaActionModal
+        open={mediaActionModalOpen}
+        onOpenChange={setMediaActionModalOpen}
+        mediaUrl={mediaToAction}
+        onRemove={handleRemoveMedia}
+        onDelete={handlePermanentlyDeleteMedia}
+      />
 
       {/* Save Module */}
       {isEditMode && canEdit && (

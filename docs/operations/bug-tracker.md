@@ -417,3 +417,225 @@ npx tsx scripts/cleanup-orphaned-media.ts --delete
 
 ### File Modified
 - `scripts/cleanup-orphaned-media.ts` - Complete rewrite
+
+---
+
+## Back Button on New Artifact Page Always Goes to /artifacts (Fixed: November 2025)
+
+### Symptoms
+- Creating a new artifact from a collection page
+- Clicking the back button always navigated to `/artifacts` instead of the collection page
+- Expected behavior: return to the page you came from
+
+### Root Cause
+The back button had a hardcoded `href="/artifacts"` instead of tracking the originating page.
+
+### Fix Applied
+**File: `app/artifacts/new/page.tsx`**
+Added `returnTo` query parameter handling:
+
+```typescript
+// Read returnTo parameter from URL
+const { collectionId, returnTo } = await searchParams
+const safeReturnTo = returnTo?.startsWith("/") ? returnTo : "/artifacts"
+
+// Back button uses the safe return URL
+<Link href={safeReturnTo}>
+```
+
+**File: `app/collections/[slug]/page.tsx`**
+Added `returnTo` to the "Add Artifact" link:
+
+```typescript
+<Link href={`/artifacts/new?collectionId=${collection.id}&returnTo=/collections/${slug}`}>
+```
+
+### Prevention Guidelines
+- When linking to creation/edit pages, include `returnTo` parameter with the current URL
+- Validate `returnTo` starts with "/" to prevent open redirect vulnerabilities
+- Provide sensible default fallback (e.g., `/artifacts`)
+
+---
+
+## Media Remove vs Delete Confusion (Fixed: November 2025)
+
+### Symptoms
+- Users confused about what happens when clicking trash icon on media blocks
+- No clear distinction between:
+  - Removing media from current artifact (media stays in library)
+  - Permanently deleting media from storage (removes from ALL artifacts)
+
+### Solution
+Created a two-option modal for media actions:
+
+**New Component: `components/media-action-modal.tsx`**
+- "Remove from artifact" - Just removes from current artifact's media blocks, media stays in library
+- "Delete permanently" - Deletes from storage AND removes from ALL artifacts across ALL collections
+
+**New Server Action: `lib/actions/media.ts` - `permanentlyDeleteMedia()`**
+```typescript
+export async function permanentlyDeleteMedia(mediaUrl: string) {
+  // 1. Delete from Supabase Storage or Cloudinary
+  // 2. Delete user_media record (cascades to artifact_media)
+  // 3. Remove from ALL artifacts.media_urls arrays
+  // 4. Clean up AI metadata (captions, summaries, transcripts)
+}
+```
+
+**UI Changes:**
+- Changed media block button from trash icon to MoreVertical (⋮) icon
+- Clicking opens `MediaActionModal` with two clear options
+- Applied to both `new-artifact-form.tsx` and `artifact-detail-view.tsx`
+
+### Files Modified
+- `components/media-action-modal.tsx` (NEW)
+- `lib/actions/media.ts` - Added `permanentlyDeleteMedia()` function
+- `components/new-artifact-form.tsx` - Use modal instead of direct remove
+- `components/artifact-detail-view.tsx` - Use modal instead of direct remove
+
+---
+
+## Gallery and Media Blocks Independence (Fixed: November 2025)
+
+### Symptoms
+- Same media couldn't exist in both gallery AND media blocks
+- Removing from gallery caused item to appear as media block (or vice versa)
+- Unexpected behavior when managing media placement
+
+### Background
+Gallery and media blocks serve different purposes:
+- **Gallery**: "Attract slideshow" - visual hero display
+- **Media Blocks**: "Detail and story" - inline content with future comments/threads
+
+Same media should be able to exist in both or either.
+
+### Root Cause
+1. Media blocks were filtered to exclude gallery URLs
+2. `removeArtifactMediaLink` was also removing from `artifacts.media_urls`
+3. Gallery changes were syncing to `editMediaUrls` state
+
+### Fix Applied
+**File: `components/artifact-detail-view.tsx`**
+- Removed filter that excluded gallery URLs from media blocks
+- Media blocks now show ALL URLs in `artifacts.media_urls`
+
+**File: `lib/actions/media.ts` - `removeArtifactMediaLink()`**
+- Now ONLY deletes from `artifact_media` table
+- Does NOT modify `artifacts.media_urls` array
+- Gallery and media blocks are truly independent
+
+### Data Model Clarification
+- `artifacts.media_urls`: Array of ALL media for this artifact (used by media blocks)
+- `artifact_media` table: Links for gallery display (subset of media_urls)
+- Same URL can exist in both - they're independent views
+
+### Files Modified
+- `components/artifact-detail-view.tsx`
+- `lib/actions/media.ts`
+
+---
+
+## Navigation Icons Semantics (Fixed: November 2025)
+
+### Issue
+Arrow icons (ArrowLeft/ArrowRight) were used for artifact-to-artifact navigation within collections, but arrows semantically represent page/structure navigation.
+
+### Fix Applied
+Changed to StepBack/StepForward icons which better represent "stepping through items in a sequence":
+
+**File: `components/artifact-sticky-nav.tsx`**
+```typescript
+// BEFORE
+import { ArrowLeft, ArrowRight } from "lucide-react"
+
+// AFTER
+import { StepBack, StepForward } from "lucide-react"
+```
+
+**File: `components/swipe-guidance.tsx`**
+Same icon replacement for the bottom navigation widget.
+
+### Icon Semantics
+- **Arrows (←/→)**: Page navigation, breadcrumbs, back to parent
+- **Step icons (⏮/⏭)**: Within-sequence navigation, prev/next item in collection
+
+---
+
+## Edit Artifact Cancel Not Cleaning Up Uploaded Media (Fixed: November 2025)
+
+### Symptoms
+- Upload new media during artifact edit
+- Click Cancel
+- Media files remain in storage (orphaned)
+- Only cleaned up after 24-hour expiration + daily audit
+
+### Root Cause
+- `new-artifact-form.tsx` properly called `cleanupPendingUploads()` on cancel
+- `artifact-detail-view.tsx` (edit mode) did NOT call cleanup on cancel
+- `updateArtifact()` properly marks uploads as saved on successful save
+- Gap: Cancel during edit left orphaned uploads
+
+### Fix Applied
+
+**File: `components/artifact-detail-view.tsx`**
+
+1. Added state to track newly uploaded URLs during edit session:
+```typescript
+const [pendingUploadUrls, setPendingUploadUrls] = useState<string[]>([])
+```
+
+2. Track uploads in `handleMediaAdded`:
+```typescript
+const handleMediaAdded = async (newUrls: string[]) => {
+  // ... existing code ...
+
+  // Track newly uploaded URLs for cleanup on cancel
+  const originalUrls = artifact.media_urls || []
+  const trulyNewUrls = newUrls.filter(url => !originalUrls.includes(url))
+  if (trulyNewUrls.length > 0) {
+    setPendingUploadUrls(prev => [...prev, ...trulyNewUrls])
+  }
+}
+```
+
+3. Cleanup on cancel:
+```typescript
+const confirmCancel = async () => {
+  // Clean up any newly uploaded media that wasn't saved
+  if (pendingUploadUrls.length > 0) {
+    console.log("[v0] CANCEL EDIT - Cleaning up", pendingUploadUrls.length, "pending uploads")
+    await cleanupPendingUploads(pendingUploadUrls)
+  }
+  // ... redirect ...
+}
+```
+
+**File: `lib/actions/pending-uploads.ts`**
+
+Updated `cleanupPendingUploads()` to accept optional specific URLs:
+```typescript
+// BEFORE
+export async function cleanupPendingUploads() {
+  // Cleaned up ALL pending uploads for user
+}
+
+// AFTER
+export async function cleanupPendingUploads(specificUrls?: string[]) {
+  // If specificUrls provided, only clean those
+  // Otherwise, clean ALL pending uploads for user
+}
+```
+
+### Media Cleanup Flow Summary
+
+| Scenario | Cleanup Method |
+|----------|----------------|
+| New artifact - Save | `createArtifact()` removes from `pending_uploads` |
+| New artifact - Cancel | `cleanupPendingUploads()` deletes files + removes from table |
+| Edit artifact - Save | `updateArtifact()` removes newly uploaded from `pending_uploads` |
+| Edit artifact - Cancel | `cleanupPendingUploads(specificUrls)` deletes new files |
+| Navigate away | 24hr expiration + daily audit cron catches orphans |
+
+### Files Modified
+- `components/artifact-detail-view.tsx` - Track and cleanup pending uploads on cancel
+- `lib/actions/pending-uploads.ts` - Accept optional URL filter parameter
