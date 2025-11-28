@@ -707,7 +707,7 @@ export function ArtifactDetailView({
                   size="sm"
                 >
                   <Plus className="mr-2 h-4 w-4" />
-                  Add Media
+                  Add Block(s)
                 </Button>
               )}
             </div>

@@ -464,7 +464,7 @@ export default function NewArtifactForm({ collectionId, userId }: NewArtifactFor
               size="sm"
             >
               <Plus className="mr-2 h-4 w-4" />
-              Add Media
+              Add Block(s)
             </Button>
           </div>
 

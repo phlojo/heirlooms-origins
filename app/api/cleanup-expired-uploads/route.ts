@@ -1,5 +1,7 @@
 import { auditPendingUploads } from "@/lib/actions/pending-uploads"
 import { deleteCloudinaryMedia } from "@/lib/actions/cloudinary"
+import { deleteFromSupabaseStorage } from "@/lib/actions/supabase-storage"
+import { isSupabaseStorageUrl } from "@/lib/media"
 import { createClient } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
 
@@ -7,6 +9,8 @@ import { NextResponse } from "next/server"
  * Cron endpoint to clean up expired uploads
  * Configure in vercel.json to run daily at midnight UTC (0 0 * * *)
  * Vercel automatically authenticates cron requests via x-vercel-cron header
+ *
+ * Phase 2: Handles both Cloudinary and Supabase Storage URLs
  */
 export async function GET(request: Request) {
   // Verify this request is from Vercel Cron
@@ -23,16 +27,28 @@ export async function GET(request: Request) {
     const audit = await auditPendingUploads()
 
     const supabase = await createClient()
-    let deletedFromCloudinary = 0
+    let deletedFromStorage = 0
     let deletedFromDatabase = 0
+    let deletedUserMedia = 0
     const failedDeletions: string[] = []
+    const successfullyDeletedUrls: string[] = []
 
     // Clean up files that are safe to delete (expired and not in use)
     for (const upload of audit.details.safeToDelete) {
-      const result = await deleteCloudinaryMedia(upload.publicId, 'image')
+      let result: { error?: string }
+
+      // Phase 2: Route deletion to correct storage backend
+      if (isSupabaseStorageUrl(upload.url)) {
+        console.log(`[v0] Cron: Deleting from Supabase Storage: ${upload.url}`)
+        result = await deleteFromSupabaseStorage(upload.url)
+      } else {
+        console.log(`[v0] Cron: Deleting from Cloudinary: ${upload.url}`)
+        result = await deleteCloudinaryMedia(upload.publicId, 'image')
+      }
 
       if (!result.error) {
-        deletedFromCloudinary++
+        deletedFromStorage++
+        successfullyDeletedUrls.push(upload.url)
       } else {
         failedDeletions.push(upload.url)
       }
@@ -41,6 +57,8 @@ export async function GET(request: Request) {
     // Clean up already-deleted files (remove database entries)
     if (audit.details.alreadyDeleted.length > 0) {
       const alreadyDeletedIds = audit.details.alreadyDeleted.map(u => u.publicId)
+      const alreadyDeletedUrls = audit.details.alreadyDeleted.map(u => u.url)
+
       const { error: deleteError } = await supabase
         .from("pending_uploads")
         .delete()
@@ -48,13 +66,14 @@ export async function GET(request: Request) {
 
       if (!deleteError) {
         deletedFromDatabase += audit.details.alreadyDeleted.length
+        successfullyDeletedUrls.push(...alreadyDeletedUrls)
       }
     }
 
-    // Remove from database those we successfully deleted from Cloudinary
-    if (deletedFromCloudinary > 0) {
+    // Remove from database those we successfully deleted from storage
+    if (deletedFromStorage > 0) {
       const successfulPublicIds = audit.details.safeToDelete
-        .slice(0, deletedFromCloudinary)
+        .filter(u => successfullyDeletedUrls.includes(u.url))
         .map(u => u.publicId)
 
       const { error: dbDeleteError } = await supabase
@@ -63,11 +82,28 @@ export async function GET(request: Request) {
         .in("cloudinary_public_id", successfulPublicIds)
 
       if (!dbDeleteError) {
-        deletedFromDatabase += deletedFromCloudinary
+        deletedFromDatabase += successfulPublicIds.length
       }
     }
 
-    console.log(`[v0] Cleanup complete: ${deletedFromCloudinary} from Cloudinary, ${deletedFromDatabase} from database`)
+    // Clean up orphaned user_media records for all deleted URLs
+    // These were created immediately on upload but the storage files are now deleted
+    if (successfullyDeletedUrls.length > 0) {
+      const { data: deletedRecords, error: userMediaError } = await supabase
+        .from("user_media")
+        .delete()
+        .in("public_url", successfullyDeletedUrls)
+        .select("id")
+
+      if (userMediaError) {
+        console.error("[v0] Cron: Failed to remove orphaned user_media records:", userMediaError)
+      } else {
+        deletedUserMedia = deletedRecords?.length || 0
+        console.log(`[v0] Cron: Removed ${deletedUserMedia} orphaned user_media records`)
+      }
+    }
+
+    console.log(`[v0] Cron cleanup complete: ${deletedFromStorage} from storage, ${deletedFromDatabase} from pending_uploads, ${deletedUserMedia} from user_media`)
 
     return NextResponse.json({
       success: true,
@@ -76,8 +112,9 @@ export async function GET(request: Request) {
         expiredCount: audit.summary.expiredUploads,
       },
       cleanup: {
-        deletedFromCloudinary,
+        deletedFromStorage,
         deletedFromDatabase,
+        deletedUserMedia,
         failedDeletions: failedDeletions.length,
       }
     })

@@ -9,6 +9,7 @@ import { Camera, Video, Mic, Upload, FolderOpen } from "lucide-react"
 import { AudioRecorder } from "@/components/audio-recorder"
 import { generateCloudinarySignature, generateCloudinaryAudioSignature } from "@/lib/actions/cloudinary"
 import { trackPendingUpload } from "@/lib/actions/pending-uploads"
+import { createUserMediaFromUrl } from "@/lib/actions/media"
 import { getFileSizeLimit, formatFileSize } from "@/lib/media"
 import { Progress } from "@/components/ui/progress"
 import { createClient } from "@/lib/supabase/client"
@@ -311,6 +312,15 @@ export function AddMediaModal({ open, onOpenChange, artifactId, userId, onMediaA
               ? "video"
               : "image"
         await trackPendingUpload(secureUrl, resourceType)
+
+        // Create user_media record immediately so media appears in Media Picker
+        // This allows reusing media across artifacts even before current artifact is saved
+        const mediaResult = await createUserMediaFromUrl(secureUrl, userId)
+        if (mediaResult.error) {
+          console.warn("[v0] Failed to create user_media record (non-fatal):", mediaResult.error)
+        } else {
+          console.log("[v0] Created user_media record for:", secureUrl)
+        }
       }
 
       console.log("[v0] All uploads complete, URLs:", urls)
@@ -414,6 +424,14 @@ export function AddMediaModal({ open, onOpenChange, artifactId, userId, onMediaA
       const secureUrl = await uploadPromise
 
       await trackPendingUpload(secureUrl, "raw")
+
+      // Create user_media record immediately so media appears in Media Picker
+      const mediaResult = await createUserMediaFromUrl(secureUrl, userId)
+      if (mediaResult.error) {
+        console.warn("[v0] Failed to create user_media record for audio (non-fatal):", mediaResult.error)
+      } else {
+        console.log("[v0] Created user_media record for audio:", secureUrl)
+      }
 
       onMediaAdded([secureUrl])
       handleClose()

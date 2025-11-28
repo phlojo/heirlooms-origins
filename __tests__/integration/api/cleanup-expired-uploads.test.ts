@@ -10,6 +10,14 @@ vi.mock("@/lib/actions/cloudinary", () => ({
   deleteCloudinaryMedia: vi.fn(),
 }))
 
+vi.mock("@/lib/actions/supabase-storage", () => ({
+  deleteFromSupabaseStorage: vi.fn(),
+}))
+
+vi.mock("@/lib/media", () => ({
+  isSupabaseStorageUrl: vi.fn().mockReturnValue(false), // Default to Cloudinary URLs
+}))
+
 vi.mock("@/lib/supabase/server", () => ({
   createClient: vi.fn(),
 }))
@@ -69,6 +77,7 @@ describe("API: /api/cleanup-expired-uploads", () => {
           delete: vi.fn().mockReturnValue({
             in: vi.fn().mockReturnValue({
               eq: vi.fn().mockResolvedValue({ error: null }),
+              select: vi.fn().mockResolvedValue({ data: [], error: null }),
             }),
           }),
         }),
@@ -119,6 +128,7 @@ describe("API: /api/cleanup-expired-uploads", () => {
           delete: vi.fn().mockReturnValue({
             in: vi.fn().mockReturnValue({
               eq: vi.fn().mockResolvedValue({ error: null }),
+              select: vi.fn().mockResolvedValue({ data: [], error: null }),
             }),
           }),
         }),
@@ -151,6 +161,7 @@ describe("API: /api/cleanup-expired-uploads", () => {
           delete: vi.fn().mockReturnValue({
             in: vi.fn().mockReturnValue({
               eq: vi.fn().mockResolvedValue({ error: null }),
+              select: vi.fn().mockResolvedValue({ data: [], error: null }),
             }),
           }),
         }),
@@ -179,6 +190,7 @@ describe("API: /api/cleanup-expired-uploads", () => {
           delete: vi.fn().mockReturnValue({
             in: vi.fn().mockReturnValue({
               eq: vi.fn().mockResolvedValue({ error: null }),
+              select: vi.fn().mockResolvedValue({ data: [], error: null }),
             }),
           }),
         }),
@@ -209,6 +221,7 @@ describe("API: /api/cleanup-expired-uploads", () => {
           delete: vi.fn().mockReturnValue({
             in: vi.fn().mockReturnValue({
               eq: vi.fn().mockResolvedValue({ error: null }),
+              select: vi.fn().mockResolvedValue({ data: [], error: null }),
             }),
           }),
         }),
@@ -223,7 +236,7 @@ describe("API: /api/cleanup-expired-uploads", () => {
       const response = await GET(request)
       const data = await response.json()
 
-      expect(data.cleanup.deletedFromCloudinary).toBeGreaterThanOrEqual(0)
+      expect(data.cleanup.deletedFromStorage).toBeGreaterThanOrEqual(0)
       expect(data.cleanup.deletedFromDatabase).toBeGreaterThanOrEqual(0)
       expect(typeof data.cleanup.failedDeletions).toBe("number")
     })
@@ -254,6 +267,7 @@ describe("API: /api/cleanup-expired-uploads", () => {
           delete: vi.fn().mockReturnValue({
             in: vi.fn().mockReturnValue({
               eq: vi.fn().mockResolvedValue({ error: null }),
+              select: vi.fn().mockResolvedValue({ data: [], error: null }),
             }),
           }),
         }),
@@ -270,7 +284,7 @@ describe("API: /api/cleanup-expired-uploads", () => {
 
       expect(response.status).toBe(200)
       expect(data.success).toBe(true)
-      expect(data.cleanup.deletedFromCloudinary).toBe(0)
+      expect(data.cleanup.deletedFromStorage).toBe(0)
     })
   })
 
@@ -350,6 +364,7 @@ describe("API: /api/cleanup-expired-uploads", () => {
           delete: vi.fn().mockReturnValue({
             in: vi.fn().mockReturnValue({
               eq: vi.fn().mockResolvedValue({ error: null }),
+              select: vi.fn().mockResolvedValue({ data: [], error: null }),
             }),
           }),
         }),
@@ -378,6 +393,7 @@ describe("API: /api/cleanup-expired-uploads", () => {
           delete: vi.fn().mockReturnValue({
             in: vi.fn().mockReturnValue({
               eq: vi.fn().mockResolvedValue({ error: null }),
+              select: vi.fn().mockResolvedValue({ data: [], error: null }),
             }),
           }),
         }),

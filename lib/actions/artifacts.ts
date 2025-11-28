@@ -215,6 +215,19 @@ export async function createArtifact(
     }
   }
 
+  // Create user_media records for media block URLs (if not already created via gallery)
+  // This ensures media blocks appear in the Media Picker for reuse
+  const mediaBlockOnlyUrls = validMediaUrls.filter(url => !galleryUrls.includes(url))
+  if (mediaBlockOnlyUrls.length > 0) {
+    console.log("[v0] CREATE ARTIFACT - Creating user_media records for", mediaBlockOnlyUrls.length, "media block URLs")
+    for (const url of mediaBlockOnlyUrls) {
+      const mediaResult = await createUserMediaFromUrl(url, user.id)
+      if (mediaResult.error) {
+        console.error("[v0] CREATE ARTIFACT - Failed to create user_media for media block (non-fatal):", url, mediaResult.error)
+      }
+    }
+  }
+
   // Mark ALL uploads (gallery + media blocks) as saved
   const allMediaUrls = [...new Set([...validMediaUrls, ...galleryUrls])]
   console.log("[v0] CREATE ARTIFACT - Marking uploads as saved:", allMediaUrls.length, "URLs (media blocks:", validMediaUrls.length, ", gallery:", galleryUrls.length, ")")

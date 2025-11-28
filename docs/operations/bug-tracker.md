@@ -959,3 +959,173 @@ Updated all thumbnail button click handlers to pass the event.
 
 **File: `components/artifact-gallery-editor.tsx`**
 Updated type signatures and click handlers similarly.
+
+---
+
+## AI Metadata Lost After Save (Fixed: November 2025)
+
+### Symptoms
+- Generate captions/summaries on new artifact page - they show correctly in UI
+- Save artifact
+- View/edit artifact - captions/summaries are missing
+- Database shows AI metadata exists but with wrong URL keys
+
+### Root Cause
+When saving an artifact, `reorganizeArtifactMedia()` moves files from temp folder to artifact folder, changing the URLs. The function updated `artifact.media_urls` with new URLs, but did NOT update the AI metadata JSONB fields.
+
+AI metadata is keyed by URL:
+```json
+{
+  "image_captions": {
+    "https://...temp/file.jpg": "A beautiful sunset..."  // OLD temp URL
+  }
+}
+```
+
+After reorganization, `media_urls` had the new URL but `image_captions` still had the old temp URL as the key - no match.
+
+### Fix Applied
+
+**File: `lib/actions/media-reorganize.ts`**
+
+Added AI metadata key updates to reorganization:
+
+```typescript
+// Fetch AI metadata fields
+const { data: artifact } = await supabase
+  .from("artifacts")
+  .select("id, media_urls, user_id, image_captions, video_summaries, audio_transcripts, thumbnail_url")
+  .eq("id", artifactId)
+  .single()
+
+// Update AI metadata keys when URLs change
+if (artifact.image_captions && Object.keys(artifact.image_captions).length > 0) {
+  const updatedCaptions: Record<string, string> = {}
+  for (const [oldUrl, caption] of Object.entries(artifact.image_captions)) {
+    const newUrl = urlMapping.get(oldUrl) || oldUrl
+    updatedCaptions[newUrl] = caption as string
+  }
+  updateData.image_captions = updatedCaptions
+}
+
+// Same for video_summaries, audio_transcripts, thumbnail_url
+```
+
+### Prevention Guidelines
+- When moving/renaming media files, update ALL places that reference the URL
+- AI metadata JSONB fields use URLs as keys - remember to update them
+- Test AI features end-to-end: generate → save → view
+
+---
+
+## Media Blocks Not Appearing in Media Picker (Fixed: November 2025)
+
+### Symptoms
+- Upload new media to Media Blocks on new artifact page
+- Click "Edit Gallery" → "Select Existing"
+- The media you just uploaded is NOT in the picker
+- After saving artifact, media appears in picker
+
+### Root Cause
+`AddMediaModal` uploaded files and tracked them in `pending_uploads`, but did NOT create `user_media` records. Media Picker queries `user_media` table, so newly uploaded media was invisible.
+
+`user_media` records were only created when `createArtifact()` was called (after save).
+
+### Fix Applied
+
+**File: `components/add-media-modal.tsx`**
+
+Create `user_media` record immediately after upload:
+
+```typescript
+// After trackPendingUpload()
+const mediaResult = await createUserMediaFromUrl(secureUrl, userId)
+if (mediaResult.error) {
+  console.warn("[v0] Failed to create user_media record (non-fatal):", mediaResult.error)
+} else {
+  console.log("[v0] Created user_media record for:", secureUrl)
+}
+```
+
+Applied to both file uploads and audio recordings.
+
+### Related Fix: Cleanup Removes user_media
+
+**File: `lib/actions/pending-uploads.ts`**
+
+When user cancels and uploads are cleaned up, also remove the `user_media` records:
+
+```typescript
+// After deleting from storage and pending_uploads
+if (deletedUrls.length > 0) {
+  await supabase
+    .from("user_media")
+    .delete()
+    .in("public_url", deletedUrls)
+    .eq("user_id", user.id)
+}
+```
+
+Prevents orphaned `user_media` records with broken URLs.
+
+---
+
+## Cron Job Updated for Supabase Storage (November 2025)
+
+### Background
+The daily cleanup cron (`/api/cleanup-expired-uploads`) only handled Cloudinary deletions and didn't clean up orphaned `user_media` records.
+
+### Updates Applied
+
+**File: `app/api/cleanup-expired-uploads/route.ts`**
+
+1. **Handles both storage backends:**
+```typescript
+if (isSupabaseStorageUrl(upload.url)) {
+  result = await deleteFromSupabaseStorage(upload.url)
+} else {
+  result = await deleteCloudinaryMedia(upload.publicId, 'image')
+}
+```
+
+2. **Cleans up orphaned user_media:**
+```typescript
+if (successfullyDeletedUrls.length > 0) {
+  await supabase
+    .from("user_media")
+    .delete()
+    .in("public_url", successfullyDeletedUrls)
+    .select("id")
+}
+```
+
+3. **Updated response format:**
+```json
+{
+  "cleanup": {
+    "deletedFromStorage": 2,
+    "deletedFromDatabase": 3,
+    "deletedUserMedia": 2,
+    "failedDeletions": 0
+  }
+}
+```
+
+### Schedule
+- **Cron:** `0 0 * * *` (daily at midnight UTC)
+- **Config:** `vercel.json`
+
+---
+
+## UI Terminology Update (November 2025)
+
+### Change
+Standardized terminology for media management:
+- **Media** = All uploadable items (images, videos, audio)
+- **Gallery** = Media added to hero slideshow
+- **Blocks** = Media added as inline media blocks
+
+### Updates
+- "Add Media" button next to Media Blocks → "Add Block(s)"
+- Applied to both new artifact (`new-artifact-form.tsx`) and edit artifact (`artifact-detail-view.tsx`) pages
+

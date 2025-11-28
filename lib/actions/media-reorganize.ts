@@ -24,10 +24,10 @@ export async function reorganizeArtifactMedia(artifactId: string) {
     return { error: "Unauthorized" }
   }
 
-  // Fetch the artifact
+  // Fetch the artifact with AI metadata fields
   const { data: artifact, error: fetchError } = await supabase
     .from("artifacts")
-    .select("id, media_urls, user_id")
+    .select("id, media_urls, user_id, image_captions, video_summaries, audio_transcripts, thumbnail_url")
     .eq("id", artifactId)
     .single()
 
@@ -81,9 +81,50 @@ export async function reorganizeArtifactMedia(artifactId: string) {
   if (movedCount > 0) {
     console.log("[media-reorganize] Updating artifact with", movedCount, "new URLs")
 
+    // Build update object with new media_urls
+    const updateData: Record<string, any> = { media_urls: updatedUrls }
+
+    // Update AI metadata keys (image_captions, video_summaries, audio_transcripts)
+    // These are JSONB objects keyed by URL, so we need to update the keys
+    if (artifact.image_captions && Object.keys(artifact.image_captions).length > 0) {
+      const updatedCaptions: Record<string, string> = {}
+      for (const [oldUrl, caption] of Object.entries(artifact.image_captions)) {
+        const newUrl = urlMapping.get(oldUrl) || oldUrl
+        updatedCaptions[newUrl] = caption as string
+      }
+      updateData.image_captions = updatedCaptions
+      console.log("[media-reorganize] Updated image_captions keys:", Object.keys(updatedCaptions).length)
+    }
+
+    if (artifact.video_summaries && Object.keys(artifact.video_summaries).length > 0) {
+      const updatedSummaries: Record<string, string> = {}
+      for (const [oldUrl, summary] of Object.entries(artifact.video_summaries)) {
+        const newUrl = urlMapping.get(oldUrl) || oldUrl
+        updatedSummaries[newUrl] = summary as string
+      }
+      updateData.video_summaries = updatedSummaries
+      console.log("[media-reorganize] Updated video_summaries keys:", Object.keys(updatedSummaries).length)
+    }
+
+    if (artifact.audio_transcripts && Object.keys(artifact.audio_transcripts).length > 0) {
+      const updatedTranscripts: Record<string, string> = {}
+      for (const [oldUrl, transcript] of Object.entries(artifact.audio_transcripts)) {
+        const newUrl = urlMapping.get(oldUrl) || oldUrl
+        updatedTranscripts[newUrl] = transcript as string
+      }
+      updateData.audio_transcripts = updatedTranscripts
+      console.log("[media-reorganize] Updated audio_transcripts keys:", Object.keys(updatedTranscripts).length)
+    }
+
+    // Update thumbnail_url if it was moved
+    if (artifact.thumbnail_url && urlMapping.has(artifact.thumbnail_url)) {
+      updateData.thumbnail_url = urlMapping.get(artifact.thumbnail_url)
+      console.log("[media-reorganize] Updated thumbnail_url:", artifact.thumbnail_url, "->", updateData.thumbnail_url)
+    }
+
     const { error: updateError } = await supabase
       .from("artifacts")
-      .update({ media_urls: updatedUrls })
+      .update(updateData)
       .eq("id", artifactId)
 
     if (updateError) {

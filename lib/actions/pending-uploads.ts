@@ -175,6 +175,11 @@ export async function cleanupPendingUploads(specificUrls?: string[]) {
 
   // Only remove successfully deleted uploads from database
   if (successfulIds.length > 0) {
+    // Get the URLs that were successfully deleted from storage
+    const deletedUrls = uploads
+      .filter(u => successfulIds.includes(u.id))
+      .map(u => u.cloudinary_url)
+
     const { error: deleteError } = await supabase
       .from("pending_uploads")
       .delete()
@@ -182,6 +187,22 @@ export async function cleanupPendingUploads(specificUrls?: string[]) {
 
     if (deleteError) {
       console.error("[v0] Failed to remove pending uploads from DB:", deleteError)
+    }
+
+    // Also remove orphaned user_media records for these URLs
+    // These were created immediately on upload but the storage files are now deleted
+    if (deletedUrls.length > 0) {
+      const { error: userMediaError } = await supabase
+        .from("user_media")
+        .delete()
+        .in("public_url", deletedUrls)
+        .eq("user_id", user.id)
+
+      if (userMediaError) {
+        console.error("[v0] Failed to remove orphaned user_media records:", userMediaError)
+      } else {
+        console.log(`[v0] Removed ${deletedUrls.length} orphaned user_media records`)
+      }
     }
   }
 
