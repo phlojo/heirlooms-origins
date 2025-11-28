@@ -12,10 +12,11 @@ import { redirect } from "next/navigation"
 import { deleteCloudinaryMedia, extractPublicIdFromUrl } from "./cloudinary"
 import { generateSlug, generateUniqueSlug } from "@/lib/utils/slug"
 import { isCurrentUserAdmin } from "@/lib/utils/admin"
-import { hasVisualMedia, getPrimaryVisualMediaUrl, getStorageType } from "@/lib/media"
+import { hasVisualMedia, getPrimaryVisualMediaUrl, getStorageType, isImageUrl, isVideoUrl, isAudioUrl } from "@/lib/media"
 import { reorganizeArtifactMedia } from "./media-reorganize"
 import { generateDerivativesMap } from "@/lib/utils/media-derivatives"
 import { deleteFromSupabaseStorage } from "./supabase-storage"
+import { createUserMediaFromUrl, createArtifactMediaLinks } from "./media"
 
 export async function createArtifact(
   input: CreateArtifactInput,
@@ -197,6 +198,22 @@ export async function createArtifact(
 
   if (!data.thumbnail_url) {
     console.log("[v0] CREATE ARTIFACT - Note: Artifact created without thumbnail (audio-only or no media)")
+  }
+
+  // Create gallery links for URLs explicitly added to the gallery
+  // If gallery_urls is provided, use those; otherwise fall back to all visual media for backward compatibility
+  const galleryUrls = validatedFields.data.gallery_urls && validatedFields.data.gallery_urls.length > 0
+    ? validatedFields.data.gallery_urls.filter(url => validMediaUrls.includes(url))
+    : validMediaUrls.filter(url => isImageUrl(url) || isVideoUrl(url))
+
+  if (galleryUrls.length > 0) {
+    console.log("[v0] CREATE ARTIFACT - Creating gallery links for", galleryUrls.length, "media items")
+    const galleryResult = await createArtifactMediaLinks(data.id, galleryUrls, user.id, "gallery")
+    if (galleryResult.error) {
+      console.error("[v0] CREATE ARTIFACT - Failed to create gallery links (non-fatal):", galleryResult.error)
+    } else {
+      console.log("[v0] CREATE ARTIFACT - Created", galleryResult.createdCount, "gallery links")
+    }
   }
 
   console.log("[v0] CREATE ARTIFACT - Marking uploads as saved:", validMediaUrls.length, "URLs")
@@ -614,7 +631,7 @@ export async function updateArtifact(
   const { data: existingArtifact } = await supabase
     .from("artifacts")
     .select(
-      "user_id, collection_id, slug, title, media_urls, collection:collections(slug), image_captions, video_summaries, audio_transcripts, audio_summaries",
+      "user_id, collection_id, slug, title, media_urls, thumbnail_url, collection:collections(slug), image_captions, video_summaries, audio_transcripts, audio_summaries",
     )
     .eq("id", validatedFields.data.id)
     .single()
@@ -805,8 +822,8 @@ export async function updateArtifact(
   revalidatePath(`/artifacts/${updatedArtifact.slug}`)
   revalidatePath("/collections")
 
-  if (existingArtifact.collection?.slug) {
-    revalidatePath(`/collections/${existingArtifact.collection.slug}`)
+  if (existingArtifact.collection?.[0]?.slug) {
+    revalidatePath(`/collections/${existingArtifact.collection?.[0]?.slug}`)
   }
 
   if (collectionChanged) {
@@ -891,8 +908,8 @@ export async function deleteMediaFromArtifact(artifactId: string, mediaUrl: stri
 
   revalidatePath(`/artifacts/${artifact.slug}`)
   revalidatePath("/collections")
-  if (artifact.collection?.slug) {
-    revalidatePath(`/collections/${artifact.collection.slug}`)
+  if (artifact.collection?.[0]?.slug) {
+    revalidatePath(`/collections/${artifact.collection?.[0]?.slug}`)
   }
 
   return { success: true }
@@ -1030,8 +1047,8 @@ export async function deleteArtifact(artifactId: string) {
 
   revalidatePath(`/artifacts/${artifact.slug}`)
   revalidatePath("/collections")
-  if (artifact.collection?.slug) {
-    revalidatePath(`/collections/${artifact.collection.slug}`)
+  if (artifact.collection?.[0]?.slug) {
+    revalidatePath(`/collections/${artifact.collection?.[0]?.slug}`)
   }
 
   return { success: true }
@@ -1083,8 +1100,8 @@ export async function updateMediaCaption(artifactId: string, mediaUrl: string, c
   }
 
   revalidatePath(`/artifacts/${artifact.slug}`)
-  if (artifact.collection?.slug) {
-    revalidatePath(`/collections/${artifact.collection.slug}`)
+  if (artifact.collection?.[0]?.slug) {
+    revalidatePath(`/collections/${artifact.collection?.[0]?.slug}`)
   }
 
   return { success: true }

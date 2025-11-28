@@ -7,12 +7,16 @@ import { AudioPlayer } from "@/components/audio-player"
 import ReactMarkdown from "react-markdown"
 import { ArtifactSwipeWrapper } from "@/components/artifact-swipe-wrapper"
 import { ArtifactImageWithViewer } from "@/components/artifact-image-with-viewer"
+import { ArtifactMediaGallery } from "@/components/artifact-media-gallery"
+import { ArtifactGalleryEditor } from "@/components/artifact-gallery-editor"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible"
 import { Separator } from "@/components/ui/separator"
 import { AddMediaModal } from "@/components/add-media-modal"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { type ArtifactMediaWithDerivatives } from "@/lib/types/media"
+import { getArtifactGalleryMedia } from "@/lib/actions/media"
 import {
   ChevronDown,
   Plus,
@@ -47,7 +51,10 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { SectionTitle } from "@/components/ui/section-title"
+import { HelpText } from "@/components/ui/help-text"
 import { ArtifactTypeSelector } from "./artifact-type-selector"
+import { ArtifactStickyNav } from "./artifact-sticky-nav"
 import { getArtifactTypes } from "@/lib/actions/artifact-types"
 import type { ArtifactType } from "@/lib/types/artifact-types"
 import { toast } from "sonner"
@@ -69,6 +76,9 @@ interface ArtifactDetailViewProps {
   isEditMode?: boolean
   previousUrl: string | null
   nextUrl: string | null
+  galleryMedia?: ArtifactMediaWithDerivatives[]
+  // For edit mode sticky nav
+  isCurrentUserAdmin?: boolean
 }
 
 export function ArtifactDetailView({
@@ -82,6 +92,8 @@ export function ArtifactDetailView({
   isEditMode = false,
   previousUrl,
   nextUrl,
+  galleryMedia,
+  isCurrentUserAdmin = false,
 }: ArtifactDetailViewProps) {
   const [isSaving, setIsSaving] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
@@ -90,6 +102,9 @@ export function ArtifactDetailView({
   const [artifactTypes, setArtifactTypes] = useState<ArtifactType[]>([])
   const [selectedTypeId, setSelectedTypeId] = useState<string | null>(artifact.type_id || null)
   const shouldWarnOnUnloadRef = useRef(true)
+  const [currentGalleryMedia, setCurrentGalleryMedia] = useState<ArtifactMediaWithDerivatives[]>(
+    galleryMedia || []
+  )
 
   const [isImageFullscreen, setIsImageFullscreen] = useState(false)
   const [isAttributesOpen, setIsAttributesOpen] = useState(false)
@@ -180,7 +195,13 @@ export function ArtifactDetailView({
   const imageCaptions = isEditMode ? editImageCaptions : artifact.image_captions || {}
   const videoSummaries = isEditMode ? editVideoSummaries : artifact.video_summaries || {}
   const audioTranscripts = isEditMode ? editAudioTranscripts : artifact.audio_transcripts || {}
-  const mediaUrls = isEditMode ? Array.from(new Set(editMediaUrls)) : Array.from(new Set(artifact.media_urls || []))
+  const allMediaUrls = isEditMode ? Array.from(new Set(editMediaUrls)) : Array.from(new Set(artifact.media_urls || []))
+
+  // Extract gallery URLs from galleryMedia to exclude them from media blocks
+  const galleryUrls = new Set(currentGalleryMedia.map(gm => gm.media.public_url))
+
+  // Media blocks should only show URLs that are NOT in the gallery
+  const mediaUrls = allMediaUrls.filter(url => !galleryUrls.has(url))
 
   const audioUrlsFiltered = mediaUrls.filter(isAudioUrl)
   const videoUrlsFiltered = mediaUrls.filter(isVideoUrl)
@@ -406,15 +427,45 @@ export function ArtifactDetailView({
     setSelectedTypeId(typeId)
   }
 
+  const handleGalleryUpdate = async () => {
+    // Refetch gallery media after changes
+    const { data } = await getArtifactGalleryMedia(artifact.id)
+    if (data) {
+      setCurrentGalleryMedia(data)
+    }
+  }
+
   return (
     <ArtifactSwipeWrapper
       previousUrl={isEditMode ? null : previousUrl}
       nextUrl={isEditMode ? null : nextUrl}
       disableSwipe={isImageFullscreen || isEditMode}
     >
-      <div className={`space-y-6 px-6 lg:px-8 overflow-x-hidden pb-6 ${isEditMode ? "pt-4" : "pt-2"}`}>
+      {/* Edit mode sticky nav with title input */}
+      {isEditMode && (
+        <ArtifactStickyNav
+          title={artifact.title}
+          backHref={undefined}
+          backLabel={`${artifact.collection?.title || "Uncategorized"} Collection`}
+          previousItem={null}
+          nextItem={null}
+          isEditMode={true}
+          collectionId={artifact.collection_id}
+          collectionSlug={artifact.collection?.slug}
+          collectionName={artifact.collection?.title}
+          currentPosition={currentPosition ?? undefined}
+          totalCount={totalCount}
+          currentUserId={userId}
+          isCurrentUserAdmin={isCurrentUserAdmin}
+          contentOwnerId={artifact.user_id}
+          editTitle={editTitle}
+          onEditTitleChange={setEditTitle}
+          userId={userId}
+        />
+      )}
+      <div className={`overflow-x-hidden pb-[240px]`}>
         {!isEditMode && canEdit && (
-          <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center justify-between gap-3 pt-4 mb-4">
             <Button asChild className="bg-purple-600 hover:bg-purple-700 text-white">
               <Link href={`/artifacts/${artifact.slug}?mode=edit`}>
                 <Pencil className="mr-2 h-4 w-4" />
@@ -441,55 +492,53 @@ export function ArtifactDetailView({
           </div>
         )}
 
-        {isEditMode && (
-          <section className="space-y-2">
-            <label htmlFor="title" className="text-sm font-medium text-foreground">
-              Title
-            </label>
-            <TranscriptionInput
-              value={editTitle}
-              onChange={setEditTitle}
-              placeholder="Enter artifact title"
-              type="text"
-              fieldType="title"
-              userId={userId}
-              entityType="artifact"
-            />
-          </section>
+        {/* Gallery Editor/Viewer */}
+        {isEditMode ? (
+          <ArtifactGalleryEditor
+            artifactId={artifact.id}
+            galleryMedia={currentGalleryMedia}
+            onUpdate={handleGalleryUpdate}
+          />
+        ) : (
+          currentGalleryMedia && currentGalleryMedia.length > 0 && (
+            <ArtifactMediaGallery media={currentGalleryMedia} />
+          )
         )}
 
         {/* Description Section */}
-        <section className="space-y-4">
-          {isEditMode && <h2 className="text-sm font-medium text-foreground">Description</h2>}
-          {isEditMode ? (
-            <TranscriptionInput
-              value={editDescription}
-              onChange={setEditDescription}
-              placeholder="Tell the story of this artifact..."
-              type="textarea"
-              fieldType="description"
-              userId={userId}
-              entityType="artifact"
-              rows={4}
-            />
-          ) : (
-            <div className="text-pretty text-muted-foreground prose prose-sm max-w-none dark:prose-invert">
-              <ReactMarkdown>{artifact.description || "No description provided"}</ReactMarkdown>
-              {artifact.ai_description && (
-                <div className="mt-4 pt-4 border-t">
-                  <p className="text-xs font-semibold text-purple-600 mb-2">AI-Enhanced Description</p>
-                  <ReactMarkdown>{artifact.ai_description}</ReactMarkdown>
-                </div>
-              )}
-            </div>
-          )}
-        </section>
+        {(isEditMode || artifact.description || artifact.ai_description) && (
+          <section className="space-y-4 py-4">
+            {isEditMode && <SectionTitle>Description</SectionTitle>}
+            {isEditMode ? (
+              <TranscriptionInput
+                value={editDescription}
+                onChange={setEditDescription}
+                placeholder="Tell the story of this artifact..."
+                type="textarea"
+                fieldType="description"
+                userId={userId}
+                entityType="artifact"
+                rows={4}
+              />
+            ) : (
+              <div className="text-pretty text-muted-foreground prose prose-sm max-w-none dark:prose-invert">
+                {artifact.description && (
+                  <ReactMarkdown>{artifact.description}</ReactMarkdown>
+                )}
+                {artifact.ai_description && (
+                  <div className={artifact.description ? "mt-4 pt-4 border-t" : ""}>
+                    <p className="text-xs font-semibold text-purple-600 mb-2">AI-Enhanced Description</p>
+                    <ReactMarkdown>{artifact.ai_description}</ReactMarkdown>
+                  </div>
+                )}
+              </div>
+            )}
+          </section>
+        )}
 
         {isEditMode && (
           <section className="space-y-2">
-            <label htmlFor="collection" className="text-sm font-medium text-foreground">
-              Collection
-            </label>
+            <SectionTitle as="label" htmlFor="collection">Collection</SectionTitle>
             <Select
               value={editCollectionId}
               onValueChange={setEditCollectionId}
@@ -511,10 +560,11 @@ export function ArtifactDetailView({
                 )}
               </SelectContent>
             </Select>
-            <p className="text-sm text-muted-foreground">Move this artifact to a different collection</p>
+            <HelpText>Move this artifact to a different collection</HelpText>
           </section>
         )}
 
+        {isEditMode && artifactTypes.length > 0 && <div className="pt-4" />}
         {isEditMode && artifactTypes.length > 0 && (
           <ArtifactTypeSelector
             types={artifactTypes}
@@ -526,46 +576,56 @@ export function ArtifactDetailView({
           />
         )}
 
-        {/* Attributes Section */}
-        <section className="space-y-2 mb-0">
-          <Collapsible open={isAttributesOpen} onOpenChange={setIsAttributesOpen}>
-            <CollapsibleTrigger className="flex w-full items-center justify-between hover:opacity-80 transition-opacity">
-              <h2 className="text-sm font-medium text-foreground">Attributes</h2>
-              <ChevronDown
-                className={`h-5 w-5 text-muted-foreground transition-transform ${isAttributesOpen ? "rotate-180" : ""}`}
-              />
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <div className="mt-2 rounded-lg border bg-card p-4">
-                <p className="text-sm text-muted-foreground italic">
-                  No attributes added yet. Future updates will include fields for make, model, year, measurements,
-                  materials, and condition.
-                </p>
-              </div>
-            </CollapsibleContent>
-          </Collapsible>
-        </section>
-      </div>
+        {isEditMode && artifactTypes.length > 0 && <div className="pt-4" />}
 
-      <Separator className="mb-4" />
-
-      {/* Media Items Section */}
-      <section className="space-y-6 mb-6 overflow-x-hidden">
+        {/* Attributes Section - Only show in edit mode until attributes are implemented */}
         {isEditMode && (
-          <div className="flex items-center justify-between px-6 lg:px-8">
-            <h2 className="text-sm font-medium text-foreground">Media Items</h2>
-            {canEdit && (
-              <Button
-                onClick={() => setIsAddMediaOpen(true)}
-                className="bg-purple-600 hover:bg-purple-700 text-white"
-                size="sm"
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                Add Media
-              </Button>
-            )}
-          </div>
+          <section className="mb-0">
+            <Collapsible open={isAttributesOpen} onOpenChange={setIsAttributesOpen}>
+              <div className="rounded-md border border-input bg-transparent dark:bg-input/30 shadow-xs">
+                <CollapsibleTrigger className="flex w-full items-center justify-between px-3 py-2 hover:opacity-80 transition-opacity">
+                  <SectionTitle className="pl-0">Attributes</SectionTitle>
+                  <ChevronDown
+                    className={`h-4 w-4 text-muted-foreground opacity-50 transition-transform ${isAttributesOpen ? "rotate-180" : ""}`}
+                  />
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <div className="px-3 pb-3">
+                    <p className="text-sm text-muted-foreground italic">
+                      No attributes added yet. Future updates will include fields for make, model, year, measurements,
+                      materials, and condition.
+                    </p>
+                  </div>
+                </CollapsibleContent>
+              </div>
+            </Collapsible>
+          </section>
         )}
+
+        <Separator className="my-4" />
+
+        {/* Media Blocks Section */}
+        <section className="space-y-6 mb-6 overflow-x-hidden">
+          {isEditMode && (
+            <div className="flex items-center justify-between">
+              <div>
+                <SectionTitle>Media Blocks</SectionTitle>
+                <HelpText className="mt-0.5">
+                  Click "Save" at the bottom to persist changes
+                </HelpText>
+              </div>
+              {canEdit && (
+                <Button
+                  onClick={() => setIsAddMediaOpen(true)}
+                  className="bg-purple-600 hover:bg-purple-700 text-white"
+                  size="sm"
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Media
+                </Button>
+              )}
+            </div>
+          )}
 
         {mediaUrls.length > 0 ? (
           <div className="space-y-6">
@@ -575,10 +635,10 @@ export function ArtifactDetailView({
                 return (
                   <div key={url} className="space-y-3">
                     {isEditMode && (
-                      <div className="flex items-center justify-between px-6 lg:px-8">
-                        <h3 className="text-sm font-medium">
+                      <div className="flex items-center justify-between">
+                        <SectionTitle as="h3">
                           Audio{audioUrlsFiltered.length > 1 ? ` ${audioUrlsFiltered.indexOf(url) + 1}` : ""}
-                        </h3>
+                        </SectionTitle>
                         <Button
                           variant="ghost"
                           size="sm"
@@ -589,7 +649,7 @@ export function ArtifactDetailView({
                         </Button>
                       </div>
                     )}
-                    <div className="px-6 lg:px-8 space-y-3">
+                    <div className="space-y-3">
                       <AudioPlayer src={url} title="Audio Recording" />
 
                       {isEditMode && (
@@ -620,10 +680,10 @@ export function ArtifactDetailView({
                 return (
                   <div key={url} className="space-y-3">
                     {isEditMode && (
-                      <div className="flex items-center justify-between px-6 lg:px-8">
-                        <h3 className="text-sm font-medium">
+                      <div className="flex items-center justify-between">
+                        <SectionTitle as="h3">
                           Video{videoUrlsFiltered.length > 1 ? ` ${videoUrlsFiltered.indexOf(url) + 1}` : ""}
-                        </h3>
+                        </SectionTitle>
                         <div className="flex items-center gap-2">
                           <Button
                             type="button"
@@ -653,11 +713,11 @@ export function ArtifactDetailView({
                         Your browser does not support the video tag.
                       </video>
                     </div>
-                    <div className="px-6 lg:px-8 space-y-3">
+                    <div className="space-y-3">
                       {isEditMode ? (
                         <>
                           <div className="space-y-2">
-                            <label className="text-sm font-medium text-purple-600">Caption</label>
+                            <SectionTitle as="label" variant="purple">Caption</SectionTitle>
                             <TranscriptionInput
                               value={summary || ""}
                               onChange={(newSummary) => {
@@ -698,10 +758,10 @@ export function ArtifactDetailView({
                 return (
                   <div key={url} className="space-y-3">
                     {isEditMode && (
-                      <div className="flex items-center justify-between px-6 lg:px-8">
-                        <h3 className="text-sm font-medium">
+                      <div className="flex items-center justify-between">
+                        <SectionTitle as="h3">
                           Photo{imageUrlsFiltered.length > 1 ? ` ${imageUrlsFiltered.indexOf(url) + 1}` : ""}
-                        </h3>
+                        </SectionTitle>
                         <div className="flex items-center gap-2">
                           <Button
                             type="button"
@@ -731,11 +791,11 @@ export function ArtifactDetailView({
                       alt={`${artifact.title} - Image ${imageUrlsFiltered.indexOf(url) + 1}`}
                       setIsImageFullscreen={setIsImageFullscreen}
                     />
-                    <div className="px-6 lg:px-8 space-y-3">
+                    <div className="space-y-3">
                       {isEditMode ? (
                         <>
                           <div className="space-y-2">
-                            <label className="text-sm font-medium text-purple-600">Caption</label>
+                            <SectionTitle as="label" variant="purple">Caption</SectionTitle>
                             <TranscriptionInput
                               value={caption || ""}
                               onChange={(newCaption) => {
@@ -778,96 +838,97 @@ export function ArtifactDetailView({
             <p className="text-sm text-muted-foreground">No media available</p>
           </div>
         )}
-      </section>
+        </section>
 
-      {/* Provenance Section */}
-      <div className="px-6 lg:px-8 pb-[240px] overflow-x-hidden">
+        {/* Provenance Section */}
         <section className="pb-8">
           <Collapsible open={isProvenanceOpen} onOpenChange={setIsProvenanceOpen}>
-            <CollapsibleTrigger className="flex w-full items-center justify-between hover:opacity-80 transition-opacity">
-              <h2 className="text-sm font-medium text-foreground">Provenance</h2>
-              <ChevronDown
-                className={`h-5 w-5 text-muted-foreground transition-transform ${isProvenanceOpen ? "rotate-180" : ""}`}
-              />
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <div className="mt-2 rounded-lg border bg-card p-4">
-                <dl className="space-y-3 text-sm">
-                  {artifact.author_name && (
+            <div className="rounded-md border border-input bg-transparent dark:bg-input/30 shadow-xs">
+              <CollapsibleTrigger className="flex w-full items-center justify-between px-3 py-2 hover:opacity-80 transition-opacity">
+                <SectionTitle className="pl-0">Provenance</SectionTitle>
+                <ChevronDown
+                  className={`h-4 w-4 text-muted-foreground opacity-50 transition-transform ${isProvenanceOpen ? "rotate-180" : ""}`}
+                />
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <div className="px-3 pb-3">
+                  <dl className="space-y-3 text-sm">
+                    {artifact.author_name && (
+                      <div className="flex justify-between">
+                        <dt className="text-muted-foreground">Author</dt>
+                        <dd className="font-medium">{artifact.author_name}</dd>
+                      </div>
+                    )}
                     <div className="flex justify-between">
-                      <dt className="text-muted-foreground">Author</dt>
-                      <dd className="font-medium">{artifact.author_name}</dd>
+                      <dt className="text-muted-foreground">Collection</dt>
+                      <dd className="font-medium">
+                        <Link href={collectionHref} className="text-primary hover:underline">
+                          {artifact.collection?.title || "Unknown"}
+                        </Link>
+                      </dd>
                     </div>
-                  )}
-                  <div className="flex justify-between">
-                    <dt className="text-muted-foreground">Collection</dt>
-                    <dd className="font-medium">
-                      <Link href={collectionHref} className="text-primary hover:underline">
-                        {artifact.collection?.title || "Unknown"}
-                      </Link>
-                    </dd>
-                  </div>
-                  <div className="flex justify-between">
-                    <dt className="text-muted-foreground">Created</dt>
-                    <dd className="font-medium">{new Date(artifact.created_at).toLocaleDateString()}</dd>
-                  </div>
-                  {artifact.updated_at && artifact.updated_at !== artifact.created_at && (
                     <div className="flex justify-between">
-                      <dt className="text-muted-foreground">Last Modified</dt>
-                      <dd className="font-medium">{new Date(artifact.updated_at).toLocaleDateString()}</dd>
+                      <dt className="text-muted-foreground">Created</dt>
+                      <dd className="font-medium">{new Date(artifact.created_at).toLocaleDateString()}</dd>
                     </div>
-                  )}
-                  <div className="flex justify-between">
-                    <dt className="text-muted-foreground">Total Media Items</dt>
-                    <dd className="font-medium">
-                      {totalMedia} {totalMedia === 1 ? "file" : "files"}
-                    </dd>
-                  </div>
-                  {imageFiles > 0 && (
+                    {artifact.updated_at && artifact.updated_at !== artifact.created_at && (
+                      <div className="flex justify-between">
+                        <dt className="text-muted-foreground">Last Modified</dt>
+                        <dd className="font-medium">{new Date(artifact.updated_at).toLocaleDateString()}</dd>
+                      </div>
+                    )}
                     <div className="flex justify-between">
-                      <dt className="text-muted-foreground">Photos</dt>
-                      <dd className="font-medium">{imageFiles}</dd>
+                      <dt className="text-muted-foreground">Total Media Items</dt>
+                      <dd className="font-medium">
+                        {totalMedia} {totalMedia === 1 ? "file" : "files"}
+                      </dd>
                     </div>
-                  )}
-                  {videoFiles > 0 && (
-                    <div className="flex justify-between">
-                      <dt className="text-muted-foreground">Videos</dt>
-                      <dd className="font-medium">{videoFiles}</dd>
-                    </div>
-                  )}
-                  {audioFiles > 0 && (
-                    <div className="flex justify-between">
-                      <dt className="text-muted-foreground">Audio Recordings</dt>
-                      <dd className="font-medium">{audioFiles}</dd>
-                    </div>
-                  )}
-                  {artifact.transcript && (
-                    <div className="flex justify-between">
-                      <dt className="text-muted-foreground">AI Transcription</dt>
-                      <dd className="font-medium text-green-600">Available</dd>
-                    </div>
-                  )}
-                  {artifact.ai_description && (
-                    <div className="flex justify-between">
-                      <dt className="text-muted-foreground">AI Description</dt>
-                      <dd className="font-medium text-green-600">Generated</dd>
-                    </div>
-                  )}
-                  {imageCaptions && Object.keys(imageCaptions).length > 0 && (
-                    <div className="flex justify-between">
-                      <dt className="text-muted-foreground">AI Image Captions</dt>
-                      <dd className="font-medium text-green-600">{Object.keys(imageCaptions).length}</dd>
-                    </div>
-                  )}
-                  {videoSummaries && Object.keys(videoSummaries).length > 0 && (
-                    <div className="flex justify-between">
-                      <dt className="text-muted-foreground">AI Video Summaries</dt>
-                      <dd className="font-medium text-green-600">{Object.keys(videoSummaries).length}</dd>
-                    </div>
-                  )}
-                </dl>
-              </div>
-            </CollapsibleContent>
+                    {imageFiles > 0 && (
+                      <div className="flex justify-between">
+                        <dt className="text-muted-foreground">Photos</dt>
+                        <dd className="font-medium">{imageFiles}</dd>
+                      </div>
+                    )}
+                    {videoFiles > 0 && (
+                      <div className="flex justify-between">
+                        <dt className="text-muted-foreground">Videos</dt>
+                        <dd className="font-medium">{videoFiles}</dd>
+                      </div>
+                    )}
+                    {audioFiles > 0 && (
+                      <div className="flex justify-between">
+                        <dt className="text-muted-foreground">Audio Recordings</dt>
+                        <dd className="font-medium">{audioFiles}</dd>
+                      </div>
+                    )}
+                    {artifact.transcript && (
+                      <div className="flex justify-between">
+                        <dt className="text-muted-foreground">AI Transcription</dt>
+                        <dd className="font-medium text-green-600">Available</dd>
+                      </div>
+                    )}
+                    {artifact.ai_description && (
+                      <div className="flex justify-between">
+                        <dt className="text-muted-foreground">AI Description</dt>
+                        <dd className="font-medium text-green-600">Generated</dd>
+                      </div>
+                    )}
+                    {imageCaptions && Object.keys(imageCaptions).length > 0 && (
+                      <div className="flex justify-between">
+                        <dt className="text-muted-foreground">AI Image Captions</dt>
+                        <dd className="font-medium text-green-600">{Object.keys(imageCaptions).length}</dd>
+                      </div>
+                    )}
+                    {videoSummaries && Object.keys(videoSummaries).length > 0 && (
+                      <div className="flex justify-between">
+                        <dt className="text-muted-foreground">AI Video Summaries</dt>
+                        <dd className="font-medium text-green-600">{Object.keys(videoSummaries).length}</dd>
+                      </div>
+                    )}
+                  </dl>
+                </div>
+              </CollapsibleContent>
+            </div>
           </Collapsible>
         </section>
 
@@ -875,10 +936,10 @@ export function ArtifactDetailView({
           <section className="border-t pt-6 pb-8">
             <div className="space-y-4">
               <div>
-                <h3 className="text-sm font-medium text-destructive">Danger Zone</h3>
-                <p className="text-sm text-muted-foreground mt-1">
+                <SectionTitle as="h3" variant="destructive">Danger Zone</SectionTitle>
+                <HelpText className="mt-1">
                   Permanently delete this artifact. This action cannot be undone and all media will be lost.
-                </p>
+                </HelpText>
               </div>
 
               <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>

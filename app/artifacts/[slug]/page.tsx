@@ -5,6 +5,7 @@ import { getArtifactBySlug, getAdjacentArtifacts } from "@/lib/actions/artifacts
 import { ArtifactDetailView } from "@/components/artifact-detail-view"
 import { ArtifactStickyNav } from "@/components/artifact-sticky-nav"
 import { isCurrentUserAdmin } from "@/lib/utils/admin"
+import { getArtifactGalleryMedia } from "@/lib/actions/media"
 
 export default async function ArtifactDetailPage({
   params,
@@ -52,6 +53,9 @@ export default async function ArtifactDetailPage({
     artifact.collection_id,
   )
 
+  // Fetch gallery media from new unified media model (optional - falls back to media_urls)
+  const { data: galleryMedia } = await getArtifactGalleryMedia(artifact.id)
+
   const collectionHref = artifact.collection?.slug
     ? `/collections/${artifact.collection.slug}`
     : `/collections/${artifact.collection_id}`
@@ -62,25 +66,28 @@ export default async function ArtifactDetailPage({
   const nextUrl = next?.slug ? `/artifacts/${next.slug}${modeParam}` : null
 
   return (
-    <AppLayout user={user}>
-      <ArtifactStickyNav
-        title={artifact.title}
-        backHref={isEditMode ? undefined : collectionHref}
-        backLabel={`${artifact.collection?.title || "Uncategorized"} Collection`}
-        previousItem={isEditMode ? null : previous}
-        nextItem={isEditMode ? null : next}
-        editHref={`/artifacts/${artifact.slug}?mode=edit`}
-        canEdit={canEdit}
-        isEditMode={isEditMode}
-        collectionId={artifact.collection_id}
-        collectionSlug={artifact.collection?.slug}
-        collectionName={artifact.collection?.title}
-        currentPosition={currentPosition}
-        totalCount={totalCount}
-        currentUserId={user?.id}
-        isCurrentUserAdmin={isAdmin}
-        contentOwnerId={artifact.user_id}
-      />
+    <AppLayout user={user} noTopPadding>
+      {/* Sticky nav rendered from server in view mode only */}
+      {!isEditMode && (
+        <ArtifactStickyNav
+          title={artifact.title}
+          backHref={collectionHref}
+          backLabel={`${artifact.collection?.title || "Uncategorized"} Collection`}
+          previousItem={previous}
+          nextItem={next}
+          editHref={`/artifacts/${artifact.slug}?mode=edit`}
+          canEdit={canEdit}
+          isEditMode={false}
+          collectionId={artifact.collection_id}
+          collectionSlug={artifact.collection?.slug}
+          collectionName={artifact.collection?.title}
+          currentPosition={currentPosition}
+          totalCount={totalCount}
+          currentUserId={user?.id}
+          isCurrentUserAdmin={isAdmin}
+          contentOwnerId={artifact.user_id}
+        />
+      )}
 
       <ArtifactDetailView
         artifact={artifact}
@@ -93,6 +100,8 @@ export default async function ArtifactDetailPage({
         isEditMode={isEditMode}
         previousUrl={previousUrl}
         nextUrl={nextUrl}
+        galleryMedia={galleryMedia || undefined}
+        isCurrentUserAdmin={isAdmin}
       />
     </AppLayout>
   )

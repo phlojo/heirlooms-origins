@@ -1,7 +1,11 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import { ArrowLeft, ArrowRight } from "lucide-react"
 import { useRouter } from "next/navigation"
+
+const CYCLE_WORDS = ["Swipe", "to Navigate", "Artifacts"]
+const CYCLE_INTERVAL = 2500
 
 interface SwipeGuidanceProps {
   onDismiss: () => void
@@ -11,6 +15,21 @@ interface SwipeGuidanceProps {
 
 export function SwipeGuidance({ onDismiss, previousUrl, nextUrl }: SwipeGuidanceProps) {
   const router = useRouter()
+  const [wordIndex, setWordIndex] = useState(0)
+  const [isVisible, setIsVisible] = useState(true)
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      // Fade out
+      setIsVisible(false)
+      // After fade out, change word and fade in
+      setTimeout(() => {
+        setWordIndex((prev) => (prev + 1) % CYCLE_WORDS.length)
+        setIsVisible(true)
+      }, 400)
+    }, CYCLE_INTERVAL)
+    return () => clearInterval(interval)
+  }, [])
 
   const handlePrevious = () => {
     if (previousUrl) {
@@ -46,7 +65,11 @@ export function SwipeGuidance({ onDismiss, previousUrl, nextUrl }: SwipeGuidance
         >
           <ArrowLeft className="h-5 w-5 flex-shrink-0" />
         </button>
-        <span className="text-center px-2">Swipe</span>
+        <span
+          className={`text-center w-24 transition-opacity duration-400 ${isVisible ? 'opacity-100' : 'opacity-0'}`}
+        >
+          {CYCLE_WORDS[wordIndex]}
+        </span>
         <button
           onClick={handleNext}
           disabled={!nextUrl}

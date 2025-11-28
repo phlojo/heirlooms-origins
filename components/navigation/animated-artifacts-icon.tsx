@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { Package } from "lucide-react"
 import { getDynamicLucideIcon } from "@/lib/utils/dynamic-icon"
 import { cn } from "@/lib/utils"
@@ -24,9 +24,8 @@ interface AnimatedArtifactsIconProps {
  *
  * Animation:
  * - Changes icon every 4 seconds
- * - Uses opacity cross-fade for smooth transition
+ * - Uses true crossfade with two overlapping icons
  * - Respects prefers-reduced-motion
- * - Continues animating even when tab is active
  *
  * Styling:
  * - Inherits color from parent (text-muted-foreground or text-foreground)
@@ -40,19 +39,20 @@ interface AnimatedArtifactsIconProps {
 export function AnimatedArtifactsIcon({ className }: AnimatedArtifactsIconProps) {
   const [artifactTypes, setArtifactTypes] = useState<ArtifactType[]>([])
   const [currentIndex, setCurrentIndex] = useState(0)
+  const [nextIndex, setNextIndex] = useState(0)
   const [isTransitioning, setIsTransitioning] = useState(false)
+  const transitionTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   useEffect(() => {
     async function fetchTypes() {
       const types = await getArtifactTypes()
-      console.log("[v0] AnimatedArtifactsIcon loaded types:", types)
       setArtifactTypes(types)
     }
     fetchTypes()
   }, [])
 
   useEffect(() => {
-    if (artifactTypes.length === 0) return
+    if (artifactTypes.length <= 1) return
 
     const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches
 
@@ -62,30 +62,54 @@ export function AnimatedArtifactsIcon({ className }: AnimatedArtifactsIconProps)
     }
 
     const interval = setInterval(() => {
+      // Calculate next index
+      const next = (currentIndex + 1) % artifactTypes.length
+      setNextIndex(next)
+
+      // Start crossfade
       setIsTransitioning(true)
 
-      setTimeout(() => {
-        setCurrentIndex((prev) => (prev + 1) % artifactTypes.length)
+      // After transition completes, update current index
+      transitionTimeoutRef.current = setTimeout(() => {
+        setCurrentIndex(next)
         setIsTransitioning(false)
-      }, 200)
+      }, 500)
     }, 4000)
 
-    return () => clearInterval(interval)
-  }, [artifactTypes])
+    return () => {
+      clearInterval(interval)
+      if (transitionTimeoutRef.current) {
+        clearTimeout(transitionTimeoutRef.current)
+      }
+    }
+  }, [artifactTypes.length, currentIndex])
 
   const currentType = artifactTypes[currentIndex]
-  const IconComponent = currentType ? getDynamicLucideIcon(currentType.icon_name) : Package
+  const nextType = artifactTypes[nextIndex]
+  const CurrentIcon = currentType ? getDynamicLucideIcon(currentType.icon_name) : Package
+  const NextIcon = nextType ? getDynamicLucideIcon(nextType.icon_name) : Package
 
   return (
     <div className="relative">
-      <IconComponent
+      {/* Current icon - fades out during transition */}
+      <CurrentIcon
         aria-label="Artifacts icon"
         className={cn(
-          "transition-opacity duration-[400ms] ease-in-out",
+          "transition-opacity duration-500 ease-in-out",
           isTransitioning ? "opacity-0" : "opacity-100",
           className,
         )}
       />
+      {/* Next icon - fades in during transition, positioned absolutely on top */}
+      {isTransitioning && (
+        <NextIcon
+          aria-hidden="true"
+          className={cn(
+            "absolute inset-0 transition-opacity duration-500 ease-in-out opacity-100",
+            className,
+          )}
+        />
+      )}
     </div>
   )
 }

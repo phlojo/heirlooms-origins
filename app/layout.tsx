@@ -55,7 +55,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning data-scroll-behavior="smooth">
       <body className={`font-sans antialiased overflow-x-hidden`}>
         <ViewportHeightManager />
         <SupabaseProvider>

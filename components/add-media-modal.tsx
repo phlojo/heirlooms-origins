@@ -5,13 +5,15 @@ import type React from "react"
 import { useState, useRef } from "react"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
-import { Camera, Video, Mic, Upload } from "lucide-react"
+import { Camera, Video, Mic, Upload, FolderOpen } from "lucide-react"
 import { AudioRecorder } from "@/components/audio-recorder"
 import { generateCloudinarySignature, generateCloudinaryAudioSignature } from "@/lib/actions/cloudinary"
 import { trackPendingUpload } from "@/lib/actions/pending-uploads"
 import { getFileSizeLimit, formatFileSize } from "@/lib/media"
 import { Progress } from "@/components/ui/progress"
 import { createClient } from "@/lib/supabase/client"
+import { MediaPicker } from "@/components/media-picker"
+import { type UserMediaWithDerivatives } from "@/lib/types/media"
 
 // Phase 2: Feature flag for storage backend
 const USE_SUPABASE_STORAGE = process.env.NEXT_PUBLIC_USE_SUPABASE_STORAGE === "true"
@@ -33,6 +35,7 @@ interface AddMediaModalProps {
 
 type MediaType = "photo" | "video" | "audio" | null
 type MediaMode = "upload" | "record" | null
+type MediaSource = "new" | "existing" | null
 
 interface UploadProgress {
   currentFile: number
@@ -43,6 +46,7 @@ interface UploadProgress {
 }
 
 export function AddMediaModal({ open, onOpenChange, artifactId, userId, onMediaAdded }: AddMediaModalProps) {
+  const [mediaSource, setMediaSource] = useState<MediaSource>(null)
   const [selectedType, setSelectedType] = useState<MediaType>(null)
   const [selectedMode, setSelectedMode] = useState<MediaMode>(null)
   const [isUploading, setIsUploading] = useState(false)
@@ -53,6 +57,7 @@ export function AddMediaModal({ open, onOpenChange, artifactId, userId, onMediaA
   const videoCameraInputRef = useRef<HTMLInputElement>(null)
 
   const handleReset = () => {
+    setMediaSource(null)
     setSelectedType(null)
     setSelectedMode(null)
     setError(null)
@@ -75,7 +80,16 @@ export function AddMediaModal({ open, onOpenChange, artifactId, userId, onMediaA
       setSelectedMode(null)
     } else if (selectedType) {
       setSelectedType(null)
+    } else if (mediaSource) {
+      setMediaSource(null)
     }
+  }
+
+  const handleExistingMediaSelected = (selectedMedia: UserMediaWithDerivatives[]) => {
+    // Extract URLs from selected media
+    const urls = selectedMedia.map((m) => m.public_url)
+    onMediaAdded(urls)
+    handleClose()
   }
 
   /**
@@ -443,16 +457,56 @@ export function AddMediaModal({ open, onOpenChange, artifactId, userId, onMediaA
         <DialogHeader>
           <DialogTitle>Add Media</DialogTitle>
           <DialogDescription>
-            {!selectedType && "Step 1: Choose the type of media to add"}
-            {selectedType && !selectedMode && "Step 2: Choose how to add your media"}
-            {selectedMode === "upload" && "Select files to upload"}
-            {selectedMode === "record" && "Record your media"}
+            {!mediaSource && "Choose how to add media"}
+            {mediaSource === "new" && !selectedType && "Step 1: Choose the type of media to add"}
+            {mediaSource === "new" && selectedType && !selectedMode && "Step 2: Choose how to add your media"}
+            {mediaSource === "new" && selectedMode === "upload" && "Select files to upload"}
+            {mediaSource === "new" && selectedMode === "record" && "Record your media"}
+            {mediaSource === "existing" && "Select from your media library"}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
-          {/* Step 1: Choose Media Type */}
-          {!selectedType && (
+          {/* Step 0: Choose Source (New or Existing) */}
+          {!mediaSource && (
+            <div className="grid gap-3">
+              <Button
+                variant="outline"
+                className="h-auto flex-col gap-2 py-6 bg-transparent"
+                onClick={() => setMediaSource("new")}
+              >
+                <Upload className="h-8 w-8" />
+                <div className="text-center">
+                  <div className="font-semibold">Upload New</div>
+                  <div className="text-xs text-muted-foreground">Take or upload new photos, videos, or audio</div>
+                </div>
+              </Button>
+
+              <Button
+                variant="outline"
+                className="h-auto flex-col gap-2 py-6 bg-transparent"
+                onClick={() => setMediaSource("existing")}
+              >
+                <FolderOpen className="h-8 w-8" />
+                <div className="text-center">
+                  <div className="font-semibold">Select Existing</div>
+                  <div className="text-xs text-muted-foreground">Choose from previously uploaded media</div>
+                </div>
+              </Button>
+            </div>
+          )}
+
+          {/* Existing Media Picker */}
+          {mediaSource === "existing" && (
+            <MediaPicker
+              onSelect={handleExistingMediaSelected}
+              multiSelect={true}
+              excludeUrls={[]} // Could pass artifact's existing media to exclude
+            />
+          )}
+
+          {/* Step 1: Choose Media Type (only for "new" source) */}
+          {mediaSource === "new" && !selectedType && (
             <div className="grid gap-3">
               <Button
                 variant="outline"
@@ -493,7 +547,7 @@ export function AddMediaModal({ open, onOpenChange, artifactId, userId, onMediaA
           )}
 
           {/* Step 2: Choose Upload or Capture/Record */}
-          {selectedType && !selectedMode && (
+          {mediaSource === "new" && selectedType && !selectedMode && (
             <div className="grid gap-3">
               <Button variant="outline" className="h-auto flex-col gap-2 py-6 bg-transparent" asChild>
                 <label className="cursor-pointer">
@@ -584,7 +638,7 @@ export function AddMediaModal({ open, onOpenChange, artifactId, userId, onMediaA
           )}
 
           {/* Recording UI for Audio */}
-          {selectedMode === "record" && selectedType === "audio" && (
+          {mediaSource === "new" && selectedMode === "record" && selectedType === "audio" && (
             <>
               <AudioRecorder onAudioRecorded={handleAudioRecorded} disabled={isUploading} />
               <Button variant="ghost" onClick={handleBack} className="w-full">

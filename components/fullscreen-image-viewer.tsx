@@ -62,11 +62,8 @@ export function FullscreenImageViewer({ src, alt, onClose }: FullscreenImageView
   }
 
   const handleDoubleTap = () => {
-    if (scale === 1 && position.x === 0 && position.y === 0) {
-      // Already at default fit, close the viewer
-      onClose()
-    } else {
-      // Zoomed in or panned, reset to fit
+    // Only reset if zoomed in or panned - do nothing if already at default
+    if (scale !== 1 || position.x !== 0 || position.y !== 0) {
       handleReset()
     }
   }

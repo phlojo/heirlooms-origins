@@ -1,4 +1,5 @@
 import { test, expect, type Page } from "./global.setup"
+import type { Route } from "@playwright/test"
 import { getFirstArtifactSlug } from "./helpers/test-data"
 
 // Mock data for AI responses
@@ -23,7 +24,7 @@ This artifact captures a significant family moment, preserving memories across g
  */
 async function setupApiMocks(page: Page) {
   // Mock the audio transcription API
-  await page.route("**/api/analyze/audio-per-media", async (route) => {
+  await page.route("**/api/analyze/audio-per-media", async (route: Route) => {
     const request = route.request()
     const method = request.method()
 
@@ -42,7 +43,7 @@ async function setupApiMocks(page: Page) {
   })
 
   // Mock the image captions API
-  await page.route("**/api/analyze/images", async (route) => {
+  await page.route("**/api/analyze/images", async (route: Route) => {
     if (route.request().method() === "POST") {
       await route.fulfill({
         status: 200,
@@ -60,7 +61,7 @@ async function setupApiMocks(page: Page) {
   })
 
   // Mock the AI description/summary API
-  await page.route("**/api/analyze/summary", async (route) => {
+  await page.route("**/api/analyze/summary", async (route: Route) => {
     if (route.request().method() === "POST") {
       await route.fulfill({
         status: 200,
@@ -76,7 +77,7 @@ async function setupApiMocks(page: Page) {
   })
 
   // Mock the "Run All" orchestrator API
-  await page.route("**/api/analyze/run-all", async (route) => {
+  await page.route("**/api/analyze/run-all", async (route: Route) => {
     if (route.request().method() === "POST") {
       await route.fulfill({
         status: 200,
@@ -96,7 +97,7 @@ async function setupApiMocks(page: Page) {
   })
 
   // Mock Cloudinary/media fetch requests to avoid actual file downloads
-  await page.route("**/*.mp3", async (route) => {
+  await page.route("**/*.mp3", async (route: Route) => {
     await route.fulfill({
       status: 200,
       contentType: "audio/mpeg",
@@ -104,7 +105,7 @@ async function setupApiMocks(page: Page) {
     })
   })
 
-  await page.route("**/*.jpg", async (route) => {
+  await page.route("**/*.jpg", async (route: Route) => {
     await route.fulfill({
       status: 200,
       contentType: "image/jpeg",
@@ -267,7 +268,7 @@ test.describe("AI Analysis Flow", () => {
 
   test("should show error when audio file is missing", async ({ page }) => {
     // Mock the API to return a 400 error for missing audio
-    await page.route("**/api/analyze/audio-per-media", async (route) => {
+    await page.route("**/api/analyze/audio-per-media", async (route: Route) => {
       await route.fulfill({
         status: 400,
         contentType: "application/json",
@@ -303,7 +304,7 @@ test.describe("AI Analysis Flow", () => {
 
   test("should show status badge changes during processing", async ({ page }) => {
     // Mock a delayed response to observe the processing state
-    await page.route("**/api/analyze/audio-per-media", async (route) => {
+    await page.route("**/api/analyze/audio-per-media", async (route: Route) => {
       // Delay the response by 2 seconds
       await new Promise((resolve) => setTimeout(resolve, 2000))
       await route.fulfill({

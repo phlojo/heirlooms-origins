@@ -11,9 +11,9 @@ interface ArtifactCardProps {
     id: string
     slug: string
     title: string
-    description?: string
-    year_acquired?: number
-    origin?: string
+    description?: string | null
+    year_acquired?: number | null
+    origin?: string | null
     media_urls?: string[]
     media_derivatives?: Record<string, any> | null
     thumbnail_url?: string | null

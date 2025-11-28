@@ -6,6 +6,7 @@ import Link from "next/link"
 import { CollectionLabel } from "@/components/collection-label"
 import { useState, useEffect } from "react"
 import { Badge } from "@/components/ui/badge"
+import { TranscriptionInput } from "@/components/transcription-input"
 
 interface ArtifactStickyNavProps {
   title: string
@@ -34,6 +35,10 @@ interface ArtifactStickyNavProps {
   currentUserId?: string
   isCurrentUserAdmin?: boolean
   contentOwnerId?: string
+  // Edit mode title input props
+  editTitle?: string
+  onEditTitleChange?: (value: string) => void
+  userId?: string
 }
 
 export function ArtifactStickyNav({
@@ -55,6 +60,9 @@ export function ArtifactStickyNav({
   currentUserId,
   isCurrentUserAdmin = false,
   contentOwnerId,
+  editTitle,
+  onEditTitleChange,
+  userId,
 }: ArtifactStickyNavProps) {
   const [isFavorited, setIsFavorited] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
@@ -132,7 +140,7 @@ export function ArtifactStickyNav({
   const showSuperUserBadge = isCurrentUserAdmin && contentOwnerId && currentUserId && contentOwnerId !== currentUserId
 
   return (
-    <div className="artifact-sticky-nav sticky z-50 bg-background/90 border rounded-lg mb-4 py-2 will-change-transform">
+    <div className="artifact-sticky-nav sticky top-0 z-50 bg-background/90 border-b will-change-transform -mx-4 overflow-x-hidden">
       <div className="container max-w-7xl mx-auto">
         <div className="flex flex-col gap-0">
           {/* First row: Navigation with left arrow, collection info, right arrow */}
@@ -201,30 +209,40 @@ export function ArtifactStickyNav({
             </Button>
           </div>
 
-          {/* Second row: Title and Heart icon */}
-          <div className="flex items-center justify-between gap-0 pb-0">
-            <div className="flex items-center gap-2 flex-1 min-w-0 px-3.5 py-2">
-              <h1 className="text-balance font-bold tracking-tight flex-1 min-w-0 text-xl">{title}</h1>
-              {showSuperUserBadge && (
-                <Badge variant="destructive" className="shrink-0 text-xs">
-                  Super User
-                </Badge>
-              )}
-            </div>
-            {isEditMode ? (
-              <div className="shrink-0 h-9 w-9 mr-3.5 flex items-center justify-center rounded-full bg-purple-600">
-                <Pencil className="h-4 w-4 text-white" />
+          {/* Second row: Title (view mode) or Title Input (edit mode) */}
+          <div className="flex items-center justify-between gap-2 pb-0">
+            {isEditMode && onEditTitleChange && userId ? (
+              <div className="flex-1 min-w-0 px-3.5 py-2 pr-5">
+                <TranscriptionInput
+                  value={editTitle || ""}
+                  onChange={onEditTitleChange}
+                  placeholder="Enter artifact title"
+                  type="input"
+                  fieldType="title"
+                  userId={userId}
+                  entityType="artifact"
+                />
               </div>
             ) : (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={toggleFavorite}
-                className="shrink-0 h-9 w-9 p-0 mr-3.5"
-                aria-label={isFavorited ? "Remove from favorites" : "Add to favorites"}
-              >
-                <Heart className={`h-5 w-5 ${isFavorited ? "fill-red-500 text-red-500" : "text-muted-foreground"}`} />
-              </Button>
+              <>
+                <div className="flex items-center gap-2 flex-1 min-w-0 px-3.5 py-2">
+                  <h1 className="text-balance font-bold tracking-tight flex-1 min-w-0 text-xl">{title}</h1>
+                  {showSuperUserBadge && (
+                    <Badge variant="destructive" className="shrink-0 text-xs">
+                      Super User
+                    </Badge>
+                  )}
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={toggleFavorite}
+                  className="shrink-0 h-9 w-9 p-0 mr-3.5"
+                  aria-label={isFavorited ? "Remove from favorites" : "Add to favorites"}
+                >
+                  <Heart className={`h-5 w-5 ${isFavorited ? "fill-red-500 text-red-500" : "text-muted-foreground"}`} />
+                </Button>
+              </>
             )}
           </div>
         </div>

@@ -32,6 +32,14 @@ export function useSwipeNavigation({
     if (disabled) return
 
     const handleTouchStart = (e: TouchEvent) => {
+      // Ignore swipes that start within the Flickity gallery
+      const target = e.target as HTMLElement
+      if (target.closest('.artifact-media-gallery, .flickity-enabled')) {
+        touchStartX.current = null
+        touchStartY.current = null
+        return
+      }
+
       touchStartX.current = e.touches[0].clientX
       touchStartY.current = e.touches[0].clientY
       swipeStarted.current = false

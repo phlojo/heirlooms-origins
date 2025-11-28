@@ -73,9 +73,8 @@ export default function BottomNav() {
       )}
       style={{
         /* iOS-safe bottom padding with safe-area support */
-        /* Simplified calculation to reduce browser reflow at scroll boundaries */
-        paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 12px)",
-        height: "calc(80px + env(safe-area-inset-bottom, 0px) + 12px)",
+        paddingBottom: "env(safe-area-inset-bottom, 0px)",
+        height: "calc(80px + env(safe-area-inset-bottom, 0px))",
         /* Prevent momentum scroll from affecting nav */
         touchAction: "manipulation",
         /* Force GPU layer but prevent repaint flicker */
