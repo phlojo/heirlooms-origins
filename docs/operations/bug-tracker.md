@@ -642,6 +642,84 @@ export async function cleanupPendingUploads(specificUrls?: string[]) {
 
 ---
 
+## Delete Artifact Modal with Media Preservation Option (November 2025)
+
+### Background
+Previously, deleting an artifact always permanently deleted all associated media from storage. Users had no option to keep media for reuse in other artifacts.
+
+### Solution
+Created a two-option modal (similar to the media block remove/delete pattern) that lets users choose:
+
+1. **Keep media in library** (default) - Delete the artifact record but preserve media files in storage for reuse
+2. **Delete media permanently** - Delete artifact AND permanently remove all media from storage
+
+### Implementation
+
+**New Component: `components/delete-artifact-modal.tsx`**
+- Two-option selection UI matching `MediaActionModal` pattern
+- "Keep media in library" selected by default
+- Clear descriptions of what each option does
+- Warning text updates based on selection
+
+**Updated Server Action: `lib/actions/artifacts.ts` - `deleteArtifact()`**
+
+Added `deleteMedia` parameter (defaults to `true` for backward compatibility):
+
+```typescript
+export async function deleteArtifact(artifactId: string, deleteMedia: boolean = true)
+```
+
+When `deleteMedia = false`:
+- Only deletes the artifact record from database
+- Media files remain in Supabase Storage/Cloudinary
+- `user_media` records preserved for reuse
+- Gallery links (`artifact_media`) cascade-deleted with artifact
+
+When `deleteMedia = true`:
+- Collects ALL media URLs from both `artifacts.media_urls` (media blocks) AND `artifact_media` table (gallery)
+- Deletes media files from storage (Supabase/Cloudinary)
+- Deletes `user_media` records (cascades to `artifact_media`)
+- **Cleans up OTHER artifacts** that reference the same media:
+  - Removes URL from `artifacts.media_urls` arrays
+  - Updates `thumbnail_url` if it was the deleted media
+  - Cleans up AI metadata (`image_captions`, `video_summaries`, `audio_transcripts`)
+  - Revalidates affected artifact pages
+
+### Comprehensive Cleanup for Permanent Delete
+
+When permanently deleting media, the system ensures no broken references remain:
+
+| Location | Cleanup Action |
+|----------|----------------|
+| Storage (Supabase/Cloudinary) | Files deleted |
+| `user_media` table | Record deleted |
+| `artifact_media` table | Cascade-deleted via `user_media` FK |
+| Other artifacts' `media_urls` | URL removed from arrays |
+| Other artifacts' `thumbnail_url` | Auto-selects new thumbnail |
+| Other artifacts' AI metadata | Entries for URL deleted |
+
+### UI Changes
+
+**File: `components/artifact-detail-view.tsx`**
+- Replaced inline `AlertDialog` in Danger Zone with `DeleteArtifactModal`
+- Updated `handleDeleteArtifact` to accept `deleteMedia` boolean
+- Help text updated to remove "all media will be lost" (now depends on user choice)
+
+### Usage Flow
+
+1. User clicks "Delete Artifact" button in Danger Zone
+2. Modal opens with two options (Keep media / Delete permanently)
+3. "Keep media in library" is pre-selected
+4. User can switch selection if they want to delete media
+5. User clicks "Delete Artifact" to confirm
+6. System performs cleanup based on selection
+
+### Files Modified
+- `components/delete-artifact-modal.tsx` (NEW)
+- `lib/actions/artifacts.ts` - Added `deleteMedia` parameter with full cleanup logic
+- `components/artifact-detail-view.tsx` - Integrated new modal
+
+---
 ## Small Thumbnail Derivative (120x120) Added (November 2025)
 
 ### Background

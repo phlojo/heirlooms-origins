@@ -15,6 +15,7 @@ import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/component
 import { Separator } from "@/components/ui/separator"
 import { AddMediaModal } from "@/components/add-media-modal"
 import { MediaActionModal } from "@/components/media-action-modal"
+import { DeleteArtifactModal } from "@/components/delete-artifact-modal"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { type ArtifactMediaWithDerivatives } from "@/lib/types/media"
 import { getArtifactGalleryMedia } from "@/lib/actions/media"
@@ -193,18 +194,21 @@ export function ArtifactDetailView({
     }
   }, [isEditMode, userId])
 
-  const totalMedia = editMediaUrls.length
+  // Gallery URLs (used to check if media is in gallery for delete warnings)
+  const galleryUrls = new Set(currentGalleryMedia.map(gm => gm.media.public_url))
+
+  // Total unique media across both media blocks AND gallery
+  const allUniqueMediaUrls = new Set([...editMediaUrls, ...galleryUrls])
+  const totalMedia = allUniqueMediaUrls.size
+
   const audioFiles = editMediaUrls.filter((url) => isAudioUrl(url)).length
   const videoFiles = editMediaUrls.filter((url) => isVideoUrl(url)).length
-  const imageFiles = totalMedia - audioFiles - videoFiles
+  const imageFiles = editMediaUrls.length - audioFiles - videoFiles
 
   const imageCaptions = isEditMode ? editImageCaptions : artifact.image_captions || {}
   const videoSummaries = isEditMode ? editVideoSummaries : artifact.video_summaries || {}
   const audioTranscripts = isEditMode ? editAudioTranscripts : artifact.audio_transcripts || {}
   const allMediaUrls: string[] = isEditMode ? Array.from(new Set(editMediaUrls)) : Array.from(new Set(artifact.media_urls || []))
-
-  // Gallery URLs (used to check if media is in gallery for delete warnings)
-  const galleryUrls = new Set(currentGalleryMedia.map(gm => gm.media.public_url))
 
   // Media blocks show ALL media URLs - same media can be in both gallery and blocks
   const mediaUrls: string[] = allMediaUrls
@@ -374,10 +378,10 @@ export function ArtifactDetailView({
     setMediaToAction(null)
   }
 
-  const handleDeleteArtifact = async () => {
+  const handleDeleteArtifact = async (deleteMedia: boolean) => {
     setIsDeleting(true)
     try {
-      const result = await deleteArtifact(artifact.id)
+      const result = await deleteArtifact(artifact.id, deleteMedia)
       if (result.success) {
         // Disable beforeunload warning before redirecting
         shouldWarnOnUnloadRef.current = false
@@ -1023,53 +1027,28 @@ export function ArtifactDetailView({
               <div>
                 <SectionTitle as="h3" variant="destructive">Danger Zone</SectionTitle>
                 <HelpText className="mt-1">
-                  Permanently delete this artifact. This action cannot be undone and all media will be lost.
+                  Permanently delete this artifact. This action cannot be undone.
                 </HelpText>
               </div>
 
-              <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-                <AlertDialogTrigger asChild>
-                  <Button variant="destructive" type="button" disabled={isDeleting}>
-                    <Trash2 className="mr-2 h-4 w-4" />
-                    Delete Artifact
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Delete Artifact</AlertDialogTitle>
-                    <AlertDialogDescription className="space-y-3">
-                      <span className="block">
-                        You are about to permanently delete <strong>"{artifact.title}"</strong>.
-                      </span>
-                      <span className="block text-destructive font-medium">
-                        All media files ({totalMedia} {totalMedia === 1 ? "file" : "files"}) will be permanently deleted
-                        from storage.
-                      </span>
-                      <span className="block text-xs text-muted-foreground">This action cannot be undone.</span>
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
-                    <AlertDialogAction
-                      onClick={(e) => {
-                        e.preventDefault()
-                        handleDeleteArtifact()
-                      }}
-                      disabled={isDeleting}
-                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                    >
-                      {isDeleting ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Deleting...
-                        </>
-                      ) : (
-                        "Delete Artifact"
-                      )}
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
+              <Button
+                variant="destructive"
+                type="button"
+                disabled={isDeleting}
+                onClick={() => setDeleteDialogOpen(true)}
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete Artifact
+              </Button>
+
+              <DeleteArtifactModal
+                open={deleteDialogOpen}
+                onOpenChange={setDeleteDialogOpen}
+                artifactTitle={artifact.title}
+                mediaCount={totalMedia}
+                onDelete={handleDeleteArtifact}
+                isDeleting={isDeleting}
+              />
             </div>
           </section>
         )}

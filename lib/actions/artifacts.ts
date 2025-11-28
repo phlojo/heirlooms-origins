@@ -954,7 +954,7 @@ export async function getArtifactBySlug(artifactSlug: string) {
   return data
 }
 
-export async function deleteArtifact(artifactId: string) {
+export async function deleteArtifact(artifactId: string, deleteMedia: boolean = true) {
   const supabase = await createClient()
 
   const {
@@ -981,62 +981,153 @@ export async function deleteArtifact(artifactId: string) {
     return { success: false, error: "Unauthorized" }
   }
 
-  // Delete all media from storage (both Supabase and Cloudinary)
-  const mediaUrls = artifact.media_urls || []
-  const deletedCloudinaryIds = new Set<string>()
-  const deletedSupabaseUrls = new Set<string>()
+  // Get media from BOTH sources: media blocks AND gallery
+  const mediaBlockUrls = artifact.media_urls || []
 
-  console.log("[deleteArtifact] Deleting media for artifact:", {
+  // Fetch gallery media URLs from artifact_media -> user_media
+  const { data: galleryMedia } = await supabase
+    .from("artifact_media")
+    .select("media:user_media(public_url)")
+    .eq("artifact_id", artifactId)
+
+  const galleryUrls = (galleryMedia || [])
+    .map((item: any) => item.media?.public_url)
+    .filter((url: string | null): url is string => !!url)
+
+  // Combine and dedupe all media URLs
+  const allMediaUrls = [...new Set([...mediaBlockUrls, ...galleryUrls])]
+
+  console.log("[deleteArtifact] Deleting artifact:", {
     artifactId,
-    mediaCount: mediaUrls.length,
+    mediaBlockCount: mediaBlockUrls.length,
+    galleryCount: galleryUrls.length,
+    totalUniqueMedia: allMediaUrls.length,
+    deleteMedia,
   })
 
-  for (const url of mediaUrls) {
-    const storageType = getStorageType(url)
+  // Only delete media from storage if explicitly requested
+  if (deleteMedia && allMediaUrls.length > 0) {
+    const deletedCloudinaryIds = new Set<string>()
+    const deletedSupabaseUrls = new Set<string>()
 
-    if (storageType === "supabase") {
-      // Delete from Supabase Storage
-      const { success, error } = await deleteFromSupabaseStorage(url)
-      if (success) {
-        deletedSupabaseUrls.add(url)
-        console.log("[deleteArtifact] Deleted from Supabase Storage:", url)
+    console.log("[deleteArtifact] Deleting media files from storage...")
+
+    for (const url of allMediaUrls) {
+      const storageType = getStorageType(url)
+
+      if (storageType === "supabase") {
+        // Delete from Supabase Storage
+        const { success, error } = await deleteFromSupabaseStorage(url)
+        if (success) {
+          deletedSupabaseUrls.add(url)
+          console.log("[deleteArtifact] Deleted from Supabase Storage:", url)
+        } else {
+          console.error("[deleteArtifact] Failed to delete from Supabase Storage:", { url, error })
+        }
+      } else if (storageType === "cloudinary") {
+        // Delete from Cloudinary
+        const publicId = await extractPublicIdFromUrl(url)
+        if (publicId) {
+          await deleteCloudinaryMedia(publicId)
+          deletedCloudinaryIds.add(publicId)
+          console.log("[deleteArtifact] Deleted from Cloudinary:", publicId)
+        }
       } else {
-        console.error("[deleteArtifact] Failed to delete from Supabase Storage:", { url, error })
-      }
-    } else if (storageType === "cloudinary") {
-      // Delete from Cloudinary
-      const publicId = await extractPublicIdFromUrl(url)
-      if (publicId) {
-        await deleteCloudinaryMedia(publicId)
-        deletedCloudinaryIds.add(publicId)
-        console.log("[deleteArtifact] Deleted from Cloudinary:", publicId)
-      }
-    } else {
-      console.warn("[deleteArtifact] Unknown storage type for URL:", url)
-    }
-  }
-
-  // Delete thumbnail if it's different from media URLs
-  if (artifact.thumbnail_url) {
-    const storageType = getStorageType(artifact.thumbnail_url)
-
-    if (storageType === "supabase" && !deletedSupabaseUrls.has(artifact.thumbnail_url)) {
-      const { success, error } = await deleteFromSupabaseStorage(artifact.thumbnail_url)
-      if (success) {
-        console.log("[deleteArtifact] Deleted separate thumbnail from Supabase:", artifact.thumbnail_url)
-      } else {
-        console.error("[deleteArtifact] Failed to delete thumbnail from Supabase:", { url: artifact.thumbnail_url, error })
-      }
-    } else if (storageType === "cloudinary") {
-      const thumbnailPublicId = await extractPublicIdFromUrl(artifact.thumbnail_url)
-      if (thumbnailPublicId && !deletedCloudinaryIds.has(thumbnailPublicId)) {
-        await deleteCloudinaryMedia(thumbnailPublicId)
-        console.log("[deleteArtifact] Deleted separate thumbnail from Cloudinary:", thumbnailPublicId)
+        console.warn("[deleteArtifact] Unknown storage type for URL:", url)
       }
     }
+
+    // Delete thumbnail if it's different from media URLs
+    if (artifact.thumbnail_url) {
+      const storageType = getStorageType(artifact.thumbnail_url)
+
+      if (storageType === "supabase" && !deletedSupabaseUrls.has(artifact.thumbnail_url)) {
+        const { success, error } = await deleteFromSupabaseStorage(artifact.thumbnail_url)
+        if (success) {
+          console.log("[deleteArtifact] Deleted separate thumbnail from Supabase:", artifact.thumbnail_url)
+        } else {
+          console.error("[deleteArtifact] Failed to delete thumbnail from Supabase:", { url: artifact.thumbnail_url, error })
+        }
+      } else if (storageType === "cloudinary") {
+        const thumbnailPublicId = await extractPublicIdFromUrl(artifact.thumbnail_url)
+        if (thumbnailPublicId && !deletedCloudinaryIds.has(thumbnailPublicId)) {
+          await deleteCloudinaryMedia(thumbnailPublicId)
+          console.log("[deleteArtifact] Deleted separate thumbnail from Cloudinary:", thumbnailPublicId)
+        }
+      }
+    }
+
+    // Also delete user_media records when permanently deleting media
+    // This cascades to artifact_media links (gallery)
+    for (const url of allMediaUrls) {
+      const { data: userMedia } = await supabase
+        .from("user_media")
+        .select("id")
+        .eq("public_url", url)
+        .eq("user_id", user.id)
+        .single()
+
+      if (userMedia) {
+        console.log("[deleteArtifact] Deleting user_media record:", userMedia.id)
+        await supabase.from("user_media").delete().eq("id", userMedia.id)
+      }
+
+      // Clean up media_urls arrays and thumbnails in OTHER artifacts that reference this media
+      const { data: otherArtifacts } = await supabase
+        .from("artifacts")
+        .select("id, slug, media_urls, thumbnail_url, image_captions, video_summaries, audio_transcripts")
+        .eq("user_id", user.id)
+        .neq("id", artifactId) // Exclude the artifact being deleted
+        .contains("media_urls", [url])
+
+      if (otherArtifacts && otherArtifacts.length > 0) {
+        console.log("[deleteArtifact] Cleaning up", otherArtifacts.length, "other artifacts that reference:", url)
+
+        for (const otherArtifact of otherArtifacts) {
+          const updatedMediaUrls = (otherArtifact.media_urls || []).filter((u: string) => u !== url)
+
+          const updatedImageCaptions = { ...(otherArtifact.image_captions || {}) }
+          delete updatedImageCaptions[url]
+
+          const updatedVideoSummaries = { ...(otherArtifact.video_summaries || {}) }
+          delete updatedVideoSummaries[url]
+
+          const updatedAudioTranscripts = { ...(otherArtifact.audio_transcripts || {}) }
+          delete updatedAudioTranscripts[url]
+
+          // Update thumbnail if it was the deleted media
+          let newThumbnailUrl = otherArtifact.thumbnail_url
+          if (otherArtifact.thumbnail_url === url) {
+            newThumbnailUrl = getPrimaryVisualMediaUrl(updatedMediaUrls)
+            console.log("[deleteArtifact] Updating thumbnail for artifact", otherArtifact.id, "to:", newThumbnailUrl || "NONE")
+          }
+
+          const { error: updateError } = await supabase
+            .from("artifacts")
+            .update({
+              media_urls: updatedMediaUrls,
+              thumbnail_url: newThumbnailUrl,
+              image_captions: updatedImageCaptions,
+              video_summaries: updatedVideoSummaries,
+              audio_transcripts: updatedAudioTranscripts,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", otherArtifact.id)
+
+          if (updateError) {
+            console.error("[deleteArtifact] Failed to update artifact", otherArtifact.id, ":", updateError)
+          } else {
+            // Revalidate the updated artifact's page
+            revalidatePath(`/artifacts/${otherArtifact.slug}`)
+          }
+        }
+      }
+    }
+  } else {
+    console.log("[deleteArtifact] Keeping media files in library (deleteMedia=false)")
   }
 
-  // Delete artifact from database
+  // Delete artifact from database (cascade deletes artifact_media links)
   const { error: deleteError } = await supabase.from("artifacts").delete().eq("id", artifactId)
 
   if (deleteError) {
