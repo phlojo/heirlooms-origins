@@ -55,7 +55,8 @@ interface SortableItemProps {
 
 function SortableItem({ item, onRemove }: SortableItemProps) {
   const media = item.media
-  const thumbnailSrc = media.thumbnailUrl || media.public_url
+  // Use smallThumbnailUrl (120x120) for compact reorder cards
+  const thumbnailSrc = media.smallThumbnailUrl || media.thumbnailUrl || media.public_url
 
   const {
     attributes,

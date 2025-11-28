@@ -7,6 +7,7 @@
  * Media derivative URLs for a single media item
  */
 export interface MediaDerivatives {
+  smallThumb?: string // 120x120, cropped to fill (for pickers, reorder cards)
   thumb: string // 400x400, cropped to fill
   medium: string // 1024px width
   large?: string // 1600px width (optional)
@@ -41,6 +42,7 @@ export function generateDerivativeUrls(originalUrl: string): MediaDerivatives | 
   if (isVideo) {
     // For videos, generate thumbnail from 1 second mark
     return {
+      smallThumb: `${baseUrl}/upload/w_120,h_120,c_fill,q_auto,f_jpg,so_1.0,du_0/${path}`,
       thumb: `${baseUrl}/upload/w_400,h_400,c_fill,q_auto,f_jpg,so_1.0,du_0/${path}`,
       medium: `${baseUrl}/upload/w_1024,c_limit,q_auto,f_jpg,so_1.0,du_0/${path}`,
       large: `${baseUrl}/upload/w_1600,c_limit,q_auto,f_jpg,so_1.0,du_0/${path}`,
@@ -49,6 +51,7 @@ export function generateDerivativeUrls(originalUrl: string): MediaDerivatives | 
 
   // For images
   return {
+    smallThumb: `${baseUrl}/upload/w_120,h_120,c_fill,q_auto,f_auto/${path}`,
     thumb: `${baseUrl}/upload/w_400,h_400,c_fill,q_auto,f_auto/${path}`,
     medium: `${baseUrl}/upload/w_1024,c_limit,q_auto,f_auto/${path}`,
     large: `${baseUrl}/upload/w_1600,c_limit,q_auto,f_auto/${path}`,

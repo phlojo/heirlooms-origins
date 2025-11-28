@@ -20,7 +20,7 @@ import {
   type ArtifactMediaWithDerivatives,
   type UserMediaWithDerivatives,
 } from "@/lib/types/media"
-import { getThumbnailUrl, getMediumUrl, getLargeUrl } from "@/lib/cloudinary"
+import { getSmallThumbnailUrl, getThumbnailUrl, getMediumUrl, getLargeUrl } from "@/lib/cloudinary"
 import { revalidatePath } from "next/cache"
 
 // ============================================================================
@@ -157,6 +157,7 @@ export async function getUserMediaLibrary(params?: {
   // Add derivative URLs
   const mediaWithDerivatives: UserMediaWithDerivatives[] = (data || []).map((media) => ({
     ...media,
+    smallThumbnailUrl: getSmallThumbnailUrl(media.public_url),
     thumbnailUrl: getThumbnailUrl(media.public_url),
     mediumUrl: getMediumUrl(media.public_url),
     largeUrl: getLargeUrl(media.public_url),
@@ -518,6 +519,7 @@ export async function getArtifactMediaByRole(
         ...item,
         media: {
           ...media,
+          smallThumbnailUrl: getSmallThumbnailUrl(media.public_url),
           thumbnailUrl: getThumbnailUrl(media.public_url),
           mediumUrl: getMediumUrl(media.public_url),
           largeUrl: getLargeUrl(media.public_url),

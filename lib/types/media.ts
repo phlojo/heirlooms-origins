@@ -56,6 +56,7 @@ export interface UserMedia {
  */
 export interface UserMediaWithDerivatives extends UserMedia {
   // Computed derivatives (not stored in DB, generated on-demand via Cloudinary)
+  smallThumbnailUrl?: string        // 120x120 cropped (for pickers, reorder cards)
   thumbnailUrl?: string             // 400x400 cropped
   mediumUrl?: string                // 1024px width
   largeUrl?: string                 // 1600px width

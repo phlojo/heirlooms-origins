@@ -82,6 +82,47 @@ function isVideoFile(url: string): boolean {
 }
 
 /**
+ * Get small thumbnail version of image or video (120x120, cropped to fill)
+ * Perfect for: media pickers, reorder cards, compact lists
+ * For videos, generates a poster frame from 1 second mark
+ *
+ * @param url - Original media URL
+ * @param mediaDerivatives - Optional map of original URLs to their derivatives
+ * @returns Small thumbnail URL (120x120)
+ */
+export function getSmallThumbnailUrl(
+  url: string,
+  mediaDerivatives?: Record<string, MediaDerivatives> | null
+): string {
+  if (!url || typeof url !== 'string' || url.trim() === '') {
+    return '/placeholder.svg'
+  }
+
+  // PHASE 2: Use Cloudinary fetch for Supabase Storage URLs
+  if (isSupabaseStorageUrl(url)) {
+    const transformations = isVideoUrl(url)
+      ? "w_120,h_120,c_fill,q_auto,f_jpg,so_1.0,du_0"
+      : "w_120,h_120,c_fill,q_auto,f_auto"
+    return getCloudinaryFetchUrl(url, transformations)
+  }
+
+  // PHASE 1: Try to use stored derivative first (Cloudinary originals)
+  if (mediaDerivatives && mediaDerivatives[url]?.smallThumb) {
+    return mediaDerivatives[url].smallThumb
+  }
+
+  // Backwards compatibility: Generate dynamically (Cloudinary originals)
+  if (isCloudinaryUrl(url)) {
+    return isVideoFile(url)
+      ? getCloudinaryUrl(url, "w_120,h_120,c_fill,q_auto,f_jpg,so_1.0,du_0")
+      : getCloudinaryUrl(url, "w_120,h_120,c_fill,q_auto,f_auto")
+  }
+
+  // Unknown URL type, return original
+  return url
+}
+
+/**
  * Get thumbnail version of image or video (400x400, cropped to fill)
  * Perfect for: artifact cards, collection cards, grid views
  * For videos, generates a poster frame from 1 second mark

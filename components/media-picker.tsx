@@ -189,10 +189,10 @@ export function MediaPicker({
                       : "border-transparent hover:border-muted-foreground/50"
                   )}
                 >
-                  {/* Media Preview */}
+                  {/* Media Preview - use smallThumbnailUrl (120x120) for compact grid */}
                   {media.media_type === "image" && (
                     <img
-                      src={media.thumbnailUrl || media.public_url}
+                      src={media.smallThumbnailUrl || media.thumbnailUrl || media.public_url}
                       alt={media.filename}
                       className="h-full w-full object-cover"
                       onError={() => handleMediaError(media.id)}
@@ -200,9 +200,9 @@ export function MediaPicker({
                   )}
                   {media.media_type === "video" && (
                     <div className="relative h-full w-full bg-black">
-                      {media.thumbnailUrl ? (
+                      {(media.smallThumbnailUrl || media.thumbnailUrl) ? (
                         <img
-                          src={media.thumbnailUrl}
+                          src={media.smallThumbnailUrl || media.thumbnailUrl}
                           alt={media.filename}
                           className="h-full w-full object-cover"
                           onError={() => handleMediaError(media.id)}
