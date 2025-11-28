@@ -378,3 +378,103 @@ No new env vars required. Uses existing:
 **Fix**: Added `.filter((item) => item.media !== null)` before mapping in `lib/actions/media.ts:411-412`.
 
 **Prevention**: Always filter out null joins before accessing properties on Supabase joined relations.
+
+---
+
+## Session Updates (2025-11-28)
+
+### New Artifact Form - Gallery and Media Blocks Separation
+
+**Issue**: The new artifact form needed independent Gallery and Media Blocks sections, matching the Edit artifact page behavior 1:1.
+
+**Changes Made**:
+
+1. **`components/new-artifact-form.tsx`** - Complete rewrite with:
+   - Separate state arrays: `galleryUrls` (for gallery carousel) and `mediaBlockUrls` (for media blocks section)
+   - Full Media Blocks section with all AI functionality:
+     - Thumbnail selection (BookImage icon)
+     - AI caption generation for images
+     - AI summary generation for videos
+     - Audio transcription
+     - Delete media with confirmation dialogs
+   - `NewArtifactGalleryEditor` component for gallery management
+   - Independent `AddMediaModal` instances for each section
+   - On submit: passes both `media_urls` (combined) and `gallery_urls` (gallery-specific) to server
+
+2. **`lib/schemas.ts`** - Added `gallery_urls` field:
+   ```typescript
+   gallery_urls: z.array(z.string().url("Invalid gallery URL")).nullable().optional(),
+   ```
+
+3. **`lib/actions/artifacts.ts`** - Updated `createArtifact` to:
+   - Use `gallery_urls` for creating `artifact_media` links with role="gallery"
+   - Fall back to visual media from `media_urls` if `gallery_urls` not provided
+
+### View Mode - Gallery Items Appearing as Media Blocks (Fixed)
+
+**Issue**: After saving a new artifact, gallery items incorrectly appeared in both the gallery carousel AND the media blocks section.
+
+**Root Cause**: `artifact-detail-view.tsx` rendered ALL `media_urls` as media blocks without excluding items that are in the gallery.
+
+**Fix** in `components/artifact-detail-view.tsx`:
+```typescript
+// Before: showed all media as blocks
+const mediaUrls = isEditMode ? Array.from(new Set(editMediaUrls)) : Array.from(new Set(artifact.media_urls || []))
+
+// After: exclude gallery items from media blocks
+const allMediaUrls = isEditMode ? Array.from(new Set(editMediaUrls)) : Array.from(new Set(artifact.media_urls || []))
+const galleryUrls = new Set(currentGalleryMedia.map(gm => gm.media.public_url))
+const mediaUrls = allMediaUrls.filter(url => !galleryUrls.has(url))
+```
+
+### Gallery Images Gray on Initial Load (Fixed)
+
+**Issue**: On mobile, after reordering gallery and saving, images appeared gray on first view (had to navigate away and back).
+
+**Root Cause**: The `GalleryImage` component's shimmer placeholder stayed visible when images were browser-cached because `onLoad` fires before React attaches the event listener.
+
+**Fix** in `components/artifact-media-gallery.tsx`:
+```typescript
+function GalleryImage({ src, alt, className, loading }) {
+  const [isLoaded, setIsLoaded] = useState(false)
+  const imgRef = useRef<HTMLImageElement>(null)
+
+  // Handle already-cached images
+  useEffect(() => {
+    if (imgRef.current?.complete && imgRef.current?.naturalHeight > 0) {
+      setIsLoaded(true)
+    }
+  }, [src])
+
+  return (
+    <>
+      {!isLoaded && <div className="shimmer..." />}
+      <img ref={imgRef} onLoad={() => setIsLoaded(true)} ... />
+    </>
+  )
+}
+```
+
+### Next.js Smooth Scroll Warning (Fixed)
+
+**Issue**: Console warning about `scroll-behavior: smooth` on `<html>` element conflicting with route transitions.
+
+**Fix** in `app/layout.tsx`:
+```tsx
+<html lang="en" suppressHydrationWarning data-scroll-behavior="smooth">
+```
+
+This tells Next.js the smooth scrolling is intentional and to disable it during route transitions.
+
+---
+
+## Files Modified This Session
+
+| File | Change |
+|------|--------|
+| `components/new-artifact-form.tsx` | Separate gallery/media block state, full AI features |
+| `components/artifact-detail-view.tsx` | Filter gallery items from media blocks display |
+| `components/artifact-media-gallery.tsx` | Fix cached image loading (gray images bug) |
+| `lib/schemas.ts` | Added `gallery_urls` field |
+| `lib/actions/artifacts.ts` | Use `gallery_urls` for artifact_media links |
+| `app/layout.tsx` | Added `data-scroll-behavior="smooth"` |
