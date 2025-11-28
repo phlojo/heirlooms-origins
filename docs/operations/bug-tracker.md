@@ -196,3 +196,224 @@ interface CollectionCardProps {
 - Remember that PostgreSQL `NULL` becomes JavaScript `null`, not `undefined`
 - Run `pnpm typecheck` before committing changes
 - Do not assume database optional fields are `undefined`
+
+---
+
+## Image Shimmer Effect Stuck in Endless Loop (Fixed: November 2025)
+
+### Symptoms
+- Images displayed endless shimmer/skeleton animation instead of loading
+- Shimmer effect never resolved, images never appeared
+- Affected both `MediaImage` component and `GalleryImage` in artifact gallery
+- More frequent with cached images or CORS scenarios
+
+### Root Cause
+The shimmer effect relied on the `onLoad` event to transition from loading state to loaded state. However, `onLoad` doesn't reliably fire in several scenarios:
+1. Cached images (browser may not fire event for already-cached resources)
+2. CORS issues preventing proper load detection
+3. Race conditions where image loads before event listener attaches
+
+The `isLoaded` state would remain `false`, keeping `opacity-0` on the image while shimmer remained visible.
+
+### Fix Applied
+**File: `components/media-image.tsx`**
+Removed shimmer effect entirely. Images now render directly without loading state:
+
+```tsx
+// BEFORE (unreliable)
+const [isLoaded, setIsLoaded] = useState(false)
+return (
+  <div className="relative">
+    {!isLoaded && <div className="shimmer absolute inset-0" />}
+    <img
+      onLoad={() => setIsLoaded(true)}
+      className={isLoaded ? "opacity-100" : "opacity-0"}
+    />
+  </div>
+)
+
+// AFTER (reliable)
+return (
+  <img
+    src={imageSrc}
+    onError={(e) => { e.currentTarget.src = fallbackSrc }}
+  />
+)
+```
+
+**File: `components/artifact-media-gallery.tsx`**
+Simplified `GalleryImage` component similarly - removed shimmer state, renders `<img>` directly.
+
+### Prevention Guidelines
+- Avoid relying on `onLoad` events for critical UI state transitions
+- If shimmer/skeleton loading is needed, use CSS-only solutions or intersection observer
+- Test image loading with cached images, not just fresh loads
+- Consider that browser caching behavior varies
+
+### Files Modified
+- `components/media-image.tsx`
+- `components/artifact-media-gallery.tsx`
+
+---
+
+## Next.js Deprecation Warning: middlewareClientMaxBodySize (Fixed: November 2025)
+
+### Symptoms
+Console warning during development:
+```
+⚠ The "experimental.middlewareClientMaxBodySize" option has been deprecated.
+Please use "experimental.proxyClientMaxBodySize" instead.
+```
+
+### Root Cause
+Next.js 16 renamed the experimental config option.
+
+### Fix Applied
+**File: `next.config.mjs`**
+```javascript
+// BEFORE
+experimental: {
+  middlewareClientMaxBodySize: '100mb',
+}
+
+// AFTER
+experimental: {
+  proxyClientMaxBodySize: '100mb',
+}
+```
+
+### Prevention Guidelines
+- Check Next.js release notes when upgrading
+- Address deprecation warnings promptly before they become errors
+
+---
+
+## Gallery Media Showing as Both Gallery Items AND Media Blocks (Fixed: November 2025)
+
+### Symptoms
+- When creating a new artifact and adding media to gallery via upload/import:
+  - Media appeared correctly in gallery carousel
+  - BUT the same media also appeared as separate media blocks below
+- Only affected NEW uploads during artifact creation
+- Adding existing media from library worked correctly
+
+### Root Cause
+**Two issues combined:**
+
+1. **Missing required fields in `createUserMediaFromUrl`** (`lib/actions/media.ts`)
+   - Insert to `user_media` table was silently failing
+   - Missing fields: `mime_type`, `file_size_bytes`, `upload_source`
+   - Supabase insert returned no error but record wasn't created
+
+2. **URL mismatch after file reorganization** (`lib/actions/media-reorganize.ts`)
+   - During artifact creation:
+     - Files upload to temp folder: `temp/{userId}/{timestamp}-file.jpg`
+     - `user_media` record created with temp URL
+     - `artifact_media` link points to `user_media`
+     - Artifact saved, `reorganizeArtifactMedia()` runs
+     - Files moved to artifact folder (URLs change)
+     - `artifact.media_urls` updated with new URLs
+     - BUT `user_media.public_url` still had old temp URLs
+   - On view page, URL comparison failed:
+     - `artifact.media_urls` = new reorganized URLs
+     - Gallery links (`artifact_media` → `user_media`) = old temp URLs
+     - No match → media appeared in BOTH places
+
+### Fix Applied
+
+**File: `lib/actions/media.ts` - `createUserMediaFromUrl` function**
+Added required fields with proper mime type detection:
+
+```typescript
+// BEFORE (missing required fields)
+const { data, error } = await supabase
+  .from("user_media")
+  .insert({
+    user_id: userId,
+    filename,
+    media_type: mediaType,
+    public_url: url,
+    storage_path: url,
+  })
+
+// AFTER (all required fields)
+const { data, error } = await supabase
+  .from("user_media")
+  .insert({
+    user_id: userId,
+    filename,
+    media_type: mediaType,
+    mime_type: mimeType,        // Added
+    file_size_bytes: 0,         // Added
+    public_url: url,
+    storage_path: url,
+    upload_source: "gallery",   // Added
+  })
+```
+
+**File: `lib/actions/media-reorganize.ts`**
+Added `user_media` URL sync during file reorganization:
+
+```typescript
+// Track URL changes during move
+const urlMapping: Map<string, string> = new Map() // old URL -> new URL
+
+// After moving files, update user_media records
+for (const [oldUrl, newUrl] of urlMapping) {
+  await supabase
+    .from("user_media")
+    .update({
+      public_url: newUrl,
+      storage_path: newUrl,
+    })
+    .eq("public_url", oldUrl)
+    .eq("user_id", user.id)
+}
+```
+
+### Prevention Guidelines
+- Always include all required database fields in inserts (check schema)
+- When URLs change (file moves, reorganization), update ALL tables that reference them
+- Test media flows with new uploads, not just existing library items
+- Trace full flow: upload → save → reorganize → view
+
+### Files Modified
+- `lib/actions/media.ts` - Added required fields to `createUserMediaFromUrl`
+- `lib/actions/media-reorganize.ts` - Added `user_media` URL update during reorganization
+
+---
+
+## Enhanced Orphaned Media Cleanup Script (November 2025)
+
+### Background
+The existing `scripts/cleanup-orphaned-media.ts` only checked the new media tables (`user_media`, `artifact_media`) but not legacy `artifacts.media_urls` arrays or JSONB metadata fields.
+
+### Enhancement
+Rewrote the script to comprehensively scan all media references:
+
+1. **New media tables:**
+   - `user_media` records where file returns 404
+   - `artifact_media` links pointing to non-existent `user_media`
+
+2. **Legacy artifacts table:**
+   - `media_urls` arrays containing broken URLs
+   - `thumbnail_url` pointing to broken URLs
+   - `image_captions` JSONB keys (URLs) that are broken
+   - `video_summaries` JSONB keys (URLs) that are broken
+   - `audio_transcripts` JSONB keys (URLs) that are broken
+
+3. **Performance:**
+   - URL caching to avoid redundant HEAD requests
+   - Batch processing with progress indicators
+
+### Usage
+```bash
+# Dry run (identify orphans, no changes)
+npx tsx scripts/cleanup-orphaned-media.ts
+
+# Actually delete orphaned records
+npx tsx scripts/cleanup-orphaned-media.ts --delete
+```
+
+### File Modified
+- `scripts/cleanup-orphaned-media.ts` - Complete rewrite

@@ -50,6 +50,7 @@ export async function reorganizeArtifactMedia(artifactId: string) {
 
   // Move Supabase Storage files and collect new URLs
   const updatedUrls: string[] = []
+  const urlMapping: Map<string, string> = new Map() // old URL -> new URL
   let movedCount = 0
   const errors: string[] = []
 
@@ -66,6 +67,7 @@ export async function reorganizeArtifactMedia(artifactId: string) {
         updatedUrls.push(result.publicUrl)
         if (result.publicUrl !== url) {
           movedCount++
+          urlMapping.set(url, result.publicUrl)
           console.log("[media-reorganize] File moved:", url, "->", result.publicUrl)
         }
       }
@@ -89,6 +91,26 @@ export async function reorganizeArtifactMedia(artifactId: string) {
       return {
         error: "Failed to update artifact with new URLs",
         details: updateError.message,
+      }
+    }
+
+    // Also update user_media records with new URLs
+    // This ensures gallery links (artifact_media -> user_media) have correct URLs
+    for (const [oldUrl, newUrl] of urlMapping) {
+      const { error: userMediaError } = await supabase
+        .from("user_media")
+        .update({
+          public_url: newUrl,
+          storage_path: newUrl,
+        })
+        .eq("public_url", oldUrl)
+        .eq("user_id", user.id)
+
+      if (userMediaError) {
+        console.error("[media-reorganize] Failed to update user_media for", oldUrl, ":", userMediaError)
+        // Non-fatal - continue with other updates
+      } else {
+        console.log("[media-reorganize] Updated user_media URL:", oldUrl, "->", newUrl)
       }
     }
   }

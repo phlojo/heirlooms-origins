@@ -12,14 +12,17 @@ import { getOrCreateUncategorizedCollection } from "@/lib/actions/collections"
 export default async function NewArtifactPage({
   searchParams,
 }: {
-  searchParams: Promise<{ collectionId?: string }>
+  searchParams: Promise<{ collectionId?: string; returnTo?: string }>
 }) {
   const user = await getCurrentUser()
   if (!user) {
     redirect("/login")
   }
 
-  const { collectionId } = await searchParams
+  const { collectionId, returnTo } = await searchParams
+
+  // Validate returnTo to prevent open redirect vulnerabilities
+  const safeReturnTo = returnTo?.startsWith("/") ? returnTo : "/artifacts"
 
   let effectiveCollectionId = collectionId
 
@@ -37,7 +40,7 @@ export default async function NewArtifactPage({
     <AppLayout user={user}>
       <div className="mx-auto max-w-2xl space-y-4 pb-20">
         <Button variant="ghost" size="sm" asChild className="pl-0">
-          <Link href="/artifacts">
+          <Link href={safeReturnTo}>
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back
           </Link>

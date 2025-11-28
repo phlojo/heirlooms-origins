@@ -147,8 +147,10 @@ export function NewArtifactGalleryEditor({
   }
 
   const handleAddMedia = (newUrls: string[]) => {
+    console.log("[NewArtifactGalleryEditor] handleAddMedia called with:", newUrls.length, "URLs:", newUrls)
     const combinedUrls = [...mediaUrls, ...newUrls]
     const uniqueUrls = Array.from(new Set(combinedUrls))
+    console.log("[NewArtifactGalleryEditor] Calling onMediaUrlsChange with:", uniqueUrls.length, "URLs")
     onMediaUrlsChange(uniqueUrls)
     setIsPickerOpen(false)
   }
