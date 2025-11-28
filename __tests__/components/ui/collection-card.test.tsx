@@ -74,9 +74,12 @@ describe("CollectionCard", () => {
         itemCount: 5,
       }
 
-      render(<CollectionCard collection={collection} />)
+      // Note: mode="all" is needed to render the Author component
+      render(<CollectionCard collection={collection} mode="all" />)
 
-      expect(screen.getByText(collection.title)).toBeInTheDocument()
+      // Use getAllByText since the title is passed to both the card and CollectionThumbnailGrid
+      const titleElements = screen.getAllByText(collection.title)
+      expect(titleElements.length).toBeGreaterThan(0)
     })
 
     it("should render as link to collection detail", () => {
@@ -311,42 +314,57 @@ describe("CollectionCard", () => {
   })
 
   describe("author display", () => {
-    it("should render author with user ID", () => {
+    it("should render author with user ID when mode is 'all'", () => {
       const collection = {
         ...fixtures.collections.publicCollection,
         itemCount: 5,
       }
 
-      render(<CollectionCard collection={collection} />)
+      // Author component only renders when mode="all"
+      render(<CollectionCard collection={collection} mode="all" />)
 
       const author = screen.getByTestId("collection-author")
       expect(author).toBeInTheDocument()
       expect(author).toHaveAttribute("data-user-id", collection.user_id)
     })
 
-    it("should render author with author name when provided", () => {
+    it("should render author with author name when provided and mode is 'all'", () => {
       const collection = {
         ...fixtures.collections.publicCollection,
         authorName: "John Doe",
         itemCount: 5,
       }
 
-      render(<CollectionCard collection={collection} />)
+      // Author component only renders when mode="all"
+      render(<CollectionCard collection={collection} mode="all" />)
 
       const author = screen.getByTestId("collection-author")
       expect(author).toHaveTextContent("John Doe")
     })
 
-    it("should render with small size author component", () => {
+    it("should render with small size author component when mode is 'all'", () => {
       const collection = {
         ...fixtures.collections.publicCollection,
         itemCount: 5,
       }
 
-      render(<CollectionCard collection={collection} />)
+      // Author component only renders when mode="all"
+      render(<CollectionCard collection={collection} mode="all" />)
 
       const author = screen.getByTestId("collection-author")
       expect(author).toHaveAttribute("data-size", "sm")
+    })
+
+    it("should not render author when mode is not 'all'", () => {
+      const collection = {
+        ...fixtures.collections.publicCollection,
+        itemCount: 5,
+      }
+
+      // When mode is undefined or 'mine', Author should not render
+      render(<CollectionCard collection={collection} />)
+
+      expect(screen.queryByTestId("collection-author")).not.toBeInTheDocument()
     })
   })
 
@@ -384,11 +402,12 @@ describe("CollectionCard", () => {
         itemCount: 5,
       }
 
-      render(<CollectionCard collection={collection} />)
+      // Use mode="all" to ensure full rendering
+      render(<CollectionCard collection={collection} mode="all" />)
 
-      // Title should be rendered with line-clamp class
-      const titleElement = screen.getByText(collection.title)
-      expect(titleElement).toBeInTheDocument()
+      // Title should be rendered - use getAllByText since CollectionThumbnailGrid also receives title
+      const titleElements = screen.getAllByText(collection.title)
+      expect(titleElements.length).toBeGreaterThan(0)
     })
 
     it("should handle long descriptions", () => {

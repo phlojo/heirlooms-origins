@@ -485,12 +485,14 @@ describe("Artifact Schemas", () => {
         expect(result.success).toBe(true)
       })
 
-      it("should accept null AI fields", () => {
+      it("should accept undefined AI fields (optional but not nullable)", () => {
+        // AI fields are optional() but not nullable(), so null is not valid
+        // This matches the schema: z.record(z.string().url(), z.string()).optional()
         const input = {
           ...fixtures.forms.validCreateArtifactInput,
-          image_captions: null,
-          video_summaries: null,
-          audio_transcripts: null,
+          image_captions: undefined,
+          video_summaries: undefined,
+          audio_transcripts: undefined,
         }
 
         const result = createArtifactSchema.safeParse(input)

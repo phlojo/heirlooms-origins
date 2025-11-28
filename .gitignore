@@ -32,6 +32,7 @@ package-lock.json
 # Playwright
 playwright-report/
 test-results/
+coverage/
 # Env files
 .env
 .env.local

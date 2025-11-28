@@ -66,8 +66,10 @@ describe("Media URL Detection", () => {
       expect(isVideoUrl("https://res.cloudinary.com/test/video/upload/v123/audio.wav")).toBe(false)
     })
 
-    it("should reject non-Cloudinary video URLs", () => {
-      expect(isVideoUrl("https://example.com/video.mp4")).toBe(false)
+    it("should accept video URLs from any domain (extension-based detection)", () => {
+      // After Phase 2 migration to Supabase Storage, video detection is extension-based
+      // and works for both Cloudinary and Supabase Storage URLs
+      expect(isVideoUrl("https://example.com/video.mp4")).toBe(true)
     })
 
     it("should handle empty and null inputs", () => {
@@ -219,9 +221,10 @@ describe("Media URL Processing", () => {
 
 describe("File Utilities", () => {
   describe("getFileSizeLimit", () => {
-    it("should return 500MB for video files", () => {
+    it("should return 50MB for video files (Supabase Storage limit)", () => {
+      // After Phase 2 migration to Supabase Storage, all files have 50MB limit
       const videoFile = new File([""], "video.mp4", { type: "video/mp4" })
-      expect(getFileSizeLimit(videoFile)).toBe(500 * 1024 * 1024)
+      expect(getFileSizeLimit(videoFile)).toBe(50 * 1024 * 1024)
     })
 
     it("should return 50MB for image files", () => {

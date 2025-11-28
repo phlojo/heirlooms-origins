@@ -29,14 +29,20 @@ pnpm format           # Prettier formatting
 
 ### Testing
 \`\`\`bash
-pnpm test             # Run unit/component tests (Vitest)
+pnpm test             # Run unit/component tests (Vitest) - USE THIS FOR NORMAL CHECKS
 pnpm test:watch       # Watch mode
 pnpm test:ui          # Interactive test UI
-pnpm test:coverage    # Generate coverage report (target: 80%+)
+pnpm test:coverage    # Generate coverage report - ONLY RUN WHEN EXPLICITLY REQUESTED
 pnpm test:e2e         # Run E2E tests (Playwright)
 pnpm test:e2e:ui      # E2E tests in interactive mode
-pnpm test:all         # Run typecheck + lint + unit + E2E tests
+pnpm test:all         # Run typecheck + lint + unit + E2E tests - USE FOR FULL CI RUNS
 \`\`\`
+
+**Which test command to use:**
+- `pnpm test` - Normal checks (fast, use this by default)
+- `pnpm test:e2e` - E2E tests only
+- `pnpm test:all` - Full CI runs (typecheck + lint + unit + E2E)
+- `pnpm test:coverage` - **Only run when user explicitly asks** (slow, resource-intensive)
 
 **Test file pattern**: `__tests__/**/*.{test,spec}.{ts,tsx}` (excluding `__tests__/e2e/`)
 

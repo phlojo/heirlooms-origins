@@ -209,14 +209,15 @@ describe("ArtifactGallery Media Rendering", () => {
       expect(mediaItem4).toHaveAttribute("data-media-type", "video")
 
       // Verify the actual src attributes match the order
+      // Note: testid is based on array index, not type-index
       expect(screen.getByTestId("image-0")).toHaveAttribute("src", "https://example.com/photo1.jpg")
-      expect(screen.getByTestId("video-0")).toHaveAttribute(
+      expect(screen.getByTestId("video-1")).toHaveAttribute(
         "src",
         "https://res.cloudinary.com/test/video/upload/v123/video.mp4",
       )
-      expect(screen.getByTestId("audio-0")).toHaveAttribute("src", "https://example.com/audio.mp3")
-      expect(screen.getByTestId("image-1")).toHaveAttribute("src", "https://example.com/photo2.jpg")
-      expect(screen.getByTestId("video-1")).toHaveAttribute(
+      expect(screen.getByTestId("audio-2")).toHaveAttribute("src", "https://example.com/audio.mp3")
+      expect(screen.getByTestId("image-3")).toHaveAttribute("src", "https://example.com/photo2.jpg")
+      expect(screen.getByTestId("video-4")).toHaveAttribute(
         "src",
         "https://res.cloudinary.com/test/video/upload/v123/video2.mp4",
       )
@@ -257,9 +258,10 @@ describe("ArtifactGallery Media Rendering", () => {
       expect(mediaItem1).toHaveAttribute("data-media-type", "video")
       expect(mediaItem2).toHaveAttribute("data-media-type", "image")
 
+      // Note: testids are based on array index, not type-index
       expect(screen.getByTestId("image-0")).toHaveAttribute("src", "https://example.com/photo1.jpg")
-      expect(screen.getByTestId("video-0")).toHaveAttribute("src", "https://example.com/video.mp4")
-      expect(screen.getByTestId("image-1")).toHaveAttribute("src", "https://example.com/photo2.jpg")
+      expect(screen.getByTestId("video-1")).toHaveAttribute("src", "https://example.com/video.mp4")
+      expect(screen.getByTestId("image-2")).toHaveAttribute("src", "https://example.com/photo2.jpg")
     })
   })
 
@@ -303,10 +305,10 @@ describe("ArtifactGallery Media Rendering", () => {
 
       render(<ArtifactGallery mediaUrls={mediaUrls} />)
 
-      // All three types should be present
+      // All three types should be present - testids are based on array index
       expect(screen.getByTestId("image-0")).toBeInTheDocument()
-      expect(screen.getByTestId("video-0")).toBeInTheDocument()
-      expect(screen.getByTestId("audio-0")).toBeInTheDocument()
+      expect(screen.getByTestId("video-1")).toBeInTheDocument()
+      expect(screen.getByTestId("audio-2")).toBeInTheDocument()
     })
   })
 
@@ -384,9 +386,10 @@ describe("ArtifactGallery Media Rendering", () => {
 
       render(<ArtifactGallery mediaUrls={mediaUrls} />)
 
+      // testids are based on array index
       expect(screen.getByTestId("image-0")).toBeInTheDocument()
-      expect(screen.getByTestId("video-0")).toBeInTheDocument()
-      expect(screen.getByTestId("audio-0")).toBeInTheDocument()
+      expect(screen.getByTestId("video-1")).toBeInTheDocument()
+      expect(screen.getByTestId("audio-2")).toBeInTheDocument()
     })
 
     it("distinguishes between video and audio in Cloudinary /video/upload/ path", () => {
