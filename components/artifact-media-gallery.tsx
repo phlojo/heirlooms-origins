@@ -31,6 +31,7 @@ export function ArtifactMediaGallery({
   const galleryRef = useRef<HTMLDivElement>(null)
   const flickityInstance = useRef<InstanceType<FlickityType> | null>(null)
   const [currentIndex, setCurrentIndex] = useState(initialIndex)
+  const [imageFitModes, setImageFitModes] = useState<Record<string, 'cover' | 'contain'>>({})
 
   // Initialize Flickity
   useEffect(() => {
@@ -66,6 +67,14 @@ export function ArtifactMediaGallery({
       flkty.on("change", (index: number) => {
         setCurrentIndex(index)
         onMediaChange?.(index)
+
+        // Pause all videos when switching slides
+        const videos = galleryRef.current?.querySelectorAll('video')
+        videos?.forEach((video) => {
+          if (!video.paused) {
+            video.pause()
+          }
+        })
       })
     }
 
@@ -83,6 +92,13 @@ export function ArtifactMediaGallery({
 
   const handleNext = () => {
     flickityInstance.current?.next()
+  }
+
+  const toggleImageFit = (mediaId: string) => {
+    setImageFitModes(prev => ({
+      ...prev,
+      [mediaId]: prev[mediaId] === 'contain' ? 'cover' : 'contain'
+    }))
   }
 
   if (media.length === 0) {
@@ -131,11 +147,17 @@ export function ArtifactMediaGallery({
           return (
             <div key={item.id} className="gallery-cell w-full h-full flex flex-col">
               {isImageMedia(mediaData) && (
-                <div className="relative w-full flex-1 overflow-hidden rounded bg-muted flex items-center justify-center">
+                <div
+                  className="relative w-full flex-1 overflow-hidden rounded bg-muted flex items-center justify-center cursor-pointer"
+                  onClick={() => toggleImageFit(item.id)}
+                  title="Tap to toggle between fill and fit modes"
+                >
                   <img
                     src={mediaData.mediumUrl || mediaData.public_url}
                     alt={item.caption_override || `Media ${item.sort_order + 1}`}
-                    className="max-h-full max-w-full object-contain"
+                    className={`max-h-full max-w-full transition-all duration-200 ${
+                      imageFitModes[item.id] === 'contain' ? 'object-contain' : 'object-cover w-full h-full'
+                    }`}
                     loading={item.sort_order <= 1 ? "eager" : "lazy"}
                   />
                 </div>
