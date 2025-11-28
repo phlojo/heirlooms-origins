@@ -20,7 +20,7 @@ import {
   type ArtifactMediaWithDerivatives,
   type UserMediaWithDerivatives,
 } from "@/lib/types/media"
-import { getThumbnailUrl, getMediumUrl, getLargeUrl } from "@/lib/cloudinary"
+import { getSmallThumbnailUrl, getThumbnailUrl, getMediumUrl, getLargeUrl } from "@/lib/cloudinary"
 import { revalidatePath } from "next/cache"
 
 // ============================================================================
@@ -157,6 +157,7 @@ export async function getUserMediaLibrary(params?: {
   // Add derivative URLs
   const mediaWithDerivatives: UserMediaWithDerivatives[] = (data || []).map((media) => ({
     ...media,
+    smallThumbnailUrl: getSmallThumbnailUrl(media.public_url),
     thumbnailUrl: getThumbnailUrl(media.public_url),
     mediumUrl: getMediumUrl(media.public_url),
     largeUrl: getLargeUrl(media.public_url),
@@ -267,6 +268,8 @@ export async function permanentlyDeleteMedia(
   if (artifacts && artifacts.length > 0) {
     console.log("[permanentlyDeleteMedia] Updating", artifacts.length, "artifacts")
 
+    const { isImageUrl, isVideoUrl } = await import("@/lib/media")
+
     for (const artifact of artifacts) {
       const updatedMediaUrls = (artifact.media_urls || []).filter((url: string) => url !== mediaUrl)
 
@@ -282,8 +285,36 @@ export async function permanentlyDeleteMedia(
       // Update thumbnail if it was the deleted media
       let newThumbnailUrl = artifact.thumbnail_url
       if (artifact.thumbnail_url === mediaUrl) {
-        const { getPrimaryVisualMediaUrl } = await import("@/lib/media")
-        newThumbnailUrl = getPrimaryVisualMediaUrl(updatedMediaUrls)
+        // Get gallery media URLs (in order) for this artifact
+        const { data: galleryLinks } = await supabase
+          .from("artifact_media")
+          .select("media:user_media(public_url)")
+          .eq("artifact_id", artifact.id)
+          .eq("role", "gallery")
+          .order("sort_order", { ascending: true })
+
+        const galleryUrls = (galleryLinks || [])
+          .map((link: any) => link.media?.public_url)
+          .filter((url: string | undefined): url is string =>
+            url !== undefined && url !== mediaUrl && (isImageUrl(url) || isVideoUrl(url))
+          )
+
+        // Get visual URLs from media blocks (not in gallery)
+        const galleryUrlSet = new Set(galleryUrls)
+        const blockVisualUrls = updatedMediaUrls.filter(
+          (url: string) => !galleryUrlSet.has(url) && (isImageUrl(url) || isVideoUrl(url))
+        )
+
+        // Combine: gallery first, then blocks
+        const allVisualUrls = [...galleryUrls, ...blockVisualUrls]
+        newThumbnailUrl = allVisualUrls[0] || null
+
+        console.log("[permanentlyDeleteMedia] Auto-selecting new thumbnail:", {
+          artifactId: artifact.id,
+          galleryCount: galleryUrls.length,
+          blockCount: blockVisualUrls.length,
+          newThumbnail: newThumbnailUrl || "NONE",
+        })
       }
 
       const { error: updateError } = await supabase
@@ -358,10 +389,35 @@ export async function createArtifactMediaLink(
     return { error: "Media not found" }
   }
 
-  // Create artifact_media link
+  // Get the current max sort_order for this artifact+role to avoid unique constraint violations
+  const role = validatedFields.data.role || "gallery"
+  const { data: maxOrderResult } = await supabase
+    .from("artifact_media")
+    .select("sort_order")
+    .eq("artifact_id", validatedFields.data.artifact_id)
+    .eq("role", role)
+    .order("sort_order", { ascending: false })
+    .limit(1)
+    .single()
+
+  // Always calculate next available sort_order to avoid unique constraint violations
+  // The unique constraint is on (artifact_id, role, sort_order)
+  const nextSortOrder = (maxOrderResult?.sort_order ?? -1) + 1
+
+  // Create artifact_media link with calculated sort_order
+  const insertData = {
+    artifact_id: validatedFields.data.artifact_id,
+    media_id: validatedFields.data.media_id,
+    role,
+    sort_order: nextSortOrder,
+    block_id: validatedFields.data.block_id,
+    caption_override: validatedFields.data.caption_override,
+    is_primary: validatedFields.data.is_primary,
+  }
+
   const { data, error } = await supabase
     .from("artifact_media")
-    .insert(validatedFields.data)
+    .insert(insertData)
     .select()
     .single()
 
@@ -518,6 +574,7 @@ export async function getArtifactMediaByRole(
         ...item,
         media: {
           ...media,
+          smallThumbnailUrl: getSmallThumbnailUrl(media.public_url),
           thumbnailUrl: getThumbnailUrl(media.public_url),
           mediumUrl: getMediumUrl(media.public_url),
           largeUrl: getLargeUrl(media.public_url),
@@ -781,9 +838,19 @@ export async function createArtifactMediaLinks(
   const supabase = await createClient()
   let createdCount = 0
 
-  for (let i = 0; i < mediaUrls.length; i++) {
-    const url = mediaUrls[i]
+  // Get current max sort_order for this artifact+role
+  const { data: maxOrderResult } = await supabase
+    .from("artifact_media")
+    .select("sort_order")
+    .eq("artifact_id", artifactId)
+    .eq("role", role)
+    .order("sort_order", { ascending: false })
+    .limit(1)
+    .single()
 
+  let nextSortOrder = (maxOrderResult?.sort_order ?? -1) + 1
+
+  for (const url of mediaUrls) {
     // Create or get user_media record
     const mediaResult = await createUserMediaFromUrl(url, userId)
     if (mediaResult.error || !mediaResult.data) {
@@ -805,21 +872,23 @@ export async function createArtifactMediaLinks(
       continue
     }
 
-    // Create artifact_media link
+    // Create artifact_media link with next available sort_order
     const { error } = await supabase
       .from("artifact_media")
       .insert({
         artifact_id: artifactId,
         media_id: mediaResult.data.id,
         role,
-        sort_order: i,
-        is_primary: i === 0,
+        sort_order: nextSortOrder,
+        is_primary: nextSortOrder === 0,
       })
 
     if (error) {
       console.error(`[createArtifactMediaLinks] Failed to create link for ${url}:`, error)
       continue
     }
+
+    nextSortOrder++
 
     createdCount++
   }

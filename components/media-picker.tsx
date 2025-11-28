@@ -26,7 +26,7 @@ export function MediaPicker({
   const [allMedia, setAllMedia] = useState<UserMediaWithDerivatives[]>([])
   const [filteredMedia, setFilteredMedia] = useState<UserMediaWithDerivatives[]>([])
   const [selectedMedia, setSelectedMedia] = useState<Set<string>>(new Set())
-  const [brokenMediaIds, setBrokenMediaIds] = useState<Set<string>>(new Set())
+  const [failedThumbnailIds, setFailedThumbnailIds] = useState<Set<string>>(new Set())
   const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
   const [activeTab, setActiveTab] = useState<"all" | "image" | "video" | "audio">(
@@ -93,9 +93,9 @@ export function MediaPicker({
     setSelectedMedia(newSelected)
   }
 
-  // Handle broken media (404) - remove from display
-  const handleMediaError = (mediaId: string) => {
-    setBrokenMediaIds(prev => new Set([...prev, mediaId]))
+  // Handle failed thumbnail load - show fallback UI instead of hiding
+  const handleThumbnailError = (mediaId: string) => {
+    setFailedThumbnailIds(prev => new Set([...prev, mediaId]))
   }
 
   const handleConfirmSelection = () => {
@@ -174,12 +174,12 @@ export function MediaPicker({
           </div>
         ) : (
           <div className="grid grid-cols-4 gap-2 p-1">
-            {filteredMedia.filter(m => !brokenMediaIds.has(m.id)).map((media) => {
+            {filteredMedia.map((media) => {
               const isSelected = selectedMedia.has(media.id)
+              const hasThumbnailFailed = failedThumbnailIds.has(media.id)
 
               return (
                 <button
-                  style={{ display: media.thumbnailUrl ? "block" : "none" }}
                   key={media.id}
                   onClick={() => handleToggleSelect(media)}
                   className={cn(
@@ -189,23 +189,29 @@ export function MediaPicker({
                       : "border-transparent hover:border-muted-foreground/50"
                   )}
                 >
-                  {/* Media Preview */}
+                  {/* Media Preview - use smallThumbnailUrl (120x120) for compact grid */}
                   {media.media_type === "image" && (
-                    <img
-                      src={media.thumbnailUrl || media.public_url}
-                      alt={media.filename}
-                      className="h-full w-full object-cover"
-                      onError={() => handleMediaError(media.id)}
-                    />
+                    hasThumbnailFailed ? (
+                      <div className="flex h-full w-full items-center justify-center bg-muted">
+                        <ImageIcon className="h-8 w-8 text-muted-foreground" />
+                      </div>
+                    ) : (
+                      <img
+                        src={media.smallThumbnailUrl || media.thumbnailUrl || media.public_url}
+                        alt={media.filename}
+                        className="h-full w-full object-cover"
+                        onError={() => handleThumbnailError(media.id)}
+                      />
+                    )
                   )}
                   {media.media_type === "video" && (
                     <div className="relative h-full w-full bg-black">
-                      {media.thumbnailUrl ? (
+                      {!hasThumbnailFailed && (media.smallThumbnailUrl || media.thumbnailUrl) ? (
                         <img
-                          src={media.thumbnailUrl}
+                          src={media.smallThumbnailUrl || media.thumbnailUrl}
                           alt={media.filename}
                           className="h-full w-full object-cover"
-                          onError={() => handleMediaError(media.id)}
+                          onError={() => handleThumbnailError(media.id)}
                         />
                       ) : (
                         <div className="flex h-full items-center justify-center">

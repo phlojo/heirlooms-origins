@@ -200,11 +200,10 @@ export async function createArtifact(
     console.log("[v0] CREATE ARTIFACT - Note: Artifact created without thumbnail (audio-only or no media)")
   }
 
-  // Create gallery links for URLs explicitly added to the gallery
-  // If gallery_urls is provided, use those; otherwise fall back to all visual media for backward compatibility
-  const galleryUrls = validatedFields.data.gallery_urls && validatedFields.data.gallery_urls.length > 0
-    ? validatedFields.data.gallery_urls.filter(url => validMediaUrls.includes(url))
-    : validMediaUrls.filter(url => isImageUrl(url) || isVideoUrl(url))
+  // Create gallery links ONLY for URLs explicitly added to the gallery
+  // gallery_urls contains URLs added to gallery section, media_urls contains media block URLs
+  // These are independent - don't fall back to all visual media
+  const galleryUrls = validatedFields.data.gallery_urls || []
 
   if (galleryUrls.length > 0) {
     console.log("[v0] CREATE ARTIFACT - Creating gallery links for", galleryUrls.length, "media items")
@@ -216,11 +215,13 @@ export async function createArtifact(
     }
   }
 
-  console.log("[v0] CREATE ARTIFACT - Marking uploads as saved:", validMediaUrls.length, "URLs")
+  // Mark ALL uploads (gallery + media blocks) as saved
+  const allMediaUrls = [...new Set([...validMediaUrls, ...galleryUrls])]
+  console.log("[v0] CREATE ARTIFACT - Marking uploads as saved:", allMediaUrls.length, "URLs (media blocks:", validMediaUrls.length, ", gallery:", galleryUrls.length, ")")
   const { error: markError } = await supabase
     .from("pending_uploads")
     .delete()
-    .in("cloudinary_url", validMediaUrls)
+    .in("cloudinary_url", allMediaUrls)
     .eq("user_id", user.id)
 
   if (markError) {
@@ -231,7 +232,7 @@ export async function createArtifact(
   }
 
   // Phase 2: Reorganize Supabase Storage media from temp to artifact folder
-  if (uniqueMediaUrls.length > 0) {
+  if (allMediaUrls.length > 0) {
     console.log("[v0] CREATE ARTIFACT - Reorganizing media files...")
     const reorganizeResult = await reorganizeArtifactMedia(data.id)
 

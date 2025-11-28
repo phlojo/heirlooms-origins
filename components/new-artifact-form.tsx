@@ -84,12 +84,12 @@ export default function NewArtifactForm({ collectionId, userId }: NewArtifactFor
     },
   })
 
-  // Keep form.media_urls in sync with combined gallery + media block URLs
+  // Keep form.media_urls in sync with media block URLs ONLY
+  // Gallery URLs are passed separately via gallery_urls field
+  // This ensures gallery and media blocks remain independent
   useEffect(() => {
-    const combinedUrls = [...galleryUrls, ...mediaBlockUrls]
-    const uniqueUrls = Array.from(new Set(combinedUrls))
-    form.setValue("media_urls", normalizeMediaUrls(uniqueUrls))
-  }, [galleryUrls, mediaBlockUrls, form])
+    form.setValue("media_urls", normalizeMediaUrls(mediaBlockUrls))
+  }, [mediaBlockUrls, form])
 
   useEffect(() => {
     async function loadTypes() {
@@ -130,8 +130,9 @@ export default function NewArtifactForm({ collectionId, userId }: NewArtifactFor
   }
 
   // Handler for gallery media changes (from NewArtifactGalleryEditor)
+  // Gallery URLs are completely separate from media block URLs
   const handleGalleryUrlsChange = (urls: string[]) => {
-    console.log("[v0] Gallery URLs changed:", urls.length, urls)
+    console.log("[v0] handleGalleryUrlsChange called with:", urls.length, "URLs")
     setGalleryUrls(urls)
     // Auto-select first visual as thumbnail if none selected
     if (!selectedThumbnailUrl && urls.length > 0) {
@@ -143,11 +144,11 @@ export default function NewArtifactForm({ collectionId, userId }: NewArtifactFor
   }
 
   // Handler for adding media blocks (from AddMediaModal)
+  // Media block URLs are completely separate from gallery URLs
   const handleMediaBlocksAdded = (newUrls: string[]) => {
-    console.log("[v0] Media Blocks added:", newUrls.length, newUrls)
+    console.log("[v0] handleMediaBlocksAdded called with:", newUrls.length, "URLs")
     const combinedUrls = [...mediaBlockUrls, ...newUrls]
     const uniqueUrls = Array.from(new Set(combinedUrls))
-    console.log("[v0] Media Blocks after combining:", uniqueUrls.length, uniqueUrls)
     setMediaBlockUrls(uniqueUrls)
 
     // Auto-select first visual as thumbnail if none selected
@@ -260,26 +261,31 @@ export default function NewArtifactForm({ collectionId, userId }: NewArtifactFor
   }
 
   async function onSubmit(data: FormData): Promise<void> {
-    const normalizedUrls = normalizeMediaUrls(data.media_urls || [])
+    const normalizedBlockUrls = normalizeMediaUrls(data.media_urls || [])
+    const normalizedGalleryUrls = normalizeMediaUrls(galleryUrls)
 
-    if (normalizedUrls.length === 0) {
+    // Require at least one media item in either gallery OR media blocks
+    if (normalizedBlockUrls.length === 0 && normalizedGalleryUrls.length === 0) {
       setError("Please add at least one media item to your artifact.")
       return
     }
 
-    // Use selected thumbnail or first visual media
-    const thumbnailUrl = selectedThumbnailUrl || normalizedUrls.find((url) => isImageUrl(url) || isVideoUrl(url))
+    // Use selected thumbnail or first visual media from gallery then media blocks
+    const allVisualUrls = [...normalizedGalleryUrls, ...normalizedBlockUrls].filter(
+      (url) => isImageUrl(url) || isVideoUrl(url)
+    )
+    const thumbnailUrl = selectedThumbnailUrl || allVisualUrls[0] || null
 
     const submitData = {
       ...data,
-      media_urls: normalizedUrls,
-      thumbnail_url: thumbnailUrl || null,
+      media_urls: normalizedBlockUrls,
+      thumbnail_url: thumbnailUrl,
       image_captions: Object.keys(imageCaptions).length > 0 ? imageCaptions : undefined,
       video_summaries: Object.keys(videoSummaries).length > 0 ? videoSummaries : undefined,
       audio_transcripts: Object.keys(audioTranscripts).length > 0 ? audioTranscripts : undefined,
       type_id: selectedTypeId,
       // Pass gallery URLs separately so createArtifact can create artifact_media links
-      gallery_urls: galleryUrls,
+      gallery_urls: normalizedGalleryUrls,
     }
 
     setError(null)

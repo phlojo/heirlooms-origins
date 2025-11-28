@@ -53,7 +53,7 @@ export function MediaActionModal({
                 >
                   <X className="h-4 w-4 mr-3 shrink-0" />
                   <div className="text-left min-w-0">
-                    <div className="font-medium">Remove from artifact</div>
+                    <div className="font-medium">Remove Media Block from this artifact</div>
                     <div className="text-xs text-muted-foreground font-normal whitespace-normal">
                       Media stays in your library for use elsewhere
                     </div>

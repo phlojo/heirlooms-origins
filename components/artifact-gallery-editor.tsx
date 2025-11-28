@@ -1,26 +1,20 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { type ArtifactMediaWithDerivatives, type UserMediaWithDerivatives } from "@/lib/types/media"
+import { type ArtifactMediaWithDerivatives } from "@/lib/types/media"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
-import { X, Image as ImageIcon, GripVertical, Pencil } from "lucide-react"
+import { X, Image as ImageIcon, GripVertical, Pencil, BookImage } from "lucide-react"
 import { SectionTitle } from "@/components/ui/section-title"
 import { HelpText } from "@/components/ui/help-text"
 import {
   createArtifactMediaLink,
   removeArtifactMediaLink,
   reorderArtifactMedia,
+  createUserMediaFromUrl,
 } from "@/lib/actions/media"
-import { MediaPicker } from "@/components/media-picker"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
+import { AddMediaModal } from "@/components/add-media-modal"
 import { toast } from "sonner"
 import {
   DndContext,
@@ -44,18 +38,24 @@ import { CSS } from '@dnd-kit/utilities'
 
 interface ArtifactGalleryEditorProps {
   artifactId: string
+  userId: string
   galleryMedia: ArtifactMediaWithDerivatives[]
   onUpdate: () => void
+  currentThumbnailUrl?: string
+  onSelectThumbnail?: (url: string, e?: React.MouseEvent) => void
 }
 
 interface SortableItemProps {
   item: ArtifactMediaWithDerivatives
   onRemove: (linkId: string, filename: string) => void
+  isThumbnail?: boolean
+  onSelectThumbnail?: (url: string, e?: React.MouseEvent) => void
 }
 
-function SortableItem({ item, onRemove }: SortableItemProps) {
+function SortableItem({ item, onRemove, isThumbnail, onSelectThumbnail }: SortableItemProps) {
   const media = item.media
-  const thumbnailSrc = media.thumbnailUrl || media.public_url
+  // Use smallThumbnailUrl (120x120) for compact reorder cards
+  const thumbnailSrc = media.smallThumbnailUrl || media.thumbnailUrl || media.public_url
 
   const {
     attributes,
@@ -70,7 +70,10 @@ function SortableItem({ item, onRemove }: SortableItemProps) {
     <div
       ref={setNodeRef}
       data-media-id={item.media_id}
-      className="flex flex-col items-center gap-1 p-2 border rounded bg-card shadow-sm w-24 shrink-0"
+      className={cn(
+        "flex flex-col items-center gap-1 p-2 border rounded bg-card shadow-sm w-24 shrink-0",
+        isThumbnail && "ring-2 ring-yellow-500 border-yellow-500"
+      )}
       style={{
         transform: CSS.Transform.toString(transform),
         transition,
@@ -94,13 +97,30 @@ function SortableItem({ item, onRemove }: SortableItemProps) {
         </span>
       </div>
 
-      {/* Remove Button (not draggable) */}
-      <button
-        onClick={() => onRemove(item.id, media.filename)}
-        className="p-2 text-destructive hover:bg-destructive/10 rounded"
-      >
-        <X className="h-4 w-4" />
-      </button>
+      {/* Action Buttons (not draggable) */}
+      <div className="flex items-center gap-1">
+        {onSelectThumbnail && (
+          <button
+            onClick={(e) => onSelectThumbnail(media.public_url, e)}
+            className={cn(
+              "p-1.5 rounded transition-colors",
+              isThumbnail
+                ? "text-yellow-500"
+                : "text-muted-foreground hover:text-yellow-500 hover:bg-yellow-500/10"
+            )}
+            title={isThumbnail ? "Current thumbnail" : "Set as thumbnail"}
+          >
+            <BookImage className="h-4 w-4" />
+          </button>
+        )}
+        <button
+          onClick={() => onRemove(item.id, media.filename)}
+          className="p-1.5 text-destructive hover:bg-destructive/10 rounded"
+          title="Remove from gallery"
+        >
+          <X className="h-4 w-4" />
+        </button>
+      </div>
     </div>
   )
 }
@@ -111,8 +131,11 @@ function SortableItem({ item, onRemove }: SortableItemProps) {
  */
 export function ArtifactGalleryEditor({
   artifactId,
+  userId,
   galleryMedia,
   onUpdate,
+  currentThumbnailUrl,
+  onSelectThumbnail,
 }: ArtifactGalleryEditorProps) {
   const [isPickerOpen, setIsPickerOpen] = useState(false)
   const [isReordering, setIsReordering] = useState(false)
@@ -195,26 +218,39 @@ export function ArtifactGalleryEditor({
     }
   }
 
-  const handleAddMedia = async (selectedMedia: UserMediaWithDerivatives[]) => {
-    console.log("[GalleryEditor] handleAddMedia called with:", selectedMedia.length, "items")
+  const handleAddMedia = async (urls: string[]) => {
+    console.log("[GalleryEditor] handleAddMedia called with:", urls.length, "URLs")
     try {
-      // Add each selected media to gallery
-      for (let i = 0; i < selectedMedia.length; i++) {
-        const media = selectedMedia[i]
+      // Add each URL to gallery
+      // First create or get user_media record, then link to artifact
+      for (const url of urls) {
+        // Skip if already in gallery
+        if (existingUrls.includes(url)) {
+          console.log("[GalleryEditor] Skipping duplicate URL:", url)
+          continue
+        }
+
+        // Create or get user_media record
+        const mediaResult = await createUserMediaFromUrl(url, userId)
+        if (mediaResult.error || !mediaResult.data) {
+          toast.error(`Failed to process media: ${mediaResult.error}`)
+          continue
+        }
+
+        // Create artifact_media link
         const result = await createArtifactMediaLink({
           artifact_id: artifactId,
-          media_id: media.id,
+          media_id: mediaResult.data.id,
           role: "gallery",
-          sort_order: galleryMedia.length + i,
         })
 
         if (result.error) {
-          toast.error(`Failed to add ${media.filename}: ${result.error}`)
+          toast.error(`Failed to add media: ${result.error}`)
           return
         }
       }
 
-      toast.success(`Added ${selectedMedia.length} item${selectedMedia.length > 1 ? "s" : ""} to gallery`)
+      toast.success(`Added ${urls.length} item${urls.length > 1 ? "s" : ""} to gallery`)
       setIsPickerOpen(false)
       onUpdate()
     } catch (error) {
@@ -290,6 +326,8 @@ export function ArtifactGalleryEditor({
                     key={item.id}
                     item={item}
                     onRemove={handleRemove}
+                    isThumbnail={currentThumbnailUrl === item.media.public_url}
+                    onSelectThumbnail={onSelectThumbnail}
                   />
                 ))}
               </div>
@@ -325,22 +363,14 @@ export function ArtifactGalleryEditor({
         </div>
       )}
 
-      {/* Media Picker Dialog */}
-      <Dialog open={isPickerOpen} onOpenChange={setIsPickerOpen}>
-        <DialogContent className="max-w-3xl">
-          <DialogHeader>
-            <DialogTitle>Add to Gallery</DialogTitle>
-            <DialogDescription>
-              Select media from your library to add to this artifact's gallery
-            </DialogDescription>
-          </DialogHeader>
-          <MediaPicker
-            onSelect={handleAddMedia}
-            multiSelect={true}
-            excludeUrls={existingUrls}
-          />
-        </DialogContent>
-      </Dialog>
+      {/* Add Media Modal - supports both Upload New and Select Existing */}
+      <AddMediaModal
+        open={isPickerOpen}
+        onOpenChange={setIsPickerOpen}
+        artifactId={artifactId}
+        userId={userId}
+        onMediaAdded={handleAddMedia}
+      />
 
       <style dangerouslySetInnerHTML={{
         __html: `
