@@ -173,7 +173,7 @@ export function MediaPicker({
             No media found matching your criteria
           </div>
         ) : (
-          <div className="grid grid-cols-3 gap-3 p-1">
+          <div className="grid grid-cols-4 gap-2 p-1">
             {filteredMedia.filter(m => !brokenMediaIds.has(m.id)).map((media) => {
               const isSelected = selectedMedia.has(media.id)
 
@@ -183,7 +183,7 @@ export function MediaPicker({
                   key={media.id}
                   onClick={() => handleToggleSelect(media)}
                   className={cn(
-                    "group relative aspect-square overflow-hidden rounded-lg border-2 transition-all",
+                    "group relative aspect-square overflow-hidden rounded border-2 transition-all",
                     isSelected
                       ? "border-primary ring-2 ring-primary ring-offset-2"
                       : "border-transparent hover:border-muted-foreground/50"

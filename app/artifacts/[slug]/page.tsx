@@ -67,24 +67,27 @@ export default async function ArtifactDetailPage({
 
   return (
     <AppLayout user={user} noTopPadding>
-      <ArtifactStickyNav
-        title={artifact.title}
-        backHref={isEditMode ? undefined : collectionHref}
-        backLabel={`${artifact.collection?.title || "Uncategorized"} Collection`}
-        previousItem={isEditMode ? null : previous}
-        nextItem={isEditMode ? null : next}
-        editHref={`/artifacts/${artifact.slug}?mode=edit`}
-        canEdit={canEdit}
-        isEditMode={isEditMode}
-        collectionId={artifact.collection_id}
-        collectionSlug={artifact.collection?.slug}
-        collectionName={artifact.collection?.title}
-        currentPosition={currentPosition}
-        totalCount={totalCount}
-        currentUserId={user?.id}
-        isCurrentUserAdmin={isAdmin}
-        contentOwnerId={artifact.user_id}
-      />
+      {/* Sticky nav rendered from server in view mode only */}
+      {!isEditMode && (
+        <ArtifactStickyNav
+          title={artifact.title}
+          backHref={collectionHref}
+          backLabel={`${artifact.collection?.title || "Uncategorized"} Collection`}
+          previousItem={previous}
+          nextItem={next}
+          editHref={`/artifacts/${artifact.slug}?mode=edit`}
+          canEdit={canEdit}
+          isEditMode={false}
+          collectionId={artifact.collection_id}
+          collectionSlug={artifact.collection?.slug}
+          collectionName={artifact.collection?.title}
+          currentPosition={currentPosition}
+          totalCount={totalCount}
+          currentUserId={user?.id}
+          isCurrentUserAdmin={isAdmin}
+          contentOwnerId={artifact.user_id}
+        />
+      )}
 
       <ArtifactDetailView
         artifact={artifact}
@@ -98,6 +101,7 @@ export default async function ArtifactDetailPage({
         previousUrl={previousUrl}
         nextUrl={nextUrl}
         galleryMedia={galleryMedia || undefined}
+        isCurrentUserAdmin={isAdmin}
       />
     </AppLayout>
   )

@@ -6,6 +6,7 @@ import Link from "next/link"
 import { CollectionLabel } from "@/components/collection-label"
 import { useState, useEffect } from "react"
 import { Badge } from "@/components/ui/badge"
+import { TranscriptionInput } from "@/components/transcription-input"
 
 interface ArtifactStickyNavProps {
   title: string
@@ -34,6 +35,10 @@ interface ArtifactStickyNavProps {
   currentUserId?: string
   isCurrentUserAdmin?: boolean
   contentOwnerId?: string
+  // Edit mode title input props
+  editTitle?: string
+  onEditTitleChange?: (value: string) => void
+  userId?: string
 }
 
 export function ArtifactStickyNav({
@@ -55,6 +60,9 @@ export function ArtifactStickyNav({
   currentUserId,
   isCurrentUserAdmin = false,
   contentOwnerId,
+  editTitle,
+  onEditTitleChange,
+  userId,
 }: ArtifactStickyNavProps) {
   const [isFavorited, setIsFavorited] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
@@ -201,16 +209,30 @@ export function ArtifactStickyNav({
             </Button>
           </div>
 
-          {/* Second row: Title and Heart icon */}
-          <div className="flex items-center justify-between gap-0 pb-0">
-            <div className="flex items-center gap-2 flex-1 min-w-0 px-3.5 py-2">
-              <h1 className="text-balance font-bold tracking-tight flex-1 min-w-0 text-xl">{title}</h1>
-              {showSuperUserBadge && (
-                <Badge variant="destructive" className="shrink-0 text-xs">
-                  Super User
-                </Badge>
-              )}
-            </div>
+          {/* Second row: Title (view mode) or Title Input (edit mode) */}
+          <div className="flex items-center justify-between gap-2 pb-0">
+            {isEditMode && onEditTitleChange && userId ? (
+              <div className="flex-1 min-w-0 px-3.5 py-2">
+                <TranscriptionInput
+                  value={editTitle || ""}
+                  onChange={onEditTitleChange}
+                  placeholder="Enter artifact title"
+                  type="input"
+                  fieldType="title"
+                  userId={userId}
+                  entityType="artifact"
+                />
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 flex-1 min-w-0 px-3.5 py-2">
+                <h1 className="text-balance font-bold tracking-tight flex-1 min-w-0 text-xl">{title}</h1>
+                {showSuperUserBadge && (
+                  <Badge variant="destructive" className="shrink-0 text-xs">
+                    Super User
+                  </Badge>
+                )}
+              </div>
+            )}
             {isEditMode ? (
               <div className="shrink-0 h-9 w-9 mr-3.5 flex items-center justify-center rounded-full bg-purple-600">
                 <Pencil className="h-4 w-4 text-white" />

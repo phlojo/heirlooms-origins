@@ -5,6 +5,8 @@ import { type ArtifactMediaWithDerivatives, type UserMediaWithDerivatives } from
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { X, Image as ImageIcon, GripVertical, Pencil } from "lucide-react"
+import { SectionTitle } from "@/components/ui/section-title"
+import { HelpText } from "@/components/ui/help-text"
 import {
   createArtifactMediaLink,
   removeArtifactMediaLink,
@@ -225,15 +227,15 @@ export function ArtifactGalleryEditor({
     <div className="space-y-4 pt-4">
       {/* Header */}
       <div className="flex items-center gap-3">
-        <h3 className="text-lg font-semibold">Gallery</h3>
+        <SectionTitle>Gallery</SectionTitle>
         <span className="rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900/30 dark:text-green-400">
           Auto-saved
         </span>
       </div>
       <div className="flex items-end justify-between gap-4">
-        <p className="text-sm text-muted-foreground">
+        <HelpText>
           Media carousel displayed at the top of your artifact page. Drag to reorder, changes save automatically.
-        </p>
+        </HelpText>
         <Button onClick={() => setIsPickerOpen(true)} size="sm" className="bg-purple-600 hover:bg-purple-700 text-white flex-shrink-0">
           <Pencil className="mr-2 h-4 w-4" />
           Edit Gallery
