@@ -639,3 +639,245 @@ export async function cleanupPendingUploads(specificUrls?: string[]) {
 ### Files Modified
 - `components/artifact-detail-view.tsx` - Track and cleanup pending uploads on cancel
 - `lib/actions/pending-uploads.ts` - Accept optional URL filter parameter
+
+---
+
+## Small Thumbnail Derivative (120x120) Added (November 2025)
+
+### Background
+Media picker and gallery reorder cards were using 400x400 thumbnails which:
+- Loaded unnecessary data for small UI elements
+- Showed inconsistent crops on iOS vs desktop
+
+### Solution
+Added new `smallThumbnailUrl` derivative (120x120) to the media system.
+
+### Changes
+
+**File: `lib/cloudinary.ts`**
+Added `getSmallThumbnailUrl()` function:
+```typescript
+export function getSmallThumbnailUrl(url: string, mediaDerivatives?: Record<string, MediaDerivatives> | null): string {
+  // Returns 120x120 cropped thumbnail via Cloudinary fetch
+}
+```
+
+**File: `lib/types/media.ts`**
+Added to `UserMediaWithDerivatives`:
+```typescript
+export interface UserMediaWithDerivatives extends UserMedia {
+  smallThumbnailUrl?: string  // 120x120 cropped (for pickers, reorder cards)
+  thumbnailUrl?: string       // 400x400 cropped
+  // ... other derivatives
+}
+```
+
+**File: `lib/actions/media.ts`**
+- `getUserMediaLibrary()` now includes `smallThumbnailUrl`
+- `getArtifactMediaByRole()` now includes `smallThumbnailUrl`
+
+**Files Updated:**
+- `components/media-picker.tsx` - Uses `smallThumbnailUrl` for grid
+- `components/artifact-gallery-editor.tsx` - Uses `smallThumbnailUrl` for reorder cards
+
+---
+
+## Thumbnail Selection from Gallery Items (November 2025)
+
+### Feature
+Gallery items can now be selected as artifact thumbnail, same as media blocks.
+
+### Changes
+
+**File: `components/artifact-gallery-editor.tsx`**
+- Added `currentThumbnailUrl` and `onSelectThumbnail` props
+- Gallery items display BookImage icon for thumbnail selection
+- Current thumbnail shows yellow ring highlight
+
+**File: `components/artifact-detail-view.tsx`**
+- Added `getNextAvailableThumbnail()` helper function
+- When current thumbnail is removed/deleted, auto-selects next available from:
+  1. Gallery items (in order)
+  2. Media blocks (in order)
+- Both `handleRemoveMedia()` and `handlePermanentlyDeleteMedia()` use this logic
+
+**File: `lib/actions/media.ts` - `permanentlyDeleteMedia()`**
+- Now queries gallery media to find replacement thumbnail
+- Considers both gallery and media blocks when auto-selecting
+
+---
+
+## Media Picker Unable to Select Items (Fixed: November 2025)
+
+### Symptoms
+- Media picker showed thumbnails but clicking items didn't select them
+- Only items already in the artifact could be selected
+- Console showed 400/404 errors for Cloudinary thumbnail URLs
+
+### Root Cause
+1. `style={{ display: media.thumbnailUrl ? "block" : "none" }}` hid items without thumbnailUrl
+2. `onError` handler marked items as broken when thumbnail generation failed
+3. Audio files naturally don't have Cloudinary image thumbnails (400 errors)
+4. Some legacy Cloudinary images returned 404
+
+### Fix Applied
+
+**File: `components/media-picker.tsx`**
+- Removed conditional `display` style that hid items
+- Renamed `brokenMediaIds` to `failedThumbnailIds`
+- Items with failed thumbnails now show fallback icon instead of being hidden:
+  - Images: ImageIcon placeholder
+  - Videos: Video icon fallback
+  - Audio: Music icon (already worked)
+
+---
+
+## Duplicate Key Constraint on Gallery Sort Order (Fixed: November 2025)
+
+### Symptoms
+Adding media to gallery failed with:
+```
+duplicate key value violates unique constraint "unique_artifact_media_order"
+```
+
+### Root Cause
+- Unique constraint exists on `(artifact_id, role, sort_order)`
+- When adding to gallery, `sort_order` was calculated from `galleryMedia.length`
+- After removing items, gaps existed in sort_order sequence
+- New items got conflicting sort_order values
+
+### Fix Applied
+
+**File: `lib/actions/media.ts`**
+
+`createArtifactMediaLink()`:
+- Now queries for current max `sort_order` before insert
+- Always calculates next available: `max_sort_order + 1`
+- Ignores any provided `sort_order` value
+
+`createArtifactMediaLinks()`:
+- Same fix - queries max first, increments for each insert
+
+**File: `components/artifact-gallery-editor.tsx`**
+- Removed explicit `sort_order` from `createArtifactMediaLink` calls
+- Let server calculate the value
+
+---
+
+## Edit Gallery Now Matches New Gallery (Fixed: November 2025)
+
+### Symptoms
+- New artifact: "Edit Gallery" opened AddMediaModal (Upload New OR Select Existing)
+- Edit artifact: "Edit Gallery" opened MediaPicker (Select Existing ONLY)
+- Inconsistent user experience
+
+### Fix Applied
+
+**File: `components/artifact-gallery-editor.tsx`**
+- Changed from `MediaPicker` to `AddMediaModal`
+- Added `userId` prop for upload support
+- Updated `handleAddMedia` to work with URLs instead of `UserMediaWithDerivatives`
+- Gallery items added via upload now work the same as on new artifact page
+
+---
+
+## Gallery/Media Blocks Independence on New Artifact Page (Fixed: November 2025)
+
+### Symptoms
+- On new artifact page, adding media to gallery also showed as media blocks
+- Adding media to media blocks also showed in gallery
+- Edit artifact page worked correctly, but new artifact had this issue
+
+### Root Cause
+The form combined gallery and media block URLs:
+
+```typescript
+// BEFORE - Combined all URLs
+useEffect(() => {
+  const combinedUrls = [...galleryUrls, ...mediaBlockUrls]
+  form.setValue("media_urls", normalizeMediaUrls(combinedUrls))
+}, [galleryUrls, mediaBlockUrls])
+```
+
+And `createArtifact` fell back to all visual media for gallery if `gallery_urls` was empty:
+```typescript
+// BEFORE - Fallback added everything to gallery
+const galleryUrls = validatedFields.data.gallery_urls?.length > 0
+  ? validatedFields.data.gallery_urls
+  : validMediaUrls.filter(url => isImageUrl(url) || isVideoUrl(url))  // BAD
+```
+
+### Fix Applied
+
+**File: `components/new-artifact-form.tsx`**
+```typescript
+// AFTER - Only media block URLs go to media_urls
+useEffect(() => {
+  form.setValue("media_urls", normalizeMediaUrls(mediaBlockUrls))
+}, [mediaBlockUrls])
+```
+
+Also updated `onSubmit()`:
+- Validation now accepts gallery OR media blocks (not requiring both)
+- `gallery_urls` passed separately to `createArtifact`
+
+**File: `lib/actions/artifacts.ts`**
+```typescript
+// AFTER - No fallback, gallery_urls must be explicit
+const galleryUrls = validatedFields.data.gallery_urls || []
+```
+
+Also updated pending upload cleanup to include both gallery and media block URLs.
+
+### Data Flow Now
+
+| New Artifact Page | Storage |
+|-------------------|---------|
+| Gallery section | `gallery_urls` → `artifact_media` table |
+| Media Blocks section | `media_urls` → `artifacts.media_urls` array |
+
+These are now truly independent:
+- Same media can exist in both
+- Adding to one doesn't affect the other
+- Removing from one doesn't affect the other
+
+---
+
+## Media Action Modal Text Update (November 2025)
+
+### Change
+Updated remove button text in `MediaActionModal` for clarity.
+
+**File: `components/media-action-modal.tsx`**
+```typescript
+// BEFORE
+"Remove from artifact"
+
+// AFTER
+"Remove Media Block from this artifact"
+```
+
+---
+
+## Thumbnail Selection Single-Click Fix (November 2025)
+
+### Symptoms
+- Selecting a new thumbnail from media blocks required two taps
+- First tap appeared to deselect, second tap selected
+
+### Fix Applied
+Added `stopPropagation()` and `preventDefault()` to prevent event bubbling:
+
+**File: `components/artifact-detail-view.tsx`**
+```typescript
+const handleSelectThumbnail = (url: string, e?: React.MouseEvent) => {
+  e?.stopPropagation()
+  e?.preventDefault()
+  setEditThumbnailUrl(url)
+}
+```
+
+Updated all thumbnail button click handlers to pass the event.
+
+**File: `components/artifact-gallery-editor.tsx`**
+Updated type signatures and click handlers similarly.
