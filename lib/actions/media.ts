@@ -593,13 +593,41 @@ export async function createUserMediaFromUrl(
   const urlParts = url.split("/")
   const filename = urlParts[urlParts.length - 1].split("?")[0] || "media"
 
-  // Determine media type from URL
+  // Determine media type and mime_type from URL
   const urlLower = url.toLowerCase()
   let mediaType: "image" | "video" | "audio" = "image"
-  if (urlLower.includes(".mp4") || urlLower.includes(".mov") || urlLower.includes(".webm") || urlLower.includes("/video/")) {
+  let mimeType = "image/jpeg" // Default
+
+  if (urlLower.includes(".mp4") || urlLower.includes("/video/")) {
     mediaType = "video"
-  } else if (urlLower.includes(".mp3") || urlLower.includes(".wav") || urlLower.includes(".m4a") || urlLower.includes(".webm") && urlLower.includes("audio")) {
+    mimeType = "video/mp4"
+  } else if (urlLower.includes(".mov")) {
+    mediaType = "video"
+    mimeType = "video/quicktime"
+  } else if (urlLower.includes(".webm")) {
+    // webm can be video or audio
+    if (urlLower.includes("audio") || urlLower.includes("recording")) {
+      mediaType = "audio"
+      mimeType = "audio/webm"
+    } else {
+      mediaType = "video"
+      mimeType = "video/webm"
+    }
+  } else if (urlLower.includes(".mp3")) {
     mediaType = "audio"
+    mimeType = "audio/mpeg"
+  } else if (urlLower.includes(".wav")) {
+    mediaType = "audio"
+    mimeType = "audio/wav"
+  } else if (urlLower.includes(".m4a")) {
+    mediaType = "audio"
+    mimeType = "audio/mp4"
+  } else if (urlLower.includes(".png")) {
+    mimeType = "image/png"
+  } else if (urlLower.includes(".gif")) {
+    mimeType = "image/gif"
+  } else if (urlLower.includes(".webp")) {
+    mimeType = "image/webp"
   }
 
   // Check if user_media already exists for this URL
@@ -621,15 +649,18 @@ export async function createUserMediaFromUrl(
       user_id: userId,
       filename,
       media_type: mediaType,
+      mime_type: mimeType,
+      file_size_bytes: 0, // Unknown when creating from URL
       public_url: url,
-      storage_path: url, // For Cloudinary URLs, storage_path is the URL itself
+      storage_path: url, // For Cloudinary/Supabase URLs, storage_path is the URL itself
+      upload_source: "gallery",
     })
     .select()
     .single()
 
   if (error) {
     console.error("[createUserMediaFromUrl] Database error:", error)
-    return { error: "Failed to create media record" }
+    return { error: `Failed to create media record: ${error.message}` }
   }
 
   return { data }

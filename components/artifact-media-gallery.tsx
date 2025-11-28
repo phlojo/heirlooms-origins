@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
+// Note: useState kept for imageFitModes, useRef for flickityInstance and galleryRef
 import "flickity/css/flickity.css"
 import { type ArtifactMediaWithDerivatives } from "@/lib/types/media"
 import { isImageMedia, isVideoMedia } from "@/lib/types/media"
@@ -11,7 +12,7 @@ import { Button } from "@/components/ui/button"
 // Dynamic import type for Flickity
 type FlickityType = typeof import("flickity").default
 
-// Gallery image with shimmer loading
+// Gallery image - simple and reliable
 function GalleryImage({
   src,
   alt,
@@ -23,37 +24,13 @@ function GalleryImage({
   className?: string
   loading?: "eager" | "lazy"
 }) {
-  const [isLoaded, setIsLoaded] = useState(false)
-  const imgRef = useRef<HTMLImageElement>(null)
-
-  // Handle already-cached images (onLoad fires before React attaches listener)
-  useEffect(() => {
-    if (imgRef.current?.complete && imgRef.current?.naturalHeight > 0) {
-      setIsLoaded(true)
-    }
-  }, [src])
-
   return (
-    <>
-      {/* Shimmer placeholder */}
-      {!isLoaded && (
-        <div className="absolute inset-0 bg-muted overflow-hidden">
-          <div className="absolute inset-0 -translate-x-full animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-        </div>
-      )}
-      <img
-        ref={imgRef}
-        src={src}
-        alt={alt}
-        className={cn(
-          "transition-opacity duration-300",
-          isLoaded ? "opacity-100" : "opacity-0",
-          className
-        )}
-        loading={loading}
-        onLoad={() => setIsLoaded(true)}
-      />
-    </>
+    <img
+      src={src}
+      alt={alt}
+      className={className}
+      loading={loading}
+    />
   )
 }
 

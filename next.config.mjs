@@ -13,8 +13,8 @@ const nextConfig = {
     serverActions: {
       bodySizeLimit: '100mb',
     },
-    // CRITICAL: Also set middleware body size to prevent truncation at 10MB default
-    middlewareClientMaxBodySize: '100mb',
+    // CRITICAL: Also set proxy body size to prevent truncation at 10MB default
+    proxyClientMaxBodySize: '100mb',
   },
   async headers() {
     return [
