@@ -209,6 +209,27 @@ export function ArtifactDetailView({
   // Media blocks show ALL media URLs - same media can be in both gallery and blocks
   const mediaUrls: string[] = allMediaUrls
 
+  /**
+   * Get the next available thumbnail from all visual media (gallery + media blocks)
+   * Priority: gallery items first (in order), then media blocks
+   * Only considers images and videos
+   */
+  const getNextAvailableThumbnail = (excludeUrl?: string): string => {
+    // Get gallery visual URLs (in gallery order)
+    const galleryVisualUrls = currentGalleryMedia
+      .map(gm => gm.media.public_url)
+      .filter(url => url !== excludeUrl && (isImageUrl(url) || isVideoUrl(url)))
+
+    // Get media block visual URLs not already in gallery
+    const blockVisualUrls = allMediaUrls
+      .filter(url => url !== excludeUrl && !galleryUrls.has(url) && (isImageUrl(url) || isVideoUrl(url)))
+
+    // Combined: gallery first, then unique block items
+    const allVisualUrls = [...galleryVisualUrls, ...blockVisualUrls]
+
+    return allVisualUrls[0] || ""
+  }
+
   const audioUrlsFiltered: string[] = mediaUrls.filter(isAudioUrl)
   const videoUrlsFiltered: string[] = mediaUrls.filter(isVideoUrl)
   const imageUrlsFiltered: string[] = mediaUrls.filter((url) => isImageUrl(url))
@@ -299,10 +320,12 @@ export function ArtifactDetailView({
       delete updated[mediaToAction]
       return updated
     })
+
+    // Auto-select new thumbnail if current thumbnail was removed
+    // Consider both gallery and media blocks for next available
     if (editThumbnailUrl === mediaToAction) {
-      const remainingUrls = editMediaUrls.filter((url) => url !== mediaToAction)
-      const newThumbnail = remainingUrls.find((url) => isImageUrl(url) || isVideoUrl(url))
-      setEditThumbnailUrl(newThumbnail || "")
+      const newThumbnail = getNextAvailableThumbnail(mediaToAction)
+      setEditThumbnailUrl(newThumbnail)
     }
 
     toast.success("Media removed from artifact")
@@ -329,14 +352,16 @@ export function ArtifactDetailView({
       delete updated[mediaToAction]
       return updated
     })
-    if (editThumbnailUrl === mediaToAction) {
-      const remainingUrls = editMediaUrls.filter((url) => url !== mediaToAction)
-      const newThumbnail = remainingUrls.find((url) => isImageUrl(url) || isVideoUrl(url))
-      setEditThumbnailUrl(newThumbnail || "")
-    }
 
     // Also remove from gallery display if present
     setCurrentGalleryMedia((prev) => prev.filter(gm => gm.media.public_url !== mediaToAction))
+
+    // Auto-select new thumbnail if current thumbnail was deleted
+    // Consider both gallery and media blocks for next available
+    if (editThumbnailUrl === mediaToAction) {
+      const newThumbnail = getNextAvailableThumbnail(mediaToAction)
+      setEditThumbnailUrl(newThumbnail)
+    }
 
     // Permanently delete from storage
     const result = await permanentlyDeleteMedia(mediaToAction)
@@ -429,7 +454,9 @@ export function ArtifactDetailView({
     }
   }
 
-  const handleSelectThumbnail = (url: string) => {
+  const handleSelectThumbnail = (url: string, e?: React.MouseEvent) => {
+    e?.stopPropagation()
+    e?.preventDefault()
     setEditThumbnailUrl(url)
   }
 
@@ -548,8 +575,11 @@ export function ArtifactDetailView({
         {isEditMode ? (
           <ArtifactGalleryEditor
             artifactId={artifact.id}
+            userId={userId}
             galleryMedia={currentGalleryMedia}
             onUpdate={handleGalleryUpdate}
+            currentThumbnailUrl={editThumbnailUrl}
+            onSelectThumbnail={handleSelectThumbnail}
           />
         ) : (
           currentGalleryMedia && currentGalleryMedia.length > 0 && (
@@ -742,7 +772,7 @@ export function ArtifactDetailView({
                             type="button"
                             variant="ghost"
                             size="sm"
-                            onClick={() => handleSelectThumbnail(url)}
+                            onClick={(e) => handleSelectThumbnail(url, e)}
                             className={
                               isSelectedThumbnail ? "text-yellow-500" : "text-muted-foreground hover:text-yellow-500"
                             }
@@ -821,7 +851,7 @@ export function ArtifactDetailView({
                             type="button"
                             variant="ghost"
                             size="sm"
-                            onClick={() => handleSelectThumbnail(url)}
+                            onClick={(e) => handleSelectThumbnail(url, e)}
                             className={
                               isSelectedThumbnail ? "text-yellow-500" : "text-muted-foreground hover:text-yellow-500"
                             }
