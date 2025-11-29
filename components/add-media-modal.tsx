@@ -52,6 +52,12 @@ export function AddMediaModal({ open, onOpenChange, artifactId, userId, onMediaA
   const [isUploading, setIsUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [uploadProgress, setUploadProgress] = useState<UploadProgress | null>(null)
+  const [debugLog, setDebugLog] = useState<string[]>([])
+
+  const addDebug = (msg: string) => {
+    console.log(msg)
+    setDebugLog(prev => [...prev.slice(-5), `${new Date().toLocaleTimeString()}: ${msg}`])
+  }
 
   const cameraInputRef = useRef<HTMLInputElement>(null)
   const videoCameraInputRef = useRef<HTMLInputElement>(null)
@@ -319,9 +325,11 @@ export function AddMediaModal({ open, onOpenChange, artifactId, userId, onMediaA
       if (isCameraCapture) {
         // Stay open for more captures, show success toast
         const mediaType = e.target === cameraInputRef.current ? "Photo" : "Video"
+        addDebug(`Camera capture done, staying open (${mediaType})`)
         toast.success(`${mediaType} added to gallery`)
         // Don't close - user can take more or close manually
       } else {
+        addDebug("Regular upload done, closing")
         // Regular file upload - close modal as before
         handleClose()
       }
@@ -469,7 +477,10 @@ export function AddMediaModal({ open, onOpenChange, artifactId, userId, onMediaA
   }
 
   return (
-    <Dialog open={open} onOpenChange={handleClose}>
+    <Dialog open={open} onOpenChange={(isOpen) => {
+      addDebug(`onOpenChange: isOpen=${isOpen}`)
+      if (!isOpen) handleClose()
+    }}>
       <DialogContent className="sm:max-w-md border-2 border-dashed border-purple-400/50" showCloseButton={false}>
         <DialogHeader className={mediaSource ? "space-y-1" : "space-y-3"}>
           <div className="flex items-center">
@@ -706,6 +717,16 @@ export function AddMediaModal({ open, onOpenChange, artifactId, userId, onMediaA
                 </div>
                 <Progress value={uploadProgress.currentFileProgress} className="h-2" />
               </div>
+            </div>
+          )}
+
+          {/* Debug panel - remove after testing */}
+          {debugLog.length > 0 && (
+            <div className="mt-4 p-2 bg-yellow-100 dark:bg-yellow-900 rounded text-xs font-mono">
+              <div className="font-bold mb-1">Debug:</div>
+              {debugLog.map((log, i) => (
+                <div key={i}>{log}</div>
+              ))}
             </div>
           )}
         </div>
