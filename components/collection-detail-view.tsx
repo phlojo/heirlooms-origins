@@ -69,10 +69,10 @@ export function CollectionDetailView({
     setComingSoonOpen(true)
   }
 
-  // Determine collection thumbnail
+  // Determine collection thumbnail - fall back to artifact.thumbnail_url if media_urls is empty
   const thumbnailImages = artifacts
     .slice(0, 5)
-    .map((artifact) => getPrimaryVisualMediaUrl(artifact.media_urls))
+    .map((artifact) => getPrimaryVisualMediaUrl(artifact.media_urls) || artifact.thumbnail_url)
     .filter(Boolean) as string[]
 
   const isUncategorized = collection.slug.startsWith("uncategorized")
