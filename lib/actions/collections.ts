@@ -405,13 +405,15 @@ export async function getAllPublicCollectionsPaginated(
 
         const { data: artifacts } = await supabase
           .from("artifacts")
-          .select("media_urls")
+          .select("media_urls, thumbnail_url")
           .eq("collection_id", collection.id)
           .order("created_at", { ascending: false })
           .limit(5)
 
         const thumbnailImages =
-          artifacts?.map((artifact) => getPrimaryVisualMediaUrl(artifact.media_urls)).filter(Boolean) || []
+          artifacts?.map((artifact) =>
+            getPrimaryVisualMediaUrl(artifact.media_urls) || artifact.thumbnail_url
+          ).filter(Boolean) || []
 
         return {
           ...collection,
@@ -472,13 +474,15 @@ export async function getMyCollectionsPaginated(
 
         const { data: artifacts } = await supabase
           .from("artifacts")
-          .select("media_urls")
+          .select("media_urls, thumbnail_url")
           .eq("collection_id", collection.id)
           .order("created_at", { ascending: false })
           .limit(5)
 
         const thumbnailImages =
-          artifacts?.map((artifact) => getPrimaryVisualMediaUrl(artifact.media_urls)).filter(Boolean) || []
+          artifacts?.map((artifact) =>
+            getPrimaryVisualMediaUrl(artifact.media_urls) || artifact.thumbnail_url
+          ).filter(Boolean) || []
 
         const isUncategorized = collection.slug.startsWith("uncategorized")
 
