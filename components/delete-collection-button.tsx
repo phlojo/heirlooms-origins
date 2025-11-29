@@ -23,9 +23,10 @@ import { toast } from "sonner"
 interface DeleteCollectionButtonProps {
   collectionId: string
   collectionTitle: string
+  artifactCount?: number
 }
 
-export function DeleteCollectionButton({ collectionId, collectionTitle }: DeleteCollectionButtonProps) {
+export function DeleteCollectionButton({ collectionId, collectionTitle, artifactCount = 0 }: DeleteCollectionButtonProps) {
   const [isDeleting, setIsDeleting] = useState(false)
   const [isOpen, setIsOpen] = useState(false)
   const [deleteArtifacts, setDeleteArtifacts] = useState<"delete" | "keep">("keep")
@@ -77,29 +78,31 @@ export function DeleteCollectionButton({ collectionId, collectionTitle }: Delete
           </AlertDialogDescription>
         </AlertDialogHeader>
 
-        <div className="space-y-4 py-4">
-          <Label className="text-base font-semibold">What should happen to the artifacts in this collection?</Label>
-          <RadioGroup value={deleteArtifacts} onValueChange={(value) => setDeleteArtifacts(value as "delete" | "keep")}>
-            <div className="flex items-start space-x-3 space-y-0">
-              <RadioGroupItem value="keep" id="keep" />
-              <Label htmlFor="keep" className="font-normal cursor-pointer">
-                <div className="font-medium">Move to Unsorted</div>
-                <div className="text-sm text-muted-foreground">
-                  Keep artifacts and move them to your Unsorted collection
-                </div>
-              </Label>
-            </div>
-            <div className="flex items-start space-x-3 space-y-0">
-              <RadioGroupItem value="delete" id="delete" />
-              <Label htmlFor="delete" className="font-normal cursor-pointer">
-                <div className="font-medium">Delete artifacts</div>
-                <div className="text-sm text-muted-foreground">
-                  Permanently delete all artifacts and their media from storage
-                </div>
-              </Label>
-            </div>
-          </RadioGroup>
-        </div>
+        {artifactCount > 0 && (
+          <div className="space-y-4 py-4">
+            <Label className="text-base font-semibold">What should happen to the artifacts in this collection?</Label>
+            <RadioGroup value={deleteArtifacts} onValueChange={(value) => setDeleteArtifacts(value as "delete" | "keep")}>
+              <div className="flex items-start space-x-3 space-y-0">
+                <RadioGroupItem value="keep" id="keep" />
+                <Label htmlFor="keep" className="font-normal cursor-pointer">
+                  <div className="font-medium">Move to Unsorted</div>
+                  <div className="text-sm text-muted-foreground">
+                    Keep artifacts and move them to your Unsorted collection
+                  </div>
+                </Label>
+              </div>
+              <div className="flex items-start space-x-3 space-y-0">
+                <RadioGroupItem value="delete" id="delete" />
+                <Label htmlFor="delete" className="font-normal cursor-pointer">
+                  <div className="font-medium">Delete artifacts</div>
+                  <div className="text-sm text-muted-foreground">
+                    Permanently delete all artifacts and their media from storage
+                  </div>
+                </Label>
+              </div>
+            </RadioGroup>
+          </div>
+        )}
 
         <AlertDialogFooter>
           <AlertDialogCancel disabled={isDeleting || isPending}>Cancel</AlertDialogCancel>

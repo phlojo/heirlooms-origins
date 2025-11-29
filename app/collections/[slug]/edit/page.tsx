@@ -1,7 +1,7 @@
 import { AppLayout } from "@/components/app-layout"
 import { EditCollectionForm } from "@/components/edit-collection-form"
 import { redirect, notFound } from 'next/navigation'
-import { getCurrentUser } from "@/lib/supabase/server"
+import { getCurrentUser, createClient } from "@/lib/supabase/server"
 import { getCollection } from "@/lib/actions/collections"
 import { isCurrentUserAdmin } from "@/lib/utils/admin"
 import { CollectionsStickyNav } from "@/components/collections-sticky-nav"
@@ -27,6 +27,13 @@ export default async function EditCollectionPage({ params }: { params: Promise<{
     notFound()
   }
 
+  // Get artifact count for this collection
+  const supabase = await createClient()
+  const { count: artifactCount } = await supabase
+    .from("artifacts")
+    .select("*", { count: "exact", head: true })
+    .eq("collection_id", collection.id)
+
   return (
     <AppLayout user={user}>
       <CollectionsStickyNav
@@ -47,7 +54,7 @@ export default async function EditCollectionPage({ params }: { params: Promise<{
           <p className="mt-1 text-muted-foreground">Update your collection details and settings</p>
         </div>
 
-        <EditCollectionForm collection={collection} />
+        <EditCollectionForm collection={collection} artifactCount={artifactCount ?? 0} />
       </div>
     </AppLayout>
   )

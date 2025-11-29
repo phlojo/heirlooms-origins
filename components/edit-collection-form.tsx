@@ -34,9 +34,10 @@ interface EditCollectionFormProps {
     is_public: boolean
     slug: string
   }
+  artifactCount?: number
 }
 
-export function EditCollectionForm({ collection }: EditCollectionFormProps) {
+export function EditCollectionForm({ collection, artifactCount = 0 }: EditCollectionFormProps) {
   const router = useRouter()
   const supabase = useSupabase()
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -48,6 +49,7 @@ export function EditCollectionForm({ collection }: EditCollectionFormProps) {
   const [pendingNavigation, setPendingNavigation] = useState<string | null>(null)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [deleteArtifactsChoice, setDeleteArtifactsChoice] = useState<"delete" | "keep">("keep")
+  const [showNukeConfirmation, setShowNukeConfirmation] = useState(false)
   const [userId, setUserId] = useState<string>("")
 
   useEffect(() => {
@@ -265,28 +267,30 @@ export function EditCollectionForm({ collection }: EditCollectionFormProps) {
                     <p>
                       You are about to permanently delete <strong>"{collection.title}"</strong>.
                     </p>
-                    <div className="space-y-3">
-                      <p className="font-medium text-foreground">
-                        What should happen to the artifacts in this collection?
-                      </p>
-                      <RadioGroup
-                        value={deleteArtifactsChoice}
-                        onValueChange={(v) => setDeleteArtifactsChoice(v as "delete" | "keep")}
-                      >
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="keep" id="keep" />
-                          <Label htmlFor="keep" className="font-normal cursor-pointer">
-                            Move artifacts to Unsorted collection
-                          </Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="delete" id="delete" />
-                          <Label htmlFor="delete" className="font-normal cursor-pointer">
-                            Delete all artifacts and their media permanently
-                          </Label>
-                        </div>
-                      </RadioGroup>
-                    </div>
+                    {artifactCount > 0 && (
+                      <div className="space-y-3">
+                        <p className="font-medium text-foreground">
+                          What should happen to the artifacts in this collection?
+                        </p>
+                        <RadioGroup
+                          value={deleteArtifactsChoice}
+                          onValueChange={(v) => setDeleteArtifactsChoice(v as "delete" | "keep")}
+                        >
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="keep" id="keep" />
+                            <Label htmlFor="keep" className="font-normal cursor-pointer">
+                              Move artifacts to Unsorted collection
+                            </Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="delete" id="delete" />
+                            <Label htmlFor="delete" className="font-normal cursor-pointer">
+                              Delete all artifacts and their media permanently
+                            </Label>
+                          </div>
+                        </RadioGroup>
+                      </div>
+                    )}
                     <p className="text-xs text-muted-foreground">This action cannot be undone.</p>
                   </AlertDialogDescription>
                 </AlertDialogHeader>
@@ -295,7 +299,13 @@ export function EditCollectionForm({ collection }: EditCollectionFormProps) {
                   <AlertDialogAction
                     onClick={(e) => {
                       e.preventDefault()
-                      handleDelete()
+                      if (deleteArtifactsChoice === "delete" && artifactCount > 0) {
+                        // Show scary confirmation for permanent media deletion
+                        setDeleteDialogOpen(false)
+                        setShowNukeConfirmation(true)
+                      } else {
+                        handleDelete()
+                      }
                     }}
                     disabled={isDeleting}
                     className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
@@ -328,6 +338,67 @@ export function EditCollectionForm({ collection }: EditCollectionFormProps) {
           <AlertDialogFooter>
             <AlertDialogCancel onClick={() => setPendingNavigation(null)}>Stay on Page</AlertDialogCancel>
             <AlertDialogAction onClick={confirmNavigation}>Leave Without Saving</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Nuclear Option Confirmation Dialog */}
+      <AlertDialog open={showNukeConfirmation} onOpenChange={setShowNukeConfirmation}>
+        <AlertDialogContent className="border-destructive">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-destructive text-xl">
+              Hold up. This is permanent.
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-4 text-sm">
+                <p className="text-foreground font-medium">
+                  You selected "Delete all artifacts and their media permanently."
+                </p>
+                <div className="bg-destructive/10 border border-destructive/20 rounded-md p-3 space-y-2">
+                  <p className="font-semibold text-destructive">This will:</p>
+                  <ul className="list-disc list-inside space-y-1 text-muted-foreground">
+                    <li>Delete all {artifactCount} artifact{artifactCount !== 1 ? 's' : ''} in this collection</li>
+                    <li>Permanently remove all photos, videos, and audio from storage</li>
+                    <li>Remove media even if it's used in other artifacts</li>
+                  </ul>
+                </div>
+                <p className="text-muted-foreground">
+                  There is no recycle bin. No backup. No "oops" button.
+                  Once it's gone, it's <span className="font-semibold text-foreground">gone-gone</span>.
+                </p>
+                <p className="text-xs text-muted-foreground italic">
+                  If you're having second thoughts, that's your gut telling you something.
+                </p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="sm:space-x-4">
+            <AlertDialogCancel
+              onClick={() => {
+                setShowNukeConfirmation(false)
+                setDeleteArtifactsChoice("keep")
+              }}
+              className="flex-1"
+            >
+              Nevermind, keep the collection
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault()
+                handleDelete()
+              }}
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90 flex-1"
+            >
+              {isDeleting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Deleting forever...
+                </>
+              ) : (
+                "Yes, delete everything"
+              )}
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

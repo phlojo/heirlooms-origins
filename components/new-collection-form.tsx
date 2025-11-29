@@ -8,10 +8,9 @@ import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { AlertCircle, Loader2, CheckCircle2 } from "lucide-react"
+import { AlertCircle, Loader2 } from "lucide-react"
 import { createCollection } from "@/lib/actions/collections"
 import { collectionSchema, type CollectionInput } from "@/lib/schemas"
-import Link from "next/link"
 import { TranscriptionInput } from "@/components/transcription-input"
 import { useSupabase } from "@/lib/supabase/browser-context"
 import { ArtifactTypeSelector } from "@/components/artifact-type-selector"
@@ -23,7 +22,6 @@ export function NewCollectionForm() {
   const supabase = useSupabase()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [successData, setSuccessData] = useState<{ id: string; title: string } | null>(null)
   const [userId, setUserId] = useState<string>("")
   const [types, setTypes] = useState<any[]>([])
 
@@ -60,8 +58,9 @@ export function NewCollectionForm() {
     const result = await createCollection(data)
 
     if (result.success) {
-      setSuccessData({ id: result.data.slug || result.data.id, title: data.title })
-      setIsSubmitting(false)
+      // Navigate directly to the new collection
+      router.push(`/collections/${result.data.slug || result.data.id}`)
+      return
     } else {
       setIsSubmitting(false)
 
@@ -77,29 +76,6 @@ export function NewCollectionForm() {
         setError(result.error)
       }
     }
-  }
-
-  if (successData) {
-    return (
-      <div className="space-y-6">
-        <Alert className="border-green-200 bg-green-50 dark:border-green-900 dark:bg-green-950">
-          <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400" />
-          <AlertDescription className="text-green-800 dark:text-green-200">
-            <strong className="font-semibold">Collection created successfully!</strong>
-            <p className="mt-1">"{successData.title}" has been added to your collections.</p>
-          </AlertDescription>
-        </Alert>
-
-        <div className="flex flex-col gap-3 sm:flex-row">
-          <Button asChild className="flex-1">
-            <Link href={`/collections/${successData.id}`}>View Collection</Link>
-          </Button>
-          <Button asChild variant="outline" className="flex-1 bg-transparent">
-            <Link href="/collections">Back to Collections</Link>
-          </Button>
-        </div>
-      </div>
-    )
   }
 
   return (

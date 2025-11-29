@@ -141,7 +141,7 @@ export function MediaPicker({
   }
 
   return (
-    <div className="flex max-h-[550px] flex-col gap-4">
+    <div className="flex max-h-[420px] flex-col gap-3">
       {/* Search */}
       <div className="relative flex-shrink-0">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -167,7 +167,7 @@ export function MediaPicker({
       )}
 
       {/* Media Grid */}
-      <ScrollArea className="h-[350px] flex-shrink-0">
+      <ScrollArea className="h-[264px] flex-shrink-0">
         {filteredMedia.length === 0 ? (
           <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
             No media found matching your criteria

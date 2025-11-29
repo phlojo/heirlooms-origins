@@ -3,9 +3,9 @@
 import type React from "react"
 
 import { useState, useRef } from "react"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
-import { Camera, Video, Mic, Upload, FolderOpen } from "lucide-react"
+import { Camera, Video, Mic, Upload, FolderOpen, ArrowLeft, X } from "lucide-react"
 import { AudioRecorder } from "@/components/audio-recorder"
 import { generateCloudinarySignature, generateCloudinaryAudioSignature } from "@/lib/actions/cloudinary"
 import { trackPendingUpload } from "@/lib/actions/pending-uploads"
@@ -34,8 +34,7 @@ interface AddMediaModalProps {
   onMediaAdded: (urls: string[]) => void
 }
 
-type MediaType = "photo" | "video" | "audio" | null
-type MediaMode = "upload" | "record" | null
+type MediaMode = "record" | null
 type MediaSource = "new" | "existing" | null
 
 interface UploadProgress {
@@ -48,7 +47,6 @@ interface UploadProgress {
 
 export function AddMediaModal({ open, onOpenChange, artifactId, userId, onMediaAdded }: AddMediaModalProps) {
   const [mediaSource, setMediaSource] = useState<MediaSource>(null)
-  const [selectedType, setSelectedType] = useState<MediaType>(null)
   const [selectedMode, setSelectedMode] = useState<MediaMode>(null)
   const [isUploading, setIsUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -59,7 +57,6 @@ export function AddMediaModal({ open, onOpenChange, artifactId, userId, onMediaA
 
   const handleReset = () => {
     setMediaSource(null)
-    setSelectedType(null)
     setSelectedMode(null)
     setError(null)
     setUploadProgress(null)
@@ -70,17 +67,9 @@ export function AddMediaModal({ open, onOpenChange, artifactId, userId, onMediaA
     onOpenChange(false)
   }
 
-  const handleTypeSelect = (type: MediaType) => {
-    setSelectedType(type)
-    setSelectedMode(null)
-    setError(null)
-  }
-
   const handleBack = () => {
     if (selectedMode) {
       setSelectedMode(null)
-    } else if (selectedType) {
-      setSelectedType(null)
     } else if (mediaSource) {
       setMediaSource(null)
     }
@@ -162,10 +151,10 @@ export function AddMediaModal({ open, onOpenChange, artifactId, userId, onMediaA
       let uploadUrl: string
       let signatureResult: any
 
-      if (selectedType === "audio" || file.type.startsWith("audio/")) {
+      if (file.type.startsWith("audio/")) {
         signatureResult = await generateCloudinaryAudioSignature(userId, file.name)
         uploadUrl = `https://api.cloudinary.com/v1_1/${signatureResult.cloudName}/video/upload`
-      } else if (selectedType === "video" || file.type.startsWith("video/")) {
+      } else if (file.type.startsWith("video/")) {
         signatureResult = await generateCloudinarySignature(userId, file.name)
         uploadUrl = `https://api.cloudinary.com/v1_1/${signatureResult.cloudName}/video/upload`
       } else {
@@ -184,9 +173,7 @@ export function AddMediaModal({ open, onOpenChange, artifactId, userId, onMediaA
       formData.append("signature", signatureResult.signature)
       formData.append("public_id", signatureResult.publicId!)
 
-      if (selectedType === "audio" || file.type.startsWith("audio/")) {
-        formData.append("resource_type", "video")
-      } else if (selectedType === "video" || file.type.startsWith("video/")) {
+      if (file.type.startsWith("audio/") || file.type.startsWith("video/")) {
         formData.append("resource_type", "video")
       }
 
@@ -305,12 +292,11 @@ export function AddMediaModal({ open, onOpenChange, artifactId, userId, onMediaA
         })
         urls.push(secureUrl)
 
-        const resourceType =
-          selectedType === "audio" || file.type.startsWith("audio/")
-            ? "raw"
-            : selectedType === "video" || file.type.startsWith("video/")
-              ? "video"
-              : "image"
+        const resourceType = file.type.startsWith("audio/")
+          ? "raw"
+          : file.type.startsWith("video/")
+            ? "video"
+            : "image"
         await trackPendingUpload(secureUrl, resourceType)
 
         // Create user_media record immediately so media appears in Media Picker
@@ -471,20 +457,48 @@ export function AddMediaModal({ open, onOpenChange, artifactId, userId, onMediaA
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Add Media</DialogTitle>
-          <DialogDescription>
+      <DialogContent className="sm:max-w-md border-2 border-dashed border-purple-400/50" showCloseButton={false}>
+        <DialogHeader className={mediaSource ? "space-y-1" : "space-y-3"}>
+          <div className="flex items-center">
+            {/* Left: Back button (visible when not on initial screen) */}
+            <div className="w-16 flex justify-start">
+              {mediaSource && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleBack}
+                  className="h-7 px-2 text-muted-foreground hover:text-foreground -ml-2"
+                >
+                  <ArrowLeft className="h-4 w-4 mr-1" />
+                  Back
+                </Button>
+              )}
+            </div>
+            {/* Center: Title */}
+            <DialogTitle className="flex-1 text-center">Add Media</DialogTitle>
+            {/* Right: Close button */}
+            <div className="w-16 flex justify-end">
+              <DialogClose asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                >
+                  <X className="h-4 w-4" />
+                  <span className="sr-only">Close</span>
+                </Button>
+              </DialogClose>
+            </div>
+          </div>
+          <DialogDescription className="text-center">
             {!mediaSource && "Choose how to add media"}
-            {mediaSource === "new" && !selectedType && "Step 1: Choose the type of media to add"}
-            {mediaSource === "new" && selectedType && !selectedMode && "Step 2: Choose how to add your media"}
-            {mediaSource === "new" && selectedMode === "upload" && "Select files to upload"}
-            {mediaSource === "new" && selectedMode === "record" && "Record your media"}
-            {mediaSource === "existing" && "Select from your media library"}
+            {mediaSource === "new" && !selectedMode && "Upload or capture photos, videos, and audio"}
+            {mediaSource === "new" && selectedMode === "record" && "Record audio using your microphone"}
+            {mediaSource === "existing" && "Select from your Heirlooms media library"}
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4 py-4">
+        <div className={`space-y-4 ${mediaSource ? "pt-1 pb-2" : "py-4"}`}>
           {/* Step 0: Choose Source (New or Existing) */}
           {!mediaSource && (
             <div className="grid gap-3">
@@ -495,8 +509,8 @@ export function AddMediaModal({ open, onOpenChange, artifactId, userId, onMediaA
               >
                 <Upload className="h-8 w-8" />
                 <div className="text-center">
-                  <div className="font-semibold">Upload New</div>
-                  <div className="text-xs text-muted-foreground">Take or upload new photos, videos, or audio</div>
+                  <div className="font-semibold">Add from Device</div>
+                  <div className="text-xs text-muted-foreground">Take or upload photos, videos, or audio</div>
                 </div>
               </Button>
 
@@ -523,146 +537,133 @@ export function AddMediaModal({ open, onOpenChange, artifactId, userId, onMediaA
             />
           )}
 
-          {/* Step 1: Choose Media Type (only for "new" source) */}
-          {mediaSource === "new" && !selectedType && (
-            <div className="grid gap-3">
-              <Button
-                variant="outline"
-                className="h-auto flex-col gap-2 py-6 bg-transparent"
-                onClick={() => handleTypeSelect("photo")}
-              >
-                <Camera className="h-8 w-8" />
-                <div className="text-center">
-                  <div className="font-semibold">Photo</div>
-                  <div className="text-xs text-muted-foreground">Upload or take photos</div>
+          {/* Add from Device - All options on one screen */}
+          {mediaSource === "new" && !selectedMode && (
+            <div className="space-y-4">
+              {/* Photo Section */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-center gap-2 text-sm font-medium text-muted-foreground">
+                  <Camera className="h-4 w-4" />
+                  <span>Photos</span>
                 </div>
-              </Button>
-
-              <Button
-                variant="outline"
-                className="h-auto flex-col gap-2 py-6 bg-transparent"
-                onClick={() => handleTypeSelect("video")}
-              >
-                <Video className="h-8 w-8" />
-                <div className="text-center">
-                  <div className="font-semibold">Video</div>
-                  <div className="text-xs text-muted-foreground">Upload or record videos (up to 50MB)</div>
-                </div>
-              </Button>
-
-              <Button
-                variant="outline"
-                className="h-auto flex-col gap-2 py-6 bg-transparent"
-                onClick={() => handleTypeSelect("audio")}
-              >
-                <Mic className="h-8 w-8" />
-                <div className="text-center">
-                  <div className="font-semibold">Audio</div>
-                  <div className="text-xs text-muted-foreground">Upload or record audio</div>
-                </div>
-              </Button>
-            </div>
-          )}
-
-          {/* Step 2: Choose Upload or Capture/Record */}
-          {mediaSource === "new" && selectedType && !selectedMode && (
-            <div className="grid gap-3">
-              <Button variant="outline" className="h-auto flex-col gap-2 py-6 bg-transparent" asChild>
-                <label className="cursor-pointer">
-                  <Upload className="h-8 w-8" />
-                  <div className="text-center">
-                    <div className="font-semibold">
-                      Upload {selectedType === "photo" ? "Photos" : selectedType === "video" ? "Videos" : "Audio Files"}
-                    </div>
-                    <div className="text-xs text-muted-foreground">Choose multiple files from your device</div>
-                  </div>
-                  <input
-                    type="file"
-                    accept={selectedType === "photo" ? "image/*" : selectedType === "video" ? "video/*" : "audio/*"}
-                    multiple
-                    onChange={handleMediaUpload}
-                    className="hidden"
-                    disabled={isUploading}
-                  />
-                </label>
-              </Button>
-
-              {selectedType === "photo" ? (
-                <>
+                <div className="grid grid-cols-2 gap-2">
+                  <Button variant="outline" className="h-auto py-3 bg-transparent" asChild>
+                    <label className="cursor-pointer flex items-center justify-center gap-2">
+                      <Upload className="h-4 w-4" />
+                      <span className="font-medium">Upload</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        onChange={handleMediaUpload}
+                        className="hidden"
+                        disabled={isUploading}
+                      />
+                    </label>
+                  </Button>
                   <Button
                     variant="outline"
-                    className="h-auto flex-col gap-2 py-6 bg-transparent"
+                    className="h-auto py-3 bg-transparent flex items-center justify-center gap-2"
                     onClick={handleCameraCapture}
                     disabled={isUploading}
                   >
-                    <Camera className="h-8 w-8" />
-                    <div className="text-center">
-                      <div className="font-semibold">Take Photo</div>
-                      <div className="text-xs text-muted-foreground">Use your device camera</div>
-                    </div>
+                    <Camera className="h-4 w-4" />
+                    <span className="font-medium">Take Photo</span>
                   </Button>
-                  <input
-                    ref={cameraInputRef}
-                    type="file"
-                    accept="image/*"
-                    capture="environment"
-                    onChange={handleMediaUpload}
-                    className="hidden"
-                    disabled={isUploading}
-                  />
-                </>
-              ) : selectedType === "video" ? (
-                <>
+                </div>
+              </div>
+
+              {/* Video Section */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-center gap-2 text-sm font-medium text-muted-foreground">
+                  <Video className="h-4 w-4" />
+                  <span>Videos</span>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <Button variant="outline" className="h-auto py-3 bg-transparent" asChild>
+                    <label className="cursor-pointer flex items-center justify-center gap-2">
+                      <Upload className="h-4 w-4" />
+                      <span className="font-medium">Upload</span>
+                      <input
+                        type="file"
+                        accept="video/*"
+                        multiple
+                        onChange={handleMediaUpload}
+                        className="hidden"
+                        disabled={isUploading}
+                      />
+                    </label>
+                  </Button>
                   <Button
                     variant="outline"
-                    className="h-auto flex-col gap-2 py-6 bg-transparent"
+                    className="h-auto py-3 bg-transparent flex items-center justify-center gap-2"
                     onClick={handleVideoCameraCapture}
                     disabled={isUploading}
                   >
-                    <Video className="h-8 w-8" />
-                    <div className="text-center">
-                      <div className="font-semibold">Record Video</div>
-                      <div className="text-xs text-muted-foreground">Use your device camera</div>
-                    </div>
+                    <Video className="h-4 w-4" />
+                    <span className="font-medium">Record</span>
                   </Button>
-                  <input
-                    ref={videoCameraInputRef}
-                    type="file"
-                    accept="video/*"
-                    capture="environment"
-                    onChange={handleMediaUpload}
-                    className="hidden"
-                    disabled={isUploading}
-                  />
-                </>
-              ) : (
-                <Button
-                  variant="outline"
-                  className="h-auto flex-col gap-2 py-6 bg-transparent"
-                  onClick={() => setSelectedMode("record")}
-                >
-                  <Mic className="h-8 w-8" />
-                  <div className="text-center">
-                    <div className="font-semibold">Record Audio</div>
-                    <div className="text-xs text-muted-foreground">Use your device microphone</div>
-                  </div>
-                </Button>
-              )}
+                </div>
+              </div>
 
-              <Button variant="ghost" onClick={handleBack}>
-                Back
-              </Button>
+              {/* Audio Section */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-center gap-2 text-sm font-medium text-muted-foreground">
+                  <Mic className="h-4 w-4" />
+                  <span>Audio</span>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <Button variant="outline" className="h-auto py-3 bg-transparent" asChild>
+                    <label className="cursor-pointer flex items-center justify-center gap-2">
+                      <Upload className="h-4 w-4" />
+                      <span className="font-medium">Upload</span>
+                      <input
+                        type="file"
+                        accept="audio/*"
+                        multiple
+                        onChange={handleMediaUpload}
+                        className="hidden"
+                        disabled={isUploading}
+                      />
+                    </label>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="h-auto py-3 bg-transparent flex items-center justify-center gap-2"
+                    onClick={() => setSelectedMode("record")}
+                    disabled={isUploading}
+                  >
+                    <Mic className="h-4 w-4" />
+                    <span className="font-medium">Record</span>
+                  </Button>
+                </div>
+              </div>
+
+              {/* Hidden inputs for camera capture */}
+              <input
+                ref={cameraInputRef}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                onChange={handleMediaUpload}
+                className="hidden"
+                disabled={isUploading}
+              />
+              <input
+                ref={videoCameraInputRef}
+                type="file"
+                accept="video/*"
+                capture="environment"
+                onChange={handleMediaUpload}
+                className="hidden"
+                disabled={isUploading}
+              />
             </div>
           )}
 
           {/* Recording UI for Audio */}
-          {mediaSource === "new" && selectedMode === "record" && selectedType === "audio" && (
-            <>
-              <AudioRecorder onAudioRecorded={handleAudioRecorded} disabled={isUploading} />
-              <Button variant="ghost" onClick={handleBack} className="w-full">
-                Back
-              </Button>
-            </>
+          {mediaSource === "new" && selectedMode === "record" && (
+            <AudioRecorder onAudioRecorded={handleAudioRecorded} disabled={isUploading} />
           )}
 
           {/* Error Display */}

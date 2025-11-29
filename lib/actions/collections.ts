@@ -3,8 +3,7 @@
 import { createClient } from "@/lib/supabase/server"
 import { collectionSchema, type CollectionInput } from "@/lib/schemas"
 import { revalidatePath } from "next/cache"
-import { getArtifactsByCollection } from "./artifacts"
-import { deleteCloudinaryMedia, extractPublicIdFromUrl } from "./cloudinary"
+import { getArtifactsByCollection, deleteArtifact } from "./artifacts"
 import { generateSlug, generateUniqueSlug } from "@/lib/utils/slug"
 import { isCurrentUserAdmin } from "@/lib/utils/admin"
 import { getPrimaryVisualMediaUrl } from "@/lib/media"
@@ -309,23 +308,25 @@ export async function deleteCollection(collectionId: string, deleteArtifacts = f
   }
 
   if (deleteArtifacts) {
+    // Use deleteArtifact for each artifact - handles both storage backends,
+    // gallery media, media blocks, and user_media cleanup
     const artifacts = await getArtifactsByCollection(collectionId)
 
-    const mediaUrls: string[] = []
-    artifacts.forEach((artifact) => {
-      if (artifact.media_urls && Array.isArray(artifact.media_urls)) {
-        mediaUrls.push(...artifact.media_urls)
-      }
+    console.log("[deleteCollection] Deleting artifacts with media:", {
+      collectionId,
+      artifactCount: artifacts.length,
     })
 
-    for (const url of mediaUrls) {
-      const publicId = await extractPublicIdFromUrl(url)
-      if (publicId) {
-        await deleteCloudinaryMedia(publicId)
+    for (const artifact of artifacts) {
+      const result = await deleteArtifact(artifact.id, true) // true = delete media
+      if (!result.success) {
+        console.error("[deleteCollection] Failed to delete artifact:", {
+          artifactId: artifact.id,
+          error: result.error,
+        })
+        // Continue with other artifacts even if one fails
       }
     }
-
-    await supabase.from("artifacts").delete().eq("collection_id", collectionId)
   } else {
     const uncategorizedResult = await getOrCreateUncategorizedCollection(user.id)
     if (!uncategorizedResult.success || !uncategorizedResult.data) {

@@ -171,7 +171,8 @@ export function NewArtifactGalleryEditor({
       </div>
       <div className="flex items-end justify-between gap-4">
         <HelpText>
-          Media carousel displayed at the top of your artifact page. Drag to reorder.
+          Media carousel displayed at the top of your artifact page.
+          <br />Drag to reorder.
         </HelpText>
         <Button
           type="button"
@@ -185,13 +186,19 @@ export function NewArtifactGalleryEditor({
 
       {/* Gallery Grid */}
       {visualMediaUrls.length === 0 ? (
-        <Card className="flex h-40 flex-col items-center justify-center gap-2 border-dashed rounded-sm">
-          <ImageIcon className="h-8 w-8 text-muted-foreground" />
-          <p className="text-sm text-muted-foreground">No media in gallery</p>
-          <Button type="button" onClick={() => setIsPickerOpen(true)} size="sm" variant="outline">
-            Add Media
-          </Button>
-        </Card>
+        <button
+          type="button"
+          onClick={() => setIsPickerOpen(true)}
+          className="w-full h-48 flex flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed border-purple-400/50 bg-purple-500/5 hover:bg-purple-500/10 hover:border-purple-500/70 transition-all cursor-pointer group"
+        >
+          <div className="h-14 w-14 rounded-full bg-purple-500/10 flex items-center justify-center group-hover:bg-purple-500/20 transition-colors">
+            <ImageIcon className="h-7 w-7 text-purple-600 dark:text-purple-400" />
+          </div>
+          <div className="text-center">
+            <p className="text-base font-semibold text-purple-600 dark:text-purple-400">Add Media to Gallery</p>
+            <p className="text-xs text-muted-foreground mt-1">Photos, videos, and audio files</p>
+          </div>
+        </button>
       ) : (
         <div className="space-y-3">
           <DndContext

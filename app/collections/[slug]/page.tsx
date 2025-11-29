@@ -7,6 +7,7 @@ import { getCurrentUser, createClient } from "@/lib/supabase/server"
 import { getCollectionBySlug } from "@/lib/actions/collections"
 import { getArtifactsByCollection } from "@/lib/actions/artifacts"
 import { ArtifactCard } from "@/components/artifact-card"
+import { AddArtifactCard } from "@/components/add-artifact-card"
 import { CollectionsStickyNav } from "@/components/collections-sticky-nav"
 import { Author } from "@/components/author"
 import { isCurrentUserAdmin } from "@/lib/utils/admin"
@@ -150,20 +151,20 @@ export default async function CollectionDetailPage({
         </div>
 
         <div>
-          {artifacts.length === 0 ? (
+          {artifacts.length === 0 && !isOwnCollection ? (
             <div className="rounded-lg border border-dashed p-12 text-center">
               <p className="text-sm text-muted-foreground">
                 {isUncategorized ? "No uncategorized artifacts." : "No artifacts in this collection yet."}
               </p>
-              {canEdit && !isUncategorized && (
-                <p className="mt-2 text-xs text-muted-foreground">Click "Add Artifact" above to add your first item.</p>
-              )}
             </div>
           ) : (
             <div className="grid gap-2 grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
               {artifacts.map((artifact) => (
                 <ArtifactCard key={artifact.id} artifact={artifact} />
               ))}
+              {isOwnCollection && !isUncategorized && (
+                <AddArtifactCard collectionId={collection.id} collectionSlug={slug} />
+              )}
             </div>
           )}
         </div>
