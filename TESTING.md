@@ -92,7 +92,7 @@ __tests__/
 
 ## Test Files Included
 
-**Current Status:** 367 passing tests, 14 skipped (in 14 test files)
+**Current Status:** 439 passing tests, 14 skipped (in 17 test files)
 
 ### Unit Tests
 
@@ -120,6 +120,33 @@ __tests__/
 - Tests for slug generation, thumbnail selection, AI content handling
 
 **Status:** ✅ All 32 tests passing
+
+#### Collection Server Actions (`__tests__/unit/actions/collections.test.ts`)
+
+- **22 tests** covering collection CRUD operations
+- Tests for createCollection, getCollection, getCollectionBySlug
+- Tests for updateCollection, deleteCollection validation and authorization
+- Tests for getOrCreateUncategorizedCollection and getMyCollections
+
+**Status:** ✅ All 22 tests passing
+
+#### Pending Uploads (`__tests__/unit/actions/pending-uploads.test.ts`)
+
+- **23 tests** covering upload tracking and cleanup
+- Tests for trackPendingUpload (Cloudinary and Supabase Storage URLs)
+- Tests for markUploadsAsSaved and cleanupPendingUploads
+- Tests for auditPendingUploads media audit report generation
+
+**Status:** ✅ All 23 tests passing
+
+#### Slug Utilities (`__tests__/unit/utils/slug.test.ts`)
+
+- **27 tests** covering slug generation
+- Tests for generateSlug (lowercase, special chars, edge cases)
+- Tests for generateUniqueSlug (conflict resolution)
+- Integration tests for typical use cases
+
+**Status:** ✅ All 27 tests passing
 
 ### Component Tests
 
@@ -162,20 +189,29 @@ __tests__/
 
 **Status:** ⏭️ Skipped (needs mock infrastructure fixes)
 
+#### Cleanup Expired Uploads API (`__tests__/integration/api/cleanup-expired-uploads.test.ts`)
+
+- **13 tests** covering the cron cleanup endpoint
+- Tests for authentication (cron header in production)
+- Tests for audit execution and response format
+- Tests for cleanup statistics tracking
+
+**Status:** ✅ All 13 tests passing
+
 ### Upcoming Test Files
 
 **Phase 2: Additional Server Actions**
 
-- `__tests__/unit/actions/collections.test.ts` - Collection operations
+- ✅ `__tests__/unit/actions/collections.test.ts` - Collection operations (22 tests)
+- ✅ `__tests__/unit/actions/pending-uploads.test.ts` - Upload tracking (23 tests)
 - `__tests__/unit/actions/auth.test.ts` - Authentication flows
 - `__tests__/unit/actions/cloudinary.test.ts` - Cloudinary integration
-- `__tests__/unit/actions/pending-uploads.test.ts` - Upload tracking
 - `__tests__/unit/actions/profile.test.ts` - User profile operations
 - `__tests__/unit/actions/artifact-types.test.ts` - Type management
 
 **Phase 2: Additional Utilities**
 
-- `__tests__/unit/utils/slug.test.ts` - Slug generation
+- ✅ `__tests__/unit/utils/slug.test.ts` - Slug generation (27 tests)
 - `__tests__/unit/utils/rate-limit.test.ts` - Rate limiting
 - `__tests__/unit/utils/ai.test.ts` - AI SDK integration
 

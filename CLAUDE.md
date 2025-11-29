@@ -101,10 +101,20 @@ All data mutations use Next.js Server Actions in `lib/actions/`:
 - For Cloudinary URLs: Returns stored derivative or dynamic transformation
 - `deleteCloudinaryMedia(publicId)` - Delete Cloudinary media (legacy)
 
-### Artifact Gallery (Unified Media Model)
+### Unified Media Model (Gallery & Blocks)
 **Status**: ✅ Implemented (Phase 2 complete, 2025-11-27)
+**Architecture Doc**: `docs/architecture/media-system.md`
 
-The artifact gallery is a horizontal carousel of media displayed at the top of artifact pages. It uses a unified media model with role-based linking.
+The artifact media system uses a **unified media model** where:
+- **Gallery** = Horizontal carousel showcase at top of artifact
+- **Media Blocks** = Inline media within narrative content
+- **Both are independent** - Adding to gallery doesn't affect blocks, and vice versa
+- **Both share the same library** - Media Picker shows all user uploads
+
+**Key Principle**: Gallery and Blocks draw from the same `user_media` pool but create separate `artifact_media` links with different roles. This enables:
+- Same image appearing in both gallery and a block
+- Independent ordering within each context
+- Shared upload/library experience
 
 **Database Schema**:
 - `user_media` - Canonical storage for all user uploads (filename, type, URL, metadata)
@@ -378,18 +388,28 @@ curl "https://yourdomain.com/api/cron/audit-media?secret=YOUR_CRON_SECRET"
 See `docs/operations/bug-tracker.md` for active bugs and workarounds.
 
 ## Documentation Structure
+**Index**: See `docs/README.md` for full documentation index with quick links.
+
+**Root-level docs**:
 - `ARCHITECTURE.md` - Architectural decisions and rationale
 - `TESTING.md` - Comprehensive testing guide
-- `docs/guides/` - Feature guides
-  - `navigation.md` - Artifact page routing
-  - `artifact-types.md` - Type system and badges
-  - `media-audit.md` - Media cleanup and monitoring
-  - `artifact-grid-layout.md` - Masonry grid system and responsive columns
-  - `card-design-updates.md` - Card grounding and variable-height titles
-  - `google-oauth-*.md` - OAuth setup and branding
-- `docs/operations/` - Operational runbooks (bug tracker, cron jobs)
-- `docs/planning/` - Future features
-- `docs/archive/` - Historical decisions and snapshots
+- `MEDIA-ARCHITECTURE.md` - Storage layer (Supabase + Cloudinary)
+- `DEPLOYMENT-CHECKLIST.md` - Pre-deployment checklist
+- `ROLLBACK-GUIDE.md` - Emergency rollback procedures
+
+**docs/ folders**:
+- `docs/architecture/` - System design documents
+  - `media-system.md` - **Gallery vs Blocks independence** (key architecture doc)
+- `docs/guides/` - Feature how-to guides
+  - `artifact-gallery-editor.md` - Gallery drag-and-drop implementation
+  - `artifact-grid-layout.md` - Masonry grid system
+  - `artifact-types.md` - Type badges and categories
+  - `navigation.md` - Routing and navigation
+- `docs/operations/` - Operational runbooks
+  - `bug-tracker.md` - Known issues and fixes
+  - `cron-jobs.md` - Scheduled tasks
+- `docs/planning/` - Active feature proposals
+- `docs/archive/` - Completed work (date-prefixed, reference only)
 
 ## Critical Files to Understand
 - `lib/media.ts` - Media detection and utilities (42 unit tests)
