@@ -6,7 +6,8 @@
 |------------|-------|
 | Understand the codebase | [CLAUDE.md](../CLAUDE.md) |
 | Understand media system | [architecture/media-system.md](architecture/media-system.md) |
-| Fix a bug | [operations/bug-tracker.md](operations/bug-tracker.md) |
+| Fix an internal bug | [operations/bug-tracker.md](operations/bug-tracker.md) |
+| Track a user-reported bug | [operations/user-bugs.md](operations/user-bugs.md) |
 | Run tests | [TESTING.md](../TESTING.md) |
 | Deploy | [DEPLOYMENT-CHECKLIST.md](../DEPLOYMENT-CHECKLIST.md) |
 
@@ -22,7 +23,8 @@ docs/
 │   ├── artifact-types.md           # Type badges and categories
 │   └── navigation.md               # Routing and navigation
 ├── operations/             # Runbooks for production operations
-│   ├── bug-tracker.md      # Known issues and fixes
+│   ├── bug-tracker.md      # Internal bugs and fixes
+│   ├── user-bugs.md        # User-reported bugs (UB-YYMMDD-NN format)
 │   ├── cron-jobs.md        # Scheduled tasks
 │   └── migration-execution-guide.md  # Database migrations
 ├── planning/               # Feature design docs (in progress)
@@ -63,5 +65,6 @@ Documents in `archive/` use date prefixes (`2025-01-*`) to indicate when work wa
 
 1. **New features** → Create guide in `guides/`
 2. **Architecture decisions** → Add to `architecture/`
-3. **Bug fixes** → Document in `operations/bug-tracker.md`
-4. **Completed work** → Move to `archive/` with date prefix
+3. **Internal bug fixes** → Document in `operations/bug-tracker.md`
+4. **User-reported bugs** → Track in `operations/user-bugs.md` (format: UB-YYMMDD-NN)
+5. **Completed work** → Move to `archive/` with date prefix

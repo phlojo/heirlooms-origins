@@ -387,8 +387,17 @@ const slug = await generateUniqueSlug(
 curl "https://yourdomain.com/api/cron/audit-media?secret=YOUR_CRON_SECRET"
 \`\`\`
 
-## Known Issues & Bug Tracker
-See `docs/operations/bug-tracker.md` for active bugs and workarounds.
+## Bug Tracking
+
+**Two separate trackers:**
+- `docs/operations/bug-tracker.md` - Internal bugs (discovered during development)
+- `docs/operations/user-bugs.md` - User-reported bugs (format: UB-YYMMDD-NN)
+
+**User bug workflow:**
+1. Create entry in `user-bugs.md` with ID format `UB-YYMMDD-NN` (e.g., UB-251129-01)
+2. Create branch: `userbugs-MMDDNN` (e.g., `userbugs-112901`)
+3. Track status: Open → In Progress → Fixed → Verified
+4. Move to Resolved section after production verification
 
 ## Documentation Structure
 **Index**: See `docs/README.md` for full documentation index with quick links.

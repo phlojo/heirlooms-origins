@@ -1117,6 +1117,46 @@ if (successfullyDeletedUrls.length > 0) {
 
 ---
 
+## Media Not Visible to Other Users After Edit (Fixed: November 2025)
+
+### Symptoms
+- User adds media to existing artifact via edit mode
+- Owner can see media, but other users cannot
+- Media files remain in Supabase Storage temp folder
+- Affects artifacts edited (not created) after Phase 2 storage migration
+
+### Root Cause
+`updateArtifact()` in `lib/actions/artifacts.ts` was missing the call to `reorganizeArtifactMedia()`.
+
+The flow was:
+1. Files upload to temp folder: `temp/{userId}/{timestamp}-{filename}`
+2. `updateArtifact()` marks uploads as saved (removes from `pending_uploads`)
+3. **Missing**: No call to `reorganizeArtifactMedia()` to move files
+4. Files remain in temp folder with user-scoped RLS policies
+
+`createArtifact()` correctly called `reorganizeArtifactMedia()`, but `updateArtifact()` did not.
+
+### Fix Applied
+**File: `lib/actions/artifacts.ts:834-846`**
+
+Added `reorganizeArtifactMedia()` call after marking uploads as saved:
+
+```typescript
+// Phase 2: Reorganize Supabase Storage media from temp to artifact folder
+console.log("[v0] UPDATE ARTIFACT - Reorganizing newly uploaded media files...")
+const reorganizeResult = await reorganizeArtifactMedia(validatedFields.data.id)
+```
+
+### Prevention Guidelines
+- When adding media upload handling, always include file reorganization
+- Test both create AND edit flows for media operations
+- Verify RLS policies allow intended access after save
+
+### User Bug Reference
+See `user-bugs.md#UB-251129-01` for original user report.
+
+---
+
 ## UI Terminology Update (November 2025)
 
 ### Change

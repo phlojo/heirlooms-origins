@@ -830,6 +830,19 @@ export async function updateArtifact(
     } else {
       console.log("[v0] UPDATE ARTIFACT - Successfully removed pending uploads from tracking table")
     }
+
+    // Phase 2: Reorganize Supabase Storage media from temp to artifact folder
+    console.log("[v0] UPDATE ARTIFACT - Reorganizing newly uploaded media files...")
+    const reorganizeResult = await reorganizeArtifactMedia(validatedFields.data.id)
+
+    if (reorganizeResult.error) {
+      console.error("[v0] UPDATE ARTIFACT - Failed to reorganize media (non-fatal):", reorganizeResult.error)
+      // Don't fail artifact update, files are still accessible from temp (for owner)
+    } else if (reorganizeResult.movedCount && reorganizeResult.movedCount > 0) {
+      console.log("[v0] UPDATE ARTIFACT - Successfully reorganized", reorganizeResult.movedCount, "media files")
+    } else {
+      console.log("[v0] UPDATE ARTIFACT - No media files needed reorganization (likely Cloudinary or already organized)")
+    }
   }
 
   revalidatePath(`/artifacts/${existingArtifact.slug}`)
