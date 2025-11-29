@@ -53,6 +53,7 @@ export function AddMediaModal({ open, onOpenChange, artifactId, userId, onMediaA
   const [error, setError] = useState<string | null>(null)
   const [uploadProgress, setUploadProgress] = useState<UploadProgress | null>(null)
   const [debugLog, setDebugLog] = useState<string[]>([])
+  const [keepOpenAfterCapture, setKeepOpenAfterCapture] = useState(false)
 
   const addDebug = (msg: string) => {
     console.log(msg)
@@ -327,7 +328,10 @@ export function AddMediaModal({ open, onOpenChange, artifactId, userId, onMediaA
         const mediaType = e.target === cameraInputRef.current ? "Photo" : "Video"
         addDebug(`Camera capture done, staying open (${mediaType})`)
         toast.success(`${mediaType} added to gallery`)
-        // Don't close - user can take more or close manually
+        // Set flag to ignore the next onOpenChange(false) from Radix
+        setKeepOpenAfterCapture(true)
+        // Reset flag after a short delay (after Radix's focus events settle)
+        setTimeout(() => setKeepOpenAfterCapture(false), 500)
       } else {
         addDebug("Regular upload done, closing")
         // Regular file upload - close modal as before
@@ -478,8 +482,14 @@ export function AddMediaModal({ open, onOpenChange, artifactId, userId, onMediaA
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => {
-      addDebug(`onOpenChange: isOpen=${isOpen}`)
-      if (!isOpen) handleClose()
+      addDebug(`onOpenChange: isOpen=${isOpen}, keepOpen=${keepOpenAfterCapture}`)
+      if (!isOpen) {
+        if (keepOpenAfterCapture) {
+          addDebug("Ignoring close request (capture mode)")
+          return // Ignore close request after camera capture
+        }
+        handleClose()
+      }
     }}>
       <DialogContent className="sm:max-w-md border-2 border-dashed border-purple-400/50" showCloseButton={false}>
         <DialogHeader className={mediaSource ? "space-y-1" : "space-y-3"}>
