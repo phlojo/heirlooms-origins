@@ -14,6 +14,7 @@ import { getFileSizeLimit, formatFileSize } from "@/lib/media"
 import { Progress } from "@/components/ui/progress"
 import { createClient } from "@/lib/supabase/client"
 import { MediaPicker } from "@/components/media-picker"
+import { toast } from "sonner"
 import { type UserMediaWithDerivatives } from "@/lib/types/media"
 
 // Phase 2: Feature flag for storage backend
@@ -311,7 +312,19 @@ export function AddMediaModal({ open, onOpenChange, artifactId, userId, onMediaA
 
       console.log("[v0] All uploads complete, URLs:", urls)
       onMediaAdded(urls)
-      handleClose()
+
+      // Check if this was a camera capture (single file from capture input)
+      const isCameraCapture = e.target === cameraInputRef.current || e.target === videoCameraInputRef.current
+
+      if (isCameraCapture) {
+        // Stay open for more captures, show success toast
+        const mediaType = e.target === cameraInputRef.current ? "Photo" : "Video"
+        toast.success(`${mediaType} added to gallery`)
+        // Don't close - user can take more or close manually
+      } else {
+        // Regular file upload - close modal as before
+        handleClose()
+      }
     } catch (err) {
       console.error("[v0] Upload error:", err)
       setError(err instanceof Error ? err.message : "Failed to upload files. Please try again.")
