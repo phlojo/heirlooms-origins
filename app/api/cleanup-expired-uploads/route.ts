@@ -1,9 +1,23 @@
 import { auditPendingUploads } from "@/lib/actions/pending-uploads"
 import { deleteCloudinaryMedia } from "@/lib/actions/cloudinary"
-import { deleteFromSupabaseStorage } from "@/lib/actions/supabase-storage"
 import { isSupabaseStorageUrl } from "@/lib/media"
-import { createClient } from "@/lib/supabase/server"
+import { createClient as createServerClient } from "@/lib/supabase/server"
+import { createClient } from "@supabase/supabase-js"
 import { NextResponse } from "next/server"
+
+// Service role client for admin operations (bypasses RLS)
+function createServiceClient() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+}
+
+// Extract file path from Supabase Storage public URL
+function extractStoragePath(publicUrl: string): string | null {
+  const match = publicUrl.match(/\/public\/[^/]+\/(.+)$/)
+  return match ? match[1] : null
+}
 
 /**
  * Cron endpoint to clean up expired uploads
@@ -26,7 +40,8 @@ export async function GET(request: Request) {
     // Audit pending uploads to identify what needs cleaning
     const audit = await auditPendingUploads()
 
-    const supabase = await createClient()
+    // Use service role client for admin operations (cron has no user session)
+    const supabase = createServiceClient()
     let deletedFromStorage = 0
     let deletedFromDatabase = 0
     let deletedUserMedia = 0
@@ -35,18 +50,27 @@ export async function GET(request: Request) {
 
     // Clean up files that are safe to delete (expired and not in use)
     for (const upload of audit.details.safeToDelete) {
-      let result: { error?: string }
+      let deleteError: string | null = null
 
       // Phase 2: Route deletion to correct storage backend
       if (isSupabaseStorageUrl(upload.url)) {
         console.log(`[v0] Cron: Deleting from Supabase Storage: ${upload.url}`)
-        result = await deleteFromSupabaseStorage(upload.url)
+        const filePath = extractStoragePath(upload.url)
+        if (filePath) {
+          const { error } = await supabase.storage
+            .from("heirlooms-media")
+            .remove([filePath])
+          if (error) deleteError = error.message
+        } else {
+          deleteError = "Invalid storage URL"
+        }
       } else {
         console.log(`[v0] Cron: Deleting from Cloudinary: ${upload.url}`)
-        result = await deleteCloudinaryMedia(upload.publicId, 'image')
+        const result = await deleteCloudinaryMedia(upload.publicId, 'image')
+        if (result.error) deleteError = result.error
       }
 
-      if (!result.error) {
+      if (!deleteError) {
         deletedFromStorage++
         successfullyDeletedUrls.push(upload.url)
       } else {
@@ -136,10 +160,15 @@ export async function GET(request: Request) {
 
           // Delete from storage first
           if (isSupabaseStorageUrl(media.public_url)) {
-            const deleteResult = await deleteFromSupabaseStorage(media.public_url)
-            if (deleteResult.error) {
-              // File might already be gone, that's OK
-              console.log(`[v0] Cron: Storage delete note: ${deleteResult.error}`)
+            const filePath = extractStoragePath(media.public_url)
+            if (filePath) {
+              const { error } = await supabase.storage
+                .from("heirlooms-media")
+                .remove([filePath])
+              if (error) {
+                // File might already be gone, that's OK
+                console.log(`[v0] Cron: Storage delete note: ${error.message}`)
+              }
             }
           }
 
