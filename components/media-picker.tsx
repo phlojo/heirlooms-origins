@@ -14,6 +14,8 @@ interface MediaPickerProps {
   onSelect: (selectedMedia: UserMediaWithDerivatives[]) => void
   multiSelect?: boolean
   filterType?: "image" | "video" | "audio"
+  /** Restrict which media types can be selected. If not specified, all types are allowed. */
+  allowedTypes?: ("image" | "video" | "audio")[]
   excludeUrls?: string[] // Media already in use
 }
 
@@ -21,8 +23,11 @@ export function MediaPicker({
   onSelect,
   multiSelect = true,
   filterType,
+  allowedTypes,
   excludeUrls = [],
 }: MediaPickerProps) {
+  // If allowedTypes is specified, use it to filter what's shown
+  const effectiveAllowedTypes = allowedTypes || ["image", "video", "audio"]
   const [allMedia, setAllMedia] = useState<UserMediaWithDerivatives[]>([])
   const [filteredMedia, setFilteredMedia] = useState<UserMediaWithDerivatives[]>([])
   const [selectedMedia, setSelectedMedia] = useState<Set<string>>(new Set())
@@ -48,8 +53,11 @@ export function MediaPicker({
           return
         }
 
-        // Filter out excluded URLs
-        const available = (data || []).filter((m) => !excludeUrls.includes(m.public_url))
+        // Filter out excluded URLs and disallowed types
+        const available = (data || []).filter((m) =>
+          !excludeUrls.includes(m.public_url) &&
+          effectiveAllowedTypes.includes(m.media_type as "image" | "video" | "audio")
+        )
         setAllMedia(available)
         setFilteredMedia(available)
       } finally {
@@ -58,7 +66,8 @@ export function MediaPicker({
     }
 
     loadMedia()
-  }, [filterType, excludeUrls])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filterType, excludeUrls, effectiveAllowedTypes.join(",")])
 
   // Filter by tab and search
   useEffect(() => {
@@ -154,14 +163,17 @@ export function MediaPicker({
         />
       </div>
 
-      {/* Type Filter Tabs */}
-      {!filterType && (
+      {/* Type Filter Tabs - only show if not pre-filtered and multiple types allowed */}
+      {!filterType && effectiveAllowedTypes.length > 1 && (
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="w-full flex-shrink-0">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className={cn(
+            "grid w-full",
+            effectiveAllowedTypes.length === 3 ? "grid-cols-4" : `grid-cols-${effectiveAllowedTypes.length + 1}`
+          )}>
             <TabsTrigger value="all">All</TabsTrigger>
-            <TabsTrigger value="image">Images</TabsTrigger>
-            <TabsTrigger value="video">Videos</TabsTrigger>
-            <TabsTrigger value="audio">Audio</TabsTrigger>
+            {effectiveAllowedTypes.includes("image") && <TabsTrigger value="image">Images</TabsTrigger>}
+            {effectiveAllowedTypes.includes("video") && <TabsTrigger value="video">Videos</TabsTrigger>}
+            {effectiveAllowedTypes.includes("audio") && <TabsTrigger value="audio">Audio</TabsTrigger>}
           </TabsList>
         </Tabs>
       )}

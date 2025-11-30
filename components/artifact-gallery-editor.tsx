@@ -5,7 +5,7 @@ import { type ArtifactMediaWithDerivatives } from "@/lib/types/media"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
-import { X, Image as ImageIcon, GripVertical, BookImage, HelpCircle, Upload, FolderOpen, Camera, Video, Mic } from "lucide-react"
+import { X, Image as ImageIcon, GripVertical, BookImage, HelpCircle, Upload, FolderOpen, Camera, Video } from "lucide-react"
 import { SectionTitle } from "@/components/ui/section-title"
 import {
   Tooltip,
@@ -144,7 +144,7 @@ export function ArtifactGalleryEditor({
 }: ArtifactGalleryEditorProps) {
   const [isPickerOpen, setIsPickerOpen] = useState(false)
   const [initialSource, setInitialSource] = useState<"new" | "existing" | null>(null)
-  const [initialAction, setInitialAction] = useState<"upload" | "camera" | "video" | "audio" | null>(null)
+  const [initialAction, setInitialAction] = useState<"upload" | "camera" | "video" | null>(null)
   const [isReordering, setIsReordering] = useState(false)
   const [items, setItems] = useState(galleryMedia)
   const [activeId, setActiveId] = useState<string | null>(null)
@@ -356,18 +356,6 @@ export function ArtifactGalleryEditor({
             >
               <Video className="h-4 w-4" />
             </Button>
-            <Button
-              onClick={() => {
-                setInitialSource(null)
-                setInitialAction("audio")
-                setIsPickerOpen(true)
-              }}
-              size="icon"
-              className="h-8 w-8 bg-purple-600 hover:bg-purple-700 text-white"
-              title="Record audio"
-            >
-              <Mic className="h-4 w-4" />
-            </Button>
           </div>
         </div>
       </div>
@@ -387,7 +375,7 @@ export function ArtifactGalleryEditor({
           </div>
           <div className="text-center">
             <p className="text-base font-semibold text-purple-600 dark:text-purple-400">Add Media to Gallery</p>
-            <p className="text-xs text-muted-foreground mt-1">Photos, videos, and audio files</p>
+            <p className="text-xs text-muted-foreground mt-1">Photos and videos</p>
             <p className="text-xs text-muted-foreground mt-1">Media carousel displayed at the top of your artifact page.</p>
           </div>
         </button>
@@ -447,7 +435,7 @@ export function ArtifactGalleryEditor({
         </div>
       )}
 
-      {/* Add Media Modal - supports both Upload New and Select Existing */}
+      {/* Add Media Modal - Gallery only allows images and videos */}
       <AddMediaModal
         open={isPickerOpen}
         onOpenChange={setIsPickerOpen}
@@ -456,6 +444,7 @@ export function ArtifactGalleryEditor({
         onMediaAdded={handleAddMedia}
         initialSource={initialSource}
         initialAction={initialAction}
+        allowedMediaTypes={["image", "video"]}
       />
 
       <style dangerouslySetInnerHTML={{

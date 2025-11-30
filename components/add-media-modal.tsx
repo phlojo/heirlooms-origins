@@ -27,6 +27,8 @@ if (typeof window !== 'undefined') {
   })
 }
 
+type MediaType = "image" | "video" | "audio"
+
 interface AddMediaModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -35,6 +37,8 @@ interface AddMediaModalProps {
   onMediaAdded: (urls: string[]) => void
   initialSource?: "new" | "existing" | null
   initialAction?: "upload" | "camera" | "video" | "audio" | null
+  /** Restrict which media types can be selected/uploaded. Defaults to all types. */
+  allowedMediaTypes?: MediaType[]
 }
 
 type MediaSource = "existing" | null
@@ -47,7 +51,21 @@ interface UploadProgress {
   estimatedTimeRemaining: number | null
 }
 
-export function AddMediaModal({ open, onOpenChange, artifactId, userId, onMediaAdded, initialSource = null, initialAction = null }: AddMediaModalProps) {
+export function AddMediaModal({
+  open,
+  onOpenChange,
+  artifactId,
+  userId,
+  onMediaAdded,
+  initialSource = null,
+  initialAction = null,
+  allowedMediaTypes = ["image", "video", "audio"],
+}: AddMediaModalProps) {
+  // Helper to check if a media type is allowed
+  const isTypeAllowed = (type: MediaType) => allowedMediaTypes.includes(type)
+  const allowsAudio = isTypeAllowed("audio")
+  const allowsVideo = isTypeAllowed("video")
+  const allowsImages = isTypeAllowed("image")
   const [mediaSource, setMediaSource] = useState<MediaSource>(initialSource === "existing" ? "existing" : null)
   const [isUploading, setIsUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -508,80 +526,123 @@ export function AddMediaModal({ open, onOpenChange, artifactId, userId, onMediaA
     })
 
     try {
-      const signatureResult = await generateCloudinaryAudioSignature(userId, fileName)
+      let secureUrl: string
 
-      if (signatureResult.error || !signatureResult.signature) {
-        throw new Error(signatureResult.error || "Failed to generate upload signature")
-      }
+      if (USE_SUPABASE_STORAGE) {
+        // Phase 2: Upload to Supabase Storage
+        console.log("[v0] Uploading audio recording to Supabase Storage:", fileName)
+        const supabase = createClient()
 
-      const formData = new FormData()
-      formData.append("file", audioBlob, fileName)
-      formData.append("public_id", signatureResult.publicId!)
-      formData.append("timestamp", signatureResult.timestamp!.toString())
-      formData.append("api_key", signatureResult.apiKey!)
-      formData.append("signature", signatureResult.signature)
-      formData.append("resource_type", "video")
+        // Generate unique path
+        const timestamp = Date.now()
+        const sanitizedName = fileName.replace(/[^a-zA-Z0-9.-]/g, "_")
+        const folder = artifactId ? `${userId}/${artifactId}` : `${userId}/temp`
+        const filePath = `${folder}/${timestamp}-${sanitizedName}`
 
-      const uploadUrl = `https://api.cloudinary.com/v1_1/${signatureResult.cloudName}/video/upload`
+        const { data, error: uploadError } = await supabase.storage
+          .from("heirlooms-media")
+          .upload(filePath, audioBlob, {
+            cacheControl: "3600",
+            upsert: false,
+            contentType: audioBlob.type || "audio/webm",
+          })
 
-      const uploadPromise = new Promise<string>((resolve, reject) => {
-        const xhr = new XMLHttpRequest()
-        const startTime = Date.now()
+        if (uploadError) {
+          throw new Error(uploadError.message || "Failed to upload audio")
+        }
 
-        xhr.upload.addEventListener("progress", (event) => {
-          if (event.lengthComputable) {
-            const percentComplete = (event.loaded / event.total) * 100
-            const elapsed = Date.now() - startTime
-            const uploadSpeed = event.loaded / elapsed
-            const remaining = event.total - event.loaded
-            const estimatedMs = remaining / uploadSpeed
+        const { data: { publicUrl } } = supabase.storage
+          .from("heirlooms-media")
+          .getPublicUrl(data.path)
 
-            setUploadProgress({
-              currentFile: 1,
-              totalFiles: 1,
-              currentFileName: fileName,
-              currentFileProgress: Math.round(percentComplete),
-              estimatedTimeRemaining: Math.round(estimatedMs / 1000),
-            })
-          }
+        secureUrl = publicUrl
+        console.log("[v0] Audio uploaded to Supabase Storage:", secureUrl)
+
+        // Report progress as complete
+        setUploadProgress({
+          currentFile: 1,
+          totalFiles: 1,
+          currentFileName: fileName,
+          currentFileProgress: 100,
+          estimatedTimeRemaining: 0,
         })
+      } else {
+        // Legacy: Upload to Cloudinary
+        const signatureResult = await generateCloudinaryAudioSignature(userId, fileName)
 
-        xhr.addEventListener("load", async () => {
-          if (xhr.status >= 200 && xhr.status < 300) {
-            try {
-              const data = JSON.parse(xhr.responseText)
-              console.log("[v0] Upload successful!")
-              console.log("[v0] Response data:", {
-                public_id: data.public_id,
-                secure_url: data.secure_url,
-                format: data.format,
-                resource_type: data.resource_type,
-                width: data.width,
-                height: data.height,
+        if (signatureResult.error || !signatureResult.signature) {
+          throw new Error(signatureResult.error || "Failed to generate upload signature")
+        }
+
+        const formData = new FormData()
+        formData.append("file", audioBlob, fileName)
+        formData.append("public_id", signatureResult.publicId!)
+        formData.append("timestamp", signatureResult.timestamp!.toString())
+        formData.append("api_key", signatureResult.apiKey!)
+        formData.append("signature", signatureResult.signature)
+        formData.append("resource_type", "video")
+
+        const uploadUrl = `https://api.cloudinary.com/v1_1/${signatureResult.cloudName}/video/upload`
+
+        const uploadPromise = new Promise<string>((resolve, reject) => {
+          const xhr = new XMLHttpRequest()
+          const startTime = Date.now()
+
+          xhr.upload.addEventListener("progress", (event) => {
+            if (event.lengthComputable) {
+              const percentComplete = (event.loaded / event.total) * 100
+              const elapsed = Date.now() - startTime
+              const uploadSpeed = event.loaded / elapsed
+              const remaining = event.total - event.loaded
+              const estimatedMs = remaining / uploadSpeed
+
+              setUploadProgress({
+                currentFile: 1,
+                totalFiles: 1,
+                currentFileName: fileName,
+                currentFileProgress: Math.round(percentComplete),
+                estimatedTimeRemaining: Math.round(estimatedMs / 1000),
               })
-              resolve(data.secure_url)
-            } catch (err) {
-              reject(new Error("Failed to parse upload response"))
             }
-          } else {
-            try {
-              const errorData = JSON.parse(xhr.responseText)
-              reject(new Error(`Failed to upload audio: ${errorData.error?.message || "Unknown error"}`))
-            } catch {
-              reject(new Error(`Audio upload failed (${xhr.status}): ${xhr.responseText.substring(0, 100)}`))
+          })
+
+          xhr.addEventListener("load", async () => {
+            if (xhr.status >= 200 && xhr.status < 300) {
+              try {
+                const data = JSON.parse(xhr.responseText)
+                console.log("[v0] Upload successful!")
+                console.log("[v0] Response data:", {
+                  public_id: data.public_id,
+                  secure_url: data.secure_url,
+                  format: data.format,
+                  resource_type: data.resource_type,
+                  width: data.width,
+                  height: data.height,
+                })
+                resolve(data.secure_url)
+              } catch (err) {
+                reject(new Error("Failed to parse upload response"))
+              }
+            } else {
+              try {
+                const errorData = JSON.parse(xhr.responseText)
+                reject(new Error(`Failed to upload audio: ${errorData.error?.message || "Unknown error"}`))
+              } catch {
+                reject(new Error(`Audio upload failed (${xhr.status}): ${xhr.responseText.substring(0, 100)}`))
+              }
             }
-          }
+          })
+
+          xhr.addEventListener("error", () => {
+            reject(new Error("Network error while uploading audio"))
+          })
+
+          xhr.open("POST", uploadUrl)
+          xhr.send(formData)
         })
 
-        xhr.addEventListener("error", () => {
-          reject(new Error("Network error while uploading audio"))
-        })
-
-        xhr.open("POST", uploadUrl)
-        xhr.send(formData)
-      })
-
-      const secureUrl = await uploadPromise
+        secureUrl = await uploadPromise
+      }
 
       await trackPendingUpload(secureUrl, "raw")
 
@@ -687,6 +748,7 @@ export function AddMediaModal({ open, onOpenChange, artifactId, userId, onMediaA
               onSelect={handleExistingMediaSelected}
               multiSelect={true}
               excludeUrls={[]} // Could pass artifact's existing media to exclude
+              allowedTypes={allowedMediaTypes}
             />
           )}
 
@@ -700,12 +762,12 @@ export function AddMediaModal({ open, onOpenChange, artifactId, userId, onMediaA
                   <span>From Device</span>
                 </div>
 
-                {/* Action buttons row */}
-                <div className="grid grid-cols-4 gap-2">
+                {/* Action buttons row - centered with flex */}
+                <div className="flex justify-center gap-2">
                   {/* Upload Button - multi-select any media */}
                   <Button
                     variant="outline"
-                    className="h-14 bg-transparent flex flex-col items-center justify-center gap-1 px-2"
+                    className="h-14 w-20 bg-transparent flex flex-col items-center justify-center gap-1 px-2"
                     onClick={handleUploadClick}
                     disabled={isUploading || isRecording}
                   >
@@ -716,7 +778,7 @@ export function AddMediaModal({ open, onOpenChange, artifactId, userId, onMediaA
                   {/* Photo Capture */}
                   <Button
                     variant="outline"
-                    className="h-14 bg-transparent flex flex-col items-center justify-center gap-1 px-2"
+                    className="h-14 w-20 bg-transparent flex flex-col items-center justify-center gap-1 px-2"
                     onClick={handleCameraCapture}
                     disabled={isUploading || isRecording}
                   >
@@ -727,7 +789,7 @@ export function AddMediaModal({ open, onOpenChange, artifactId, userId, onMediaA
                   {/* Video Capture */}
                   <Button
                     variant="outline"
-                    className="h-14 bg-transparent flex flex-col items-center justify-center gap-1 px-2"
+                    className="h-14 w-20 bg-transparent flex flex-col items-center justify-center gap-1 px-2"
                     onClick={handleVideoCameraCapture}
                     disabled={isUploading || isRecording}
                   >
@@ -735,26 +797,28 @@ export function AddMediaModal({ open, onOpenChange, artifactId, userId, onMediaA
                     <span className="text-xs">Video</span>
                   </Button>
 
-                  {/* Audio Record - shows record button or stop button */}
-                  {!isRecording ? (
-                    <Button
-                      variant="outline"
-                      className="h-14 bg-transparent flex flex-col items-center justify-center gap-1 px-2"
-                      onClick={startRecording}
-                      disabled={isUploading}
-                    >
-                      <Mic className="h-5 w-5" />
-                      <span className="text-xs">Audio</span>
-                    </Button>
-                  ) : (
-                    <Button
-                      variant="destructive"
-                      className="h-14 flex flex-col items-center justify-center gap-1 px-2"
-                      onClick={stopRecording}
-                    >
-                      <Square className="h-5 w-5" />
-                      <span className="text-xs">Stop</span>
-                    </Button>
+                  {/* Audio Record - shows record button or stop button (only if audio allowed) */}
+                  {allowsAudio && (
+                    !isRecording ? (
+                      <Button
+                        variant="outline"
+                        className="h-14 w-20 bg-transparent flex flex-col items-center justify-center gap-1 px-2"
+                        onClick={startRecording}
+                        disabled={isUploading}
+                      >
+                        <Mic className="h-5 w-5" />
+                        <span className="text-xs">Audio</span>
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="destructive"
+                        className="h-14 w-20 flex flex-col items-center justify-center gap-1 px-2"
+                        onClick={stopRecording}
+                      >
+                        <Square className="h-5 w-5" />
+                        <span className="text-xs">Stop</span>
+                      </Button>
+                    )
                   )}
                 </div>
 
@@ -788,7 +852,11 @@ export function AddMediaModal({ open, onOpenChange, artifactId, userId, onMediaA
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept="image/*,video/*,audio/*"
+                  accept={[
+                    allowsImages && "image/*",
+                    allowsVideo && "video/*",
+                    allowsAudio && "audio/*",
+                  ].filter(Boolean).join(",")}
                   multiple
                   onChange={handleMediaUpload}
                   className="hidden"

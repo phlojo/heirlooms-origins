@@ -7,6 +7,10 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { generateCloudinaryTranscriptionSignature } from "@/lib/actions/cloudinary"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { createClient } from "@/lib/supabase/client"
+
+// Feature flag: Use Supabase Storage instead of Cloudinary for audio storage
+const USE_SUPABASE_STORAGE = process.env.NEXT_PUBLIC_USE_SUPABASE_STORAGE === "true"
 
 interface TranscriptionInputProps {
   value: string
@@ -246,34 +250,64 @@ export function TranscriptionInput({
         onChange(transcription)
       }
 
+      // Upload audio recording to storage (for archival purposes)
+      // Routes to Supabase or Cloudinary based on feature flag
       const fileName = `${fieldType}-${Date.now()}.webm`
-      const signatureResult = await generateCloudinaryTranscriptionSignature(userId, fileName, fieldType, entityType)
 
-      if (signatureResult.error || !signatureResult.signature) {
-        console.error("[v0] Cloudinary signature error:", signatureResult.error)
-        console.warn("[v0] Failed to upload audio to Cloudinary, but transcription succeeded")
-        return
-      }
+      if (USE_SUPABASE_STORAGE) {
+        // Upload to Supabase Storage
+        console.log("[v0] Uploading transcription audio to Supabase Storage")
+        const supabase = createClient()
 
-      const cloudinaryFormData = new FormData()
-      cloudinaryFormData.append("file", audioBlob, fileName)
-      cloudinaryFormData.append("public_id", signatureResult.publicId!)
-      cloudinaryFormData.append("timestamp", signatureResult.timestamp!.toString())
-      cloudinaryFormData.append("api_key", signatureResult.apiKey!)
-      cloudinaryFormData.append("signature", signatureResult.signature)
+        // Store in transcriptions folder under user
+        const filePath = `${userId}/transcriptions/${fileName}`
 
-      const uploadUrl = `https://api.cloudinary.com/v1_1/${signatureResult.cloudName}/video/upload`
+        const { data, error: uploadError } = await supabase.storage
+          .from("heirlooms-media")
+          .upload(filePath, audioBlob, {
+            cacheControl: "3600",
+            upsert: false,
+            contentType: "audio/webm",
+          })
 
-      const uploadResponse = await fetch(uploadUrl, {
-        method: "POST",
-        body: cloudinaryFormData,
-      })
-
-      if (!uploadResponse.ok) {
-        console.warn("[v0] Failed to upload audio to Cloudinary, but transcription succeeded")
+        if (uploadError) {
+          console.warn("[v0] Failed to upload audio to Supabase Storage, but transcription succeeded:", uploadError.message)
+        } else {
+          const { data: { publicUrl } } = supabase.storage
+            .from("heirlooms-media")
+            .getPublicUrl(data.path)
+          console.log("[v0] Transcription audio uploaded to Supabase Storage:", publicUrl)
+        }
       } else {
-        const uploadData = await uploadResponse.json()
-        console.log("[v0] Transcription audio uploaded to Cloudinary:", uploadData.secure_url)
+        // Upload to Cloudinary (legacy path)
+        const signatureResult = await generateCloudinaryTranscriptionSignature(userId, fileName, fieldType, entityType)
+
+        if (signatureResult.error || !signatureResult.signature) {
+          console.error("[v0] Cloudinary signature error:", signatureResult.error)
+          console.warn("[v0] Failed to upload audio to Cloudinary, but transcription succeeded")
+          return
+        }
+
+        const cloudinaryFormData = new FormData()
+        cloudinaryFormData.append("file", audioBlob, fileName)
+        cloudinaryFormData.append("public_id", signatureResult.publicId!)
+        cloudinaryFormData.append("timestamp", signatureResult.timestamp!.toString())
+        cloudinaryFormData.append("api_key", signatureResult.apiKey!)
+        cloudinaryFormData.append("signature", signatureResult.signature)
+
+        const uploadUrl = `https://api.cloudinary.com/v1_1/${signatureResult.cloudName}/video/upload`
+
+        const uploadResponse = await fetch(uploadUrl, {
+          method: "POST",
+          body: cloudinaryFormData,
+        })
+
+        if (!uploadResponse.ok) {
+          console.warn("[v0] Failed to upload audio to Cloudinary, but transcription succeeded")
+        } else {
+          const uploadData = await uploadResponse.json()
+          console.log("[v0] Transcription audio uploaded to Cloudinary:", uploadData.secure_url)
+        }
       }
     } catch (error) {
       console.error("[v0] Transcription error:", error)
