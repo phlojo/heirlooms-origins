@@ -8,6 +8,7 @@ import {
   deleteCollection,
   getOrCreateUncategorizedCollection,
   getMyCollections,
+  getMyCollectionsWithThumbnails,
 } from "@/lib/actions/collections"
 import * as supabaseModule from "@/lib/supabase/server"
 
@@ -514,6 +515,52 @@ describe("Collection Server Actions", () => {
       const result = await getMyCollections(fixtures.users.validUser.id)
 
       expect(result.error).toBe("Database error")
+      expect(result.collections).toEqual([])
+    })
+  })
+
+  describe("getMyCollectionsWithThumbnails", () => {
+    it("should return empty array when user has no collections", async () => {
+      mockSupabase.from.mockImplementation(() => ({
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            order: vi.fn().mockResolvedValue({ data: [], error: null }),
+          }),
+        }),
+      }))
+
+      const result = await getMyCollectionsWithThumbnails(fixtures.users.validUser.id)
+
+      expect(result.error).toBeNull()
+      expect(result.collections).toEqual([])
+    })
+
+    it("should return error when database query fails", async () => {
+      mockSupabase.from.mockImplementation(() => ({
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            order: vi.fn().mockResolvedValue({
+              data: null,
+              error: { message: "Database error" },
+            }),
+          }),
+        }),
+      }))
+
+      const result = await getMyCollectionsWithThumbnails(fixtures.users.validUser.id)
+
+      expect(result.error).toBe("Database error")
+      expect(result.collections).toEqual([])
+    })
+
+    it("should handle unexpected exceptions gracefully", async () => {
+      mockSupabase.from.mockImplementation(() => {
+        throw new Error("Unexpected database error")
+      })
+
+      const result = await getMyCollectionsWithThumbnails(fixtures.users.validUser.id)
+
+      expect(result.error).toBe("Failed to fetch collections")
       expect(result.collections).toEqual([])
     })
   })

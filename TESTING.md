@@ -92,7 +92,7 @@ __tests__/
 
 ## Test Files Included
 
-**Current Status:** 528 passing tests, 14 skipped (in 20 test files)
+**Current Status:** 558 passing tests, 14 skipped (in 21 test files)
 
 ### Unit Tests
 
@@ -203,6 +203,18 @@ __tests__/
 
 **Status:** ✅ All 21 tests passing
 
+#### Collection Picker (`__tests__/components/ui/collection-picker.test.tsx`)
+
+- **27 tests** covering the Collection Picker component
+- Tests for `CollectionPickerCard` rendering (title, item count, thumbnails)
+- Tests for thumbnail grid layouts (1, 2, 3, 4+ images)
+- Tests for selection state styling and interaction
+- Tests for uncategorized vs regular collection icons
+- Tests for URL filtering and cloudinary thumbnail transforms
+- Note: Full `CollectionPicker` async tests are simplified to avoid complex mock chains
+
+**Status:** ✅ All 27 tests passing
+
 ### Integration Tests
 
 #### Transcribe API (`__tests__/integration/api/transcribe.test.ts`)
@@ -233,7 +245,7 @@ __tests__/
 
 **Phase 2: Additional Server Actions**
 
-- ✅ `__tests__/unit/actions/collections.test.ts` - Collection operations (22 tests)
+- ✅ `__tests__/unit/actions/collections.test.ts` - Collection operations (25 tests, includes getMyCollectionsWithThumbnails)
 - ✅ `__tests__/unit/actions/pending-uploads.test.ts` - Upload tracking (23 tests)
 - ✅ `__tests__/unit/actions/media-reorganize.test.ts` - Media reorganization (14 tests)
 - ✅ `__tests__/unit/actions/supabase-storage.test.ts` - Supabase Storage operations (26 tests)

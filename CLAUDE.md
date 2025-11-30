@@ -205,7 +205,7 @@ All inputs validated with Zod schemas in `lib/schemas.ts`:
 **Pattern**: AI metadata stored as JSONB maps keyed by media URL. Use `lib/ai.ts` for OpenAI SDK integration.
 
 ### Testing Infrastructure
-**Current status**: Phases 1-3 complete (169 tests, 66% coverage)
+**Current status**: 558 tests passing (21 test files)
 
 **Test structure**:
 \`\`\`

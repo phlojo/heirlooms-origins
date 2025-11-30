@@ -38,10 +38,10 @@ describe("Integration: Collection Workflows", () => {
         user_id: fixtures.users.validUser.id,
       }
 
-      const supabase = await createClient()
+      const supabase = await createClient() as any as any
       expect(supabase).toBeDefined()
 
-      const insertMock = supabase.collections.insert as any
+      const insertMock = supabase.collections.insert
       insertMock(collectionData)
 
       expect(insertMock).toHaveBeenCalledWith(
@@ -70,8 +70,8 @@ describe("Integration: Collection Workflows", () => {
       })
       vi.mocked(createClient).mockResolvedValue(mockSupabase)
 
-      const supabase = await createClient()
-      const insertMock = supabase.collections.insert as any
+      const supabase = await createClient() as any as any
+      const insertMock = supabase.collections.insert
       insertMock({
         title: "New Collection",
         user_id: fixtures.users.validUser.id,
@@ -115,8 +115,8 @@ describe("Integration: Collection Workflows", () => {
 
       vi.mocked(createClient).mockResolvedValue(mockSupabase)
 
-      const supabase = await createClient()
-      const insertMock = supabase.collections.insert as any
+      const supabase = await createClient() as any as any
+      const insertMock = supabase.collections.insert
       insertMock({ user_id: userId })
 
       expect(insertMock).toHaveBeenCalledWith(
@@ -148,7 +148,7 @@ describe("Integration: Collection Workflows", () => {
         title: "Updated Collection Title",
       }
 
-      const supabase = await createClient()
+      const supabase = await createClient() as any
       supabase.collections.update(updateData).eq("id", collectionId)
 
       expect(updateMock).toHaveBeenCalledWith(updateData)
@@ -171,7 +171,7 @@ describe("Integration: Collection Workflows", () => {
       vi.mocked(createClient).mockResolvedValue(mockSupabase)
 
       const description = "Updated collection description"
-      const supabase = await createClient()
+      const supabase = await createClient() as any
       supabase.collections.update({ description }).eq("id", collectionId)
 
       expect(updateMock).toHaveBeenCalledWith(
@@ -197,7 +197,7 @@ describe("Integration: Collection Workflows", () => {
 
       vi.mocked(createClient).mockResolvedValue(mockSupabase)
 
-      const supabase = await createClient()
+      const supabase = await createClient() as any
       supabase.collections.update({ is_public: false }).eq("id", collectionId)
 
       expect(updateMock).toHaveBeenCalledWith(
@@ -224,7 +224,7 @@ describe("Integration: Collection Workflows", () => {
       vi.mocked(createClient).mockResolvedValue(mockSupabase)
 
       const coverImage = "https://example.com/cover.jpg"
-      const supabase = await createClient()
+      const supabase = await createClient() as any
       supabase.collections.update({ cover_image: coverImage }).eq("id", collectionId)
 
       expect(updateMock).toHaveBeenCalledWith(
@@ -252,7 +252,7 @@ describe("Integration: Collection Workflows", () => {
 
       vi.mocked(createClient).mockResolvedValue(mockSupabase)
 
-      const supabase = await createClient()
+      const supabase = await createClient() as any
       supabase.collections.delete().eq("id", collectionId)
 
       expect(deleteMock).toHaveBeenCalled()
@@ -279,7 +279,7 @@ describe("Integration: Collection Workflows", () => {
 
       vi.mocked(createClient).mockResolvedValue(mockSupabase)
 
-      const supabase = await createClient()
+      const supabase = await createClient() as any
       // First delete artifacts in collection
       supabase.artifacts.delete().eq("collection_id", collectionId)
       // Then delete collection
@@ -309,7 +309,7 @@ describe("Integration: Collection Workflows", () => {
 
       vi.mocked(createClient).mockResolvedValue(mockSupabase)
 
-      const supabase = await createClient()
+      const supabase = await createClient() as any
       const { data } = await supabase.from("collections").select().eq("id", collectionId).single()
 
       expect(data).toBeDefined()
@@ -338,7 +338,7 @@ describe("Integration: Collection Workflows", () => {
 
       vi.mocked(createClient).mockResolvedValue(mockSupabase)
 
-      const supabase = await createClient()
+      const supabase = await createClient() as any
       const { data } = await supabase
         .from("collections")
         .select()
@@ -367,7 +367,7 @@ describe("Integration: Collection Workflows", () => {
 
       vi.mocked(createClient).mockResolvedValue(mockSupabase)
 
-      const supabase = await createClient()
+      const supabase = await createClient() as any
       const { data } = await supabase
         .from("collections")
         .select()
@@ -399,7 +399,7 @@ describe("Integration: Collection Workflows", () => {
 
       vi.mocked(createClient).mockResolvedValue(mockSupabase)
 
-      const supabase = await createClient()
+      const supabase = await createClient() as any
       const { data } = await supabase
         .from("collections")
         .select("*, itemCount:artifacts(count)")
@@ -428,7 +428,7 @@ describe("Integration: Collection Workflows", () => {
 
       vi.mocked(createClient).mockResolvedValue(mockSupabase)
 
-      const supabase = await createClient()
+      const supabase = await createClient() as any
       const { data } = await supabase.from("collections").select().ilike("title", `%${searchTerm}%`)
 
       expect(data).toBeDefined()
@@ -450,7 +450,7 @@ describe("Integration: Collection Workflows", () => {
 
       vi.mocked(createClient).mockResolvedValue(mockSupabase)
 
-      const supabase = await createClient()
+      const supabase = await createClient() as any
       const { data } = await supabase.from("collections").select().eq("is_public", true)
 
       expect(data).toBeDefined()
@@ -475,7 +475,7 @@ describe("Integration: Collection Workflows", () => {
 
       vi.mocked(createClient).mockResolvedValue(mockSupabase)
 
-      const supabase = await createClient()
+      const supabase = await createClient() as any
       const { data } = await supabase
         .from("collections")
         .select()
@@ -504,7 +504,7 @@ describe("Integration: Collection Workflows", () => {
 
       vi.mocked(createClient).mockResolvedValue(mockSupabase)
 
-      const supabase = await createClient()
+      const supabase = await createClient() as any
       supabase.artifacts.update({ collection_id: collectionId }).eq("id", artifactId)
 
       expect(updateMock).toHaveBeenCalled()
@@ -528,7 +528,7 @@ describe("Integration: Collection Workflows", () => {
 
       vi.mocked(createClient).mockResolvedValue(mockSupabase)
 
-      const supabase = await createClient()
+      const supabase = await createClient() as any
       supabase.artifacts.update({ collection_id: toCollectionId }).eq("id", artifactId)
 
       expect(updateMock).toHaveBeenCalled()
@@ -550,7 +550,7 @@ describe("Integration: Collection Workflows", () => {
 
       vi.mocked(createClient).mockResolvedValue(mockSupabase)
 
-      const supabase = await createClient()
+      const supabase = await createClient() as any
       supabase.artifacts.update({ collection_id: null }).eq("id", artifactId)
 
       expect(updateMock).toHaveBeenCalled()
@@ -576,7 +576,7 @@ describe("Integration: Collection Workflows", () => {
 
       vi.mocked(createClient).mockResolvedValue(mockSupabase)
 
-      const supabase = await createClient()
+      const supabase = await createClient() as any
       const { data, error } = await supabase
         .from("collections")
         .select()
@@ -602,7 +602,7 @@ describe("Integration: Collection Workflows", () => {
 
       vi.mocked(createClient).mockResolvedValue(mockSupabase)
 
-      const supabase = await createClient()
+      const supabase = await createClient() as any
       const { error } = await supabase
         .from("collections")
         .update({ title: "New Title" })
@@ -627,7 +627,7 @@ describe("Integration: Collection Workflows", () => {
 
       vi.mocked(createClient).mockResolvedValue(mockSupabase)
 
-      const supabase = await createClient()
+      const supabase = await createClient() as any
 
       // Simulate concurrent updates
       await Promise.all([

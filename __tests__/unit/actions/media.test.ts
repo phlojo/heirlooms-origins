@@ -522,7 +522,7 @@ describe("Media Server Actions", () => {
           role: "gallery" as const,
         }
 
-        const result = await createArtifactMediaLink(input)
+        const result = await createArtifactMediaLink(input as any)
 
         expect(result.error).toBe("Invalid input")
       })
@@ -534,7 +534,7 @@ describe("Media Server Actions", () => {
           role: "gallery" as const,
         }
 
-        const result = await createArtifactMediaLink(input)
+        const result = await createArtifactMediaLink(input as any)
 
         expect(result.error).toBe("Invalid input")
       })
@@ -546,7 +546,7 @@ describe("Media Server Actions", () => {
           role: "invalid" as any,
         }
 
-        const result = await createArtifactMediaLink(input)
+        const result = await createArtifactMediaLink(input as any)
 
         expect(result.error).toBe("Invalid input")
       })
@@ -565,7 +565,7 @@ describe("Media Server Actions", () => {
           role: "gallery" as const,
         }
 
-        const result = await createArtifactMediaLink(input)
+        const result = await createArtifactMediaLink(input as any)
 
         expect(result.error).toBe("Unauthorized")
       })
@@ -600,7 +600,7 @@ describe("Media Server Actions", () => {
           role: "gallery" as const,
         }
 
-        const result = await createArtifactMediaLink(input)
+        const result = await createArtifactMediaLink(input as any)
 
         expect(result.error).toBe("Unauthorized - artifact not found or access denied")
       })
@@ -640,7 +640,7 @@ describe("Media Server Actions", () => {
           role: "gallery" as const,
         }
 
-        const result = await createArtifactMediaLink(input)
+        const result = await createArtifactMediaLink(input as any)
 
         expect(result.error).toBe("Media not found")
       })
@@ -705,7 +705,7 @@ describe("Media Server Actions", () => {
           role: "gallery" as const,
         }
 
-        const result = await createArtifactMediaLink(input)
+        const result = await createArtifactMediaLink(input as any)
 
         expect(result.error).toBeUndefined()
         expect(result.data).toBeDefined()

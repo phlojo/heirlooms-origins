@@ -286,7 +286,7 @@ describe.skip("API: /api/analyze/images", () => {
       })
       vi.mocked(createClient).mockResolvedValue(mockSupabase)
 
-      vi.mocked(generateText).mockResolvedValue({ text: "Test caption" })
+      vi.mocked(generateText).mockResolvedValue({ text: "Test caption" } as any)
 
       global.fetch = vi.fn().mockResolvedValue({
         ok: true,
@@ -331,7 +331,7 @@ describe.skip("API: /api/analyze/images", () => {
       })
       vi.mocked(createClient).mockResolvedValue(mockSupabase)
 
-      vi.mocked(generateText).mockResolvedValue({ text: "Test caption" })
+      vi.mocked(generateText).mockResolvedValue({ text: "Test caption" } as any)
 
       global.fetch = vi.fn().mockResolvedValue({
         ok: true,
@@ -425,7 +425,7 @@ describe.skip("API: /api/analyze/images", () => {
       })
       vi.mocked(createClient).mockResolvedValue(mockSupabase)
 
-      vi.mocked(generateText).mockResolvedValue({ text: "Test caption" })
+      vi.mocked(generateText).mockResolvedValue({ text: "Test caption" } as any)
 
       global.fetch = vi.fn().mockResolvedValue({
         ok: true,

@@ -51,7 +51,7 @@ describe("Integration: Artifact Workflows", () => {
 
       // In a real scenario, you'd call createArtifact here
       // This demonstrates the pattern for testing
-      const supabase = await createClient()
+      const supabase = await createClient() as any
 
       expect(supabase).toBeDefined()
       expect(mockSupabase.artifacts).toBeDefined()
@@ -105,7 +105,7 @@ describe("Integration: Artifact Workflows", () => {
 
       vi.mocked(createClient).mockResolvedValue(mockSupabase)
 
-      const supabase = await createClient()
+      const supabase = await createClient() as any
       expect(supabase).toBeDefined()
     })
 
@@ -131,7 +131,7 @@ describe("Integration: Artifact Workflows", () => {
 
       vi.mocked(createClient).mockResolvedValue(mockSupabase)
 
-      const supabase = await createClient()
+      const supabase = await createClient() as any
       const insertMock = supabase.artifacts.insert as any
       insertMock({ collection_id: collectionId })
 
@@ -165,7 +165,7 @@ describe("Integration: Artifact Workflows", () => {
         description: "Updated description",
       }
 
-      const supabase = await createClient()
+      const supabase = await createClient() as any
       supabase.artifacts.update(updateData).eq("id", artifactId)
 
       expect(updateMock).toHaveBeenCalledWith(updateData)
@@ -233,7 +233,7 @@ describe("Integration: Artifact Workflows", () => {
         ...aiContent,
       }
 
-      const supabase = await createClient()
+      const supabase = await createClient() as any
       supabase.artifacts.update(updateData).eq("id", artifactId)
 
       expect(updateMock).toHaveBeenCalledWith(
@@ -261,7 +261,7 @@ describe("Integration: Artifact Workflows", () => {
 
       vi.mocked(createClient).mockResolvedValue(mockSupabase)
 
-      const supabase = await createClient()
+      const supabase = await createClient() as any
       supabase.artifacts.delete().eq("id", artifactId)
 
       expect(deleteMock).toHaveBeenCalled()
@@ -290,7 +290,7 @@ describe("Integration: Artifact Workflows", () => {
 
       vi.mocked(createClient).mockResolvedValue(mockSupabase)
 
-      const supabase = await createClient()
+      const supabase = await createClient() as any
 
       // Simulate cleanup workflow
       const bucket = supabase.storage.from("artifacts")
@@ -320,7 +320,7 @@ describe("Integration: Artifact Workflows", () => {
 
       vi.mocked(createClient).mockResolvedValue(mockSupabase)
 
-      const supabase = await createClient()
+      const supabase = await createClient() as any
       const { data } = await supabase.from("artifacts").select().eq("id", artifactId).single()
 
       expect(data).toBeDefined()
@@ -346,7 +346,7 @@ describe("Integration: Artifact Workflows", () => {
 
       vi.mocked(createClient).mockResolvedValue(mockSupabase)
 
-      const supabase = await createClient()
+      const supabase = await createClient() as any
       const { data } = await supabase
         .from("artifacts")
         .select()
@@ -374,7 +374,7 @@ describe("Integration: Artifact Workflows", () => {
 
       vi.mocked(createClient).mockResolvedValue(mockSupabase)
 
-      const supabase = await createClient()
+      const supabase = await createClient() as any
       const pageSize = 10
       const pageNumber = 0
 
@@ -405,7 +405,7 @@ describe("Integration: Artifact Workflows", () => {
 
       vi.mocked(createClient).mockResolvedValue(mockSupabase)
 
-      const supabase = await createClient()
+      const supabase = await createClient() as any
       const { data } = await supabase.from("artifacts").select().ilike("title", `%${searchTerm}%`)
 
       expect(data).toBeDefined()
@@ -428,7 +428,7 @@ describe("Integration: Artifact Workflows", () => {
 
       vi.mocked(createClient).mockResolvedValue(mockSupabase)
 
-      const supabase = await createClient()
+      const supabase = await createClient() as any
       const { data } = await supabase.from("artifacts").select().eq("year_acquired", year)
 
       expect(data).toBeDefined()
@@ -451,7 +451,7 @@ describe("Integration: Artifact Workflows", () => {
 
       vi.mocked(createClient).mockResolvedValue(mockSupabase)
 
-      const supabase = await createClient()
+      const supabase = await createClient() as any
       const { data } = await supabase.from("artifacts").select().eq("type_id", typeId)
 
       expect(data).toBeDefined()
@@ -477,7 +477,7 @@ describe("Integration: Artifact Workflows", () => {
 
       vi.mocked(createClient).mockResolvedValue(mockSupabase)
 
-      const supabase = await createClient()
+      const supabase = await createClient() as any
       const { data, error } = await supabase
         .from("artifacts")
         .select()
@@ -503,7 +503,7 @@ describe("Integration: Artifact Workflows", () => {
 
       vi.mocked(createClient).mockResolvedValue(mockSupabase)
 
-      const supabase = await createClient()
+      const supabase = await createClient() as any
       const { error } = await supabase
         .from("artifacts")
         .update({ title: "New Title" })
@@ -525,7 +525,7 @@ describe("Integration: Artifact Workflows", () => {
 
       vi.mocked(createClient).mockResolvedValue(mockSupabase)
 
-      const supabase = await createClient()
+      const supabase = await createClient() as any
 
       try {
         await supabase.from("artifacts").select().eq("id", "test")

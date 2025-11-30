@@ -76,15 +76,16 @@ export const mockCloudinaryAPI = {
  * Setup Cloudinary mock fetch responses
  */
 export const setupCloudinaryMocks = () => {
-  global.fetch = vi.fn((url: string, options: any) => {
-    if (url.includes("/api/cloudinary-signature")) {
+  global.fetch = vi.fn((url: RequestInfo | URL, options?: RequestInit) => {
+    const urlString = typeof url === "string" ? url : url.toString()
+    if (urlString.includes("/api/cloudinary-signature")) {
       return Promise.resolve(new Response(JSON.stringify(mockCloudinarySignature)))
     }
-    if (url.includes("cloudinary.com") && options?.method === "POST") {
+    if (urlString.includes("cloudinary.com") && options?.method === "POST") {
       return Promise.resolve(new Response(JSON.stringify(mockCloudinaryUpload)))
     }
     return Promise.reject(new Error("Unknown fetch URL"))
-  })
+  }) as typeof fetch
 
   return mockCloudinaryAPI
 }

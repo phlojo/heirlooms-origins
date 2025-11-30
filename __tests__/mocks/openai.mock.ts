@@ -62,20 +62,20 @@ export const mockOpenAIAPI = {
  * Setup OpenAI mock fetch responses
  */
 export const setupOpenAIMocks = () => {
-  global.fetch = vi.fn((url: string, options: any) => {
-    const body = options?.body ? JSON.parse(options.body) : {}
+  global.fetch = vi.fn((url: RequestInfo | URL, options?: RequestInit) => {
+    const urlString = typeof url === "string" ? url : url.toString()
 
-    if (url.includes("openai.com")) {
-      if (url.includes("/v1/chat/completions")) {
+    if (urlString.includes("openai.com")) {
+      if (urlString.includes("/v1/chat/completions")) {
         return Promise.resolve(new Response(JSON.stringify(mockOpenAITextCompletion)))
       }
-      if (url.includes("/v1/audio/transcriptions")) {
+      if (urlString.includes("/v1/audio/transcriptions")) {
         return Promise.resolve(new Response(JSON.stringify(mockOpenAITranscription)))
       }
     }
 
     return Promise.reject(new Error("Unknown fetch URL"))
-  })
+  }) as typeof fetch
 
   return mockOpenAIAPI
 }
