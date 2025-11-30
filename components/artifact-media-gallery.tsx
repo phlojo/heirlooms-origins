@@ -1,36 +1,108 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
-// Note: useState kept for imageFitModes, useRef for flickityInstance and galleryRef
+import { useEffect, useRef, useState, useCallback } from "react"
 import "flickity/css/flickity.css"
 import { type ArtifactMediaWithDerivatives } from "@/lib/types/media"
 import { isImageMedia, isVideoMedia } from "@/lib/types/media"
 import { cn } from "@/lib/utils"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { FullscreenImageViewer } from "@/components/fullscreen-image-viewer"
 
 // Dynamic import type for Flickity
-type FlickityType = typeof import("flickity").default
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type FlickityType = any
 
-// Gallery image - simple and reliable
+// Gallery image component that opens fullscreen on tap
+// Filmstrip style - image height fills container, width is auto
 function GalleryImage({
   src,
   alt,
-  className,
   loading,
+  onTap,
 }: {
   src: string
   alt: string
-  className?: string
   loading?: "eager" | "lazy"
+  onTap: (rect: DOMRect) => void
 }) {
+  const imgRef = useRef<HTMLImageElement>(null)
+  // Use refs instead of state to avoid re-renders that cause flicker
+  const isDraggingRef = useRef(false)
+  const dragStartRef = useRef({ x: 0, y: 0 })
+  const hasMovedRef = useRef(false)
+
+  const handlePointerDown = useCallback((e: React.PointerEvent) => {
+    // Only track for tap detection, don't prevent default (let Flickity handle dragging)
+    dragStartRef.current = {
+      x: e.clientX,
+      y: e.clientY,
+    }
+    hasMovedRef.current = false
+    isDraggingRef.current = true
+  }, [])
+
+  const handlePointerMove = useCallback((e: React.PointerEvent) => {
+    if (!isDraggingRef.current) return
+
+    const deltaX = e.clientX - dragStartRef.current.x
+    const deltaY = e.clientY - dragStartRef.current.y
+
+    // Check if moved significantly (more than 10px from start)
+    if (Math.abs(deltaX) > 10 || Math.abs(deltaY) > 10) {
+      hasMovedRef.current = true
+    }
+  }, [])
+
+  const handlePointerUp = useCallback(() => {
+    const hasMoved = hasMovedRef.current
+    isDraggingRef.current = false
+
+    // If we moved significantly, this was a swipe, not a tap
+    if (hasMoved) return
+
+    // This is a tap - open fullscreen
+    if (imgRef.current) {
+      const rect = imgRef.current.getBoundingClientRect()
+      onTap(rect)
+    }
+  }, [onTap])
+
   return (
     <img
+      ref={imgRef}
       src={src}
       alt={alt}
-      className={className}
       loading={loading}
+      draggable={false}
+      className="gallery-cell h-full w-auto object-cover select-none rounded cursor-pointer"
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
     />
+  )
+}
+
+// Gallery video component - filmstrip style
+function GalleryVideo({
+  src,
+  poster,
+  preload,
+}: {
+  src: string
+  poster?: string
+  preload: "metadata" | "none"
+}) {
+  return (
+    <video
+      src={src}
+      controls
+      className="gallery-cell h-full w-auto rounded"
+      preload={preload}
+      poster={poster}
+    >
+      Your browser does not support the video tag.
+    </video>
   )
 }
 
@@ -39,22 +111,33 @@ interface ArtifactMediaGalleryProps {
   className?: string
   initialIndex?: number
   onMediaChange?: (index: number) => void
+  onFullscreenChange?: (isFullscreen: boolean) => void
 }
 
 /**
  * Flickity-based media gallery for artifact detail pages
  * Displays media in a horizontal carousel with touch/swipe support
+ *
+ * Tap behavior:
+ * - Tap on image: Opens fullscreen viewer with animated transition
  */
 export function ArtifactMediaGallery({
   media,
   className,
   initialIndex = 0,
   onMediaChange,
+  onFullscreenChange,
 }: ArtifactMediaGalleryProps) {
   const galleryRef = useRef<HTMLDivElement>(null)
   const flickityInstance = useRef<InstanceType<FlickityType> | null>(null)
   const [currentIndex, setCurrentIndex] = useState(initialIndex)
-  const [imageFitModes, setImageFitModes] = useState<Record<string, 'cover' | 'contain'>>({})
+
+  // Fullscreen viewer state
+  const [fullscreenImage, setFullscreenImage] = useState<{
+    src: string
+    alt: string
+    sourceRect: DOMRect | null
+  } | null>(null)
 
   // Initialize Flickity
   useEffect(() => {
@@ -67,21 +150,25 @@ export function ArtifactMediaGallery({
 
       if (!galleryRef.current) return
 
-      // Initialize Flickity with options
+      // Initialize Flickity with options for filmstrip layout
       const flkty = new Flickity(galleryRef.current, {
-        cellAlign: "center",
-        contain: true,
+        cellAlign: "center", // Center current image
+        contain: false, // Allow partial images at edges
         prevNextButtons: false, // We'll use custom buttons
-        pageDots: media.length > 1,
+        pageDots: media.length > 1, // Show dots for navigation
         draggable: media.length > 1,
+        freeScroll: false, // Snap to images for centered behavior
         wrapAround: false,
-        adaptiveHeight: true,
+        adaptiveHeight: false,
         initialIndex: initialIndex,
         imagesLoaded: true,
-        lazyLoad: 2, // Load 2 ahead
+        lazyLoad: 2,
         accessibility: true,
-        setGallerySize: true,
+        setGallerySize: false,
         percentPosition: false,
+        cellSelector: '.gallery-cell',
+        selectedAttraction: 0.025, // Smooth animation
+        friction: 0.28, // Smooth deceleration
       })
 
       flickityInstance.current = flkty
@@ -117,16 +204,21 @@ export function ArtifactMediaGallery({
     flickityInstance.current?.next()
   }
 
-  const toggleImageFit = (mediaId: string) => {
-    setImageFitModes(prev => ({
-      ...prev,
-      [mediaId]: prev[mediaId] === 'contain' ? 'cover' : 'contain'
-    }))
-  }
+  // Handle image tap to open fullscreen
+  const handleImageTap = useCallback((src: string, alt: string, rect: DOMRect) => {
+    setFullscreenImage({ src, alt, sourceRect: rect })
+    onFullscreenChange?.(true)
+  }, [onFullscreenChange])
+
+  // Close fullscreen viewer
+  const handleCloseFullscreen = useCallback(() => {
+    setFullscreenImage(null)
+    onFullscreenChange?.(false)
+  }, [onFullscreenChange])
 
   if (media.length === 0) {
     return (
-      <div className="flex h-64 w-full items-center justify-center rounded-lg bg-muted">
+      <div className="flex h-64 w-full items-center justify-center rounded bg-muted">
         <p className="text-sm text-muted-foreground">No media available</p>
       </div>
     )
@@ -135,106 +227,117 @@ export function ArtifactMediaGallery({
   const showNavButtons = media.length > 1
 
   return (
-    <div className={cn("relative w-full", className)}>
-      {/* Custom Previous Button */}
-      {showNavButtons && currentIndex > 0 && (
-        <Button
-          variant="outline"
-          size="icon"
-          className="absolute left-4 top-1/2 z-10 h-10 w-10 -translate-y-1/2 rounded-full bg-background/80 shadow-lg backdrop-blur-sm hover:bg-accent"
-          onClick={handlePrevious}
-          aria-label="Previous media"
-        >
-          <ChevronLeft className="h-5 w-5" />
-        </Button>
-      )}
+    <>
+      <div className={cn("relative w-full", className)}>
+        {/* Custom Previous Button */}
+        {showNavButtons && currentIndex > 0 && (
+          <Button
+            variant="outline"
+            size="icon"
+            className="absolute left-4 top-1/2 z-10 h-10 w-10 -translate-y-1/2 rounded-full bg-background/80 shadow-lg backdrop-blur-sm hover:bg-accent"
+            onClick={handlePrevious}
+            aria-label="Previous media"
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </Button>
+        )}
 
-      {/* Custom Next Button */}
-      {showNavButtons && currentIndex < media.length - 1 && (
-        <Button
-          variant="outline"
-          size="icon"
-          className="absolute right-4 top-1/2 z-10 h-10 w-10 -translate-y-1/2 rounded-full bg-background/80 shadow-lg backdrop-blur-sm hover:bg-accent"
-          onClick={handleNext}
-          aria-label="Next media"
-        >
-          <ChevronRight className="h-5 w-5" />
-        </Button>
-      )}
+        {/* Custom Next Button */}
+        {showNavButtons && currentIndex < media.length - 1 && (
+          <Button
+            variant="outline"
+            size="icon"
+            className="absolute right-4 top-1/2 z-10 h-10 w-10 -translate-y-1/2 rounded-full bg-background/80 shadow-lg backdrop-blur-sm hover:bg-accent"
+            onClick={handleNext}
+            aria-label="Next media"
+          >
+            <ChevronRight className="h-5 w-5" />
+          </Button>
+        )}
 
-      {/* Flickity Gallery Container */}
-      <div ref={galleryRef} className="artifact-media-gallery">
-        {media.map((item) => {
-          const mediaData = item.media
+        {/* Flickity Gallery Container - Filmstrip layout */}
+        <div ref={galleryRef} className="artifact-media-gallery aspect-[4/3] mb-10 bg-purple-500/5">
+          {media.map((item) => {
+            const mediaData = item.media
+            const imageSrc = mediaData.largeUrl || mediaData.mediumUrl || mediaData.public_url
+            const displaySrc = mediaData.mediumUrl || mediaData.public_url
 
-          return (
-            <div key={item.id} className="gallery-cell w-full h-full flex flex-col">
-              {isImageMedia(mediaData) && (
-                <div
-                  className="relative w-full flex-1 overflow-hidden rounded bg-muted flex items-center justify-center cursor-pointer"
-                  onClick={() => toggleImageFit(item.id)}
-                  title="Tap to toggle between fill and fit modes"
-                >
-                  <GalleryImage
-                    src={mediaData.mediumUrl || mediaData.public_url}
-                    alt={item.caption_override || `Media ${item.sort_order + 1}`}
-                    className={`max-h-full max-w-full ${
-                      imageFitModes[item.id] === 'contain' ? 'object-contain' : 'object-cover w-full h-full'
-                    }`}
-                    loading={item.sort_order <= 1 ? "eager" : "lazy"}
-                  />
-                </div>
-              )}
+            if (isImageMedia(mediaData)) {
+              return (
+                <GalleryImage
+                  key={item.id}
+                  src={displaySrc}
+                  alt={item.caption_override || `Media ${item.sort_order + 1}`}
+                  loading={item.sort_order <= 1 ? "eager" : "lazy"}
+                  onTap={(rect) => handleImageTap(
+                    imageSrc, // Use large version for fullscreen
+                    item.caption_override || `Media ${item.sort_order + 1}`,
+                    rect
+                  )}
+                />
+              )
+            }
 
-              {isVideoMedia(mediaData) && (
-                <div className="relative w-full flex-1 overflow-hidden rounded bg-black flex items-center justify-center">
-                  <video
-                    src={mediaData.public_url}
-                    controls
-                    className="max-h-full max-w-full"
-                    preload={item.sort_order === 0 ? "metadata" : "none"}
-                    poster={mediaData.thumbnailUrl}
-                  >
-                    Your browser does not support the video tag.
-                  </video>
-                </div>
-              )}
+            if (isVideoMedia(mediaData)) {
+              return (
+                <GalleryVideo
+                  key={item.id}
+                  src={mediaData.public_url}
+                  poster={mediaData.thumbnailUrl}
+                  preload={item.sort_order === 0 ? "metadata" : "none"}
+                />
+              )
+            }
 
-              {/* Caption */}
-              {item.caption_override && (
-                <p className="mt-3 text-center text-sm text-muted-foreground">{item.caption_override}</p>
-              )}
-            </div>
-          )
-        })}
+            return null
+          })}
+        </div>
+
+        <style dangerouslySetInnerHTML={{
+          __html: `
+            .artifact-media-gallery .flickity-viewport {
+              height: 100% !important;
+              border-radius: 4px;
+              overflow: hidden;
+            }
+            .artifact-media-gallery .flickity-slider {
+              height: 100% !important;
+            }
+            .artifact-media-gallery .gallery-cell {
+              height: 100% !important;
+              margin-right: 4px;
+            }
+            .artifact-media-gallery .gallery-cell:last-child {
+              margin-right: 0;
+            }
+            .artifact-media-gallery .flickity-page-dots {
+              bottom: -24px !important;
+            }
+            .artifact-media-gallery .flickity-page-dot {
+              width: 8px !important;
+              height: 8px !important;
+              opacity: 0.4 !important;
+              background: #9ca3af !important;
+              border: 1px solid #d1d5db !important;
+            }
+            .artifact-media-gallery .flickity-page-dot.is-selected {
+              opacity: 1 !important;
+              background: #ffffff !important;
+              border-color: #ffffff !important;
+            }
+          `
+        }} />
       </div>
 
-      <style dangerouslySetInnerHTML={{
-        __html: `
-          .artifact-media-gallery .flickity-viewport {
-            border-radius: 0.25rem !important;
-            overflow: hidden !important;
-          }
-          .artifact-media-gallery .flickity-page-dots {
-            margin-top: 8px !important;
-            margin-bottom: 16px !important;
-            bottom: auto !important;
-            position: relative !important;
-          }
-          .artifact-media-gallery .flickity-page-dot {
-            width: 8px !important;
-            height: 8px !important;
-            opacity: 0.4 !important;
-            background: #9ca3af !important;
-            border: 1px solid #d1d5db !important;
-          }
-          .artifact-media-gallery .flickity-page-dot.is-selected {
-            opacity: 1 !important;
-            background: #ffffff !important;
-            border-color: #ffffff !important;
-          }
-        `
-      }} />
-    </div>
+      {/* Fullscreen Image Viewer */}
+      {fullscreenImage && (
+        <FullscreenImageViewer
+          src={fullscreenImage.src}
+          alt={fullscreenImage.alt}
+          onClose={handleCloseFullscreen}
+          sourceRect={fullscreenImage.sourceRect}
+        />
+      )}
+    </>
   )
 }

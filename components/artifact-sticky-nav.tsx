@@ -210,9 +210,9 @@ export function ArtifactStickyNav({
           </div>
 
           {/* Second row: Title (view mode) or Title Input (edit mode) */}
-          <div className="flex items-center justify-between gap-2 pb-0">
+          <div className="flex items-center justify-center gap-2 pb-0 px-3.5 py-2">
             {isEditMode && onEditTitleChange && userId ? (
-              <div className="flex-1 min-w-0 px-3.5 py-2 pr-5">
+              <div className="flex-1 min-w-0">
                 <TranscriptionInput
                   value={editTitle || ""}
                   onChange={onEditTitleChange}
@@ -221,23 +221,22 @@ export function ArtifactStickyNav({
                   fieldType="title"
                   userId={userId}
                   entityType="artifact"
+                  className="text-center"
                 />
               </div>
             ) : (
               <>
-                <div className="flex items-center gap-2 flex-1 min-w-0 px-3.5 py-2">
-                  <h1 className="text-balance font-bold tracking-tight flex-1 min-w-0 text-xl">{title}</h1>
-                  {showSuperUserBadge && (
-                    <Badge variant="destructive" className="shrink-0 text-xs">
-                      Super User
-                    </Badge>
-                  )}
-                </div>
+                <h1 className="text-balance font-bold tracking-tight text-xl text-center">{title}</h1>
+                {showSuperUserBadge && (
+                  <Badge variant="destructive" className="shrink-0 text-xs">
+                    Super User
+                  </Badge>
+                )}
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={toggleFavorite}
-                  className="shrink-0 h-9 w-9 p-0 mr-3.5"
+                  className="shrink-0 h-9 w-9 p-0"
                   aria-label={isFavorited ? "Remove from favorites" : "Add to favorites"}
                 >
                   <Heart className={`h-5 w-5 ${isFavorited ? "fill-red-500 text-red-500" : "text-muted-foreground"}`} />

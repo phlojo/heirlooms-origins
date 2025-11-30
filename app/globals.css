@@ -336,33 +336,8 @@
     margin-right: 0;
   }
 
-  /* Flickity viewport */
-  .artifact-media-gallery .flickity-viewport {
-    @apply rounded-lg overflow-hidden;
-    min-height: 300px;
-  }
-
-  /* Page dots styling */
-  .artifact-media-gallery .flickity-page-dots {
-    @apply bottom-[-2rem];
-  }
-
-  .artifact-media-gallery .flickity-page-dots .dot {
-    @apply h-2 w-2 mx-1 rounded-full transition-all duration-200;
-    background: hsl(var(--muted-foreground) / 0.3);
-  }
-
-  .artifact-media-gallery .flickity-page-dots .dot.is-selected {
-    @apply h-2 w-6;
-    background: hsl(var(--primary));
-  }
-
-  /* Lazy load images */
-  .artifact-media-gallery img.flickity-lazyloaded {
-    @apply transition-opacity duration-300;
-  }
-
-  .artifact-media-gallery img.flickity-lazyloading {
-    @apply opacity-0;
+  /* Flickity base styles for artifact media gallery */
+  .artifact-media-gallery {
+    /* Styles defined inline in component for filmstrip layout */
   }
 }

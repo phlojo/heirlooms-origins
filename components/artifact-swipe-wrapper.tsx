@@ -16,39 +16,65 @@ interface ArtifactSwipeWrapperProps {
 }
 
 export function ArtifactSwipeWrapper({ previousUrl, nextUrl, children, disableSwipe }: ArtifactSwipeWrapperProps) {
-  const [showGuidance, setShowGuidance] = useState(false)
+  // showIntro = true means show the full intro widget (first time user)
+  // showIntro = false means show mini widget (returning user or after first swipe)
+  const [showIntro, setShowIntro] = useState(false)
+  const [hasMounted, setHasMounted] = useState(false)
 
   useEffect(() => {
-    // Only check localStorage after component mounts on client
-    const shouldShow = !localStorage.getItem(STORAGE_KEY) && (previousUrl !== null || nextUrl !== null)
-    setShowGuidance(shouldShow)
+    setHasMounted(true)
+    // Check if user has dismissed intro before
+    const hasSeenIntro = localStorage.getItem(STORAGE_KEY)
+    const hasNavigation = previousUrl !== null || nextUrl !== null
+
+    // Show intro only if never seen and there's navigation available
+    setShowIntro(!hasSeenIntro && hasNavigation)
   }, [previousUrl, nextUrl])
 
-  const handleDismiss = () => {
-    setShowGuidance(false)
+  const handleDismissIntro = () => {
+    setShowIntro(false)
     if (typeof window !== "undefined") {
       localStorage.setItem(STORAGE_KEY, "true")
     }
   }
 
   const handleSwipeStart = () => {
-    if (showGuidance) {
-      handleDismiss()
+    if (showIntro) {
+      handleDismissIntro()
     }
   }
 
   useSwipeNavigation({
     previousUrl: disableSwipe ? null : previousUrl,
     nextUrl: disableSwipe ? null : nextUrl,
-    onNavigate: handleDismiss,
+    onNavigate: handleDismissIntro,
     onSwipeStart: handleSwipeStart,
   })
+
+  // Check if there's any navigation available
+  const hasNavigation = previousUrl !== null || nextUrl !== null
 
   return (
     <>
       {children}
-      {!disableSwipe && showGuidance && (
-        <SwipeGuidance onDismiss={handleDismiss} previousUrl={previousUrl} nextUrl={nextUrl} />
+      {/* Show widget only when not disabled and navigation exists */}
+      {!disableSwipe && hasNavigation && hasMounted && (
+        showIntro ? (
+          // Full intro widget with animated text
+          <SwipeGuidance
+            onDismiss={handleDismissIntro}
+            previousUrl={previousUrl}
+            nextUrl={nextUrl}
+          />
+        ) : (
+          // Mini persistent widget
+          <SwipeGuidance
+            onDismiss={() => {}}
+            previousUrl={previousUrl}
+            nextUrl={nextUrl}
+            mini
+          />
+        )
       )}
     </>
   )

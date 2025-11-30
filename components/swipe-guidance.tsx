@@ -11,14 +11,19 @@ interface SwipeGuidanceProps {
   onDismiss: () => void
   previousUrl: string | null
   nextUrl: string | null
+  /** Mini mode: smaller, no text, semi-transparent - always visible after intro */
+  mini?: boolean
 }
 
-export function SwipeGuidance({ onDismiss, previousUrl, nextUrl }: SwipeGuidanceProps) {
+export function SwipeGuidance({ onDismiss, previousUrl, nextUrl, mini = false }: SwipeGuidanceProps) {
   const router = useRouter()
   const [wordIndex, setWordIndex] = useState(0)
   const [isVisible, setIsVisible] = useState(true)
 
   useEffect(() => {
+    // Only run text animation in intro mode
+    if (mini) return
+
     const interval = setInterval(() => {
       // Fade out
       setIsVisible(false)
@@ -29,7 +34,7 @@ export function SwipeGuidance({ onDismiss, previousUrl, nextUrl }: SwipeGuidance
       }, 400)
     }, CYCLE_INTERVAL)
     return () => clearInterval(interval)
-  }, [])
+  }, [mini])
 
   const handlePrevious = () => {
     if (previousUrl) {
@@ -43,6 +48,48 @@ export function SwipeGuidance({ onDismiss, previousUrl, nextUrl }: SwipeGuidance
     }
   }
 
+  // Mini mode: smaller, no text, semi-transparent black with white/gray icons
+  if (mini) {
+    return (
+      <div
+        className="fixed left-1/2 -translate-x-1/2 z-50 px-4"
+        style={{
+          bottom: "calc(var(--bottom-nav-height, 0px) + 16px)",
+        }}
+        role="navigation"
+        aria-label="Navigate between artifacts"
+      >
+        <div className="bg-black/50 backdrop-blur-sm px-2 py-1 rounded-full shadow-md flex items-center justify-center gap-1">
+          <button
+            onClick={handlePrevious}
+            disabled={!previousUrl}
+            className={`p-1.5 rounded-full transition-colors ${
+              previousUrl
+                ? "text-white/80 hover:text-white hover:bg-white/20 active:bg-white/30 cursor-pointer"
+                : "text-white/30 cursor-not-allowed"
+            }`}
+            aria-label="Previous artifact"
+          >
+            <StepBack className="h-3.5 w-3.5 flex-shrink-0" />
+          </button>
+          <button
+            onClick={handleNext}
+            disabled={!nextUrl}
+            className={`p-1.5 rounded-full transition-colors ${
+              nextUrl
+                ? "text-white/80 hover:text-white hover:bg-white/20 active:bg-white/30 cursor-pointer"
+                : "text-white/30 cursor-not-allowed"
+            }`}
+            aria-label="Next artifact"
+          >
+            <StepForward className="h-3.5 w-3.5 flex-shrink-0" />
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  // Intro mode: full size with animated text
   return (
     <div
       className="fixed left-1/2 -translate-x-1/2 z-50 animate-in fade-in slide-in-from-bottom-4 duration-500 px-4"
