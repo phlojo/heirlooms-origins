@@ -1157,6 +1157,83 @@ See `user-bugs.md#UB-251129-01` for original user report.
 
 ---
 
+## Gallery Media Not Reorganized from Temp Folder (Fixed: November 2025)
+
+### Symptoms
+- Large number of media files stuck in Supabase Storage temp folder
+- Files remain in temp even after artifacts are saved
+- Affects gallery media primarily (media blocks less affected)
+- Files only accessible to owner due to temp folder RLS policies
+
+### Root Cause
+**`reorganizeArtifactMedia()` only processed media block URLs, not gallery URLs.**
+
+The media system has two independent storage locations:
+1. **Media blocks**: URLs stored in `artifacts.media_urls` array
+2. **Gallery**: URLs stored in `user_media.public_url` via `artifact_media` junction table
+
+`reorganizeArtifactMedia()` only read from `artifact.media_urls`, missing all gallery URLs that were stored in the `user_media` table.
+
+When users uploaded media to gallery:
+1. Files uploaded to temp: `{userId}/temp/{timestamp}-{filename}`
+2. `user_media` record created with temp URL
+3. `artifact_media` link created pointing to user_media
+4. Artifact saved
+5. `reorganizeArtifactMedia()` called but only looked at `media_urls` (empty for gallery-only artifacts)
+6. Gallery files never moved from temp folder
+
+### Fix Applied
+
+**File: `lib/actions/media-reorganize.ts`**
+
+Updated `reorganizeArtifactMedia()` to also fetch and process gallery URLs:
+
+```typescript
+// OLD: Only processed media_urls
+const mediaUrls = artifact.media_urls || []
+
+// NEW: Also fetch gallery URLs from user_media via artifact_media
+const { data: galleryLinks } = await supabase
+  .from("artifact_media")
+  .select("media:user_media(id, public_url)")
+  .eq("artifact_id", artifactId)
+  .eq("role", "gallery")
+
+const galleryUrls = (galleryLinks || [])
+  .map((link: any) => link.media?.public_url)
+  .filter((url): url is string => !!url)
+
+// Combine all URLs (deduplicated)
+const allUrls = [...new Set([...mediaBlockUrls, ...galleryUrls])]
+```
+
+**File: `scripts/migrate-temp-media.ts`**
+
+Enhanced migration script to:
+- Find temp URLs in both gallery and media blocks
+- Update AI metadata keys (image_captions, video_summaries, audio_transcripts)
+- Handle all references in a single artifact update
+
+### Migration for Existing Files
+Run the migration script to move existing temp files:
+
+```bash
+# Dry run (preview changes)
+pnpm tsx scripts/migrate-temp-media.ts
+
+# Actually migrate files
+pnpm tsx scripts/migrate-temp-media.ts --migrate
+```
+
+### Prevention Guidelines
+- When processing media URLs, always check BOTH:
+  - `artifacts.media_urls` (media blocks)
+  - `user_media` via `artifact_media` (gallery)
+- Gallery and media blocks are independent storage locations
+- Test media operations with gallery-only artifacts
+
+---
+
 ## UI Terminology Update (November 2025)
 
 ### Change

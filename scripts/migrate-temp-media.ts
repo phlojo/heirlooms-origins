@@ -210,40 +210,65 @@ async function migrateFile(
       console.log(`    Warning: Could not update user_media: ${updateError.message}`)
     }
 
-    // Update artifacts.media_urls if this was from media_blocks
-    if (item.source === "media_blocks") {
-      const { data: artifact } = await supabase
-        .from("artifacts")
-        .select("media_urls")
-        .eq("id", item.artifactId)
-        .single()
+    // Fetch artifact to update all fields at once
+    const { data: artifact } = await supabase
+      .from("artifacts")
+      .select("media_urls, thumbnail_url, image_captions, video_summaries, audio_transcripts")
+      .eq("id", item.artifactId)
+      .single()
 
-      if (artifact?.media_urls) {
+    if (artifact) {
+      const updateData: Record<string, any> = {}
+
+      // Update media_urls array
+      if (artifact.media_urls && Array.isArray(artifact.media_urls)) {
         const updatedUrls = artifact.media_urls.map((url: string) =>
           url === item.tempUrl ? newUrl : url
         )
-        await supabase
+        if (JSON.stringify(updatedUrls) !== JSON.stringify(artifact.media_urls)) {
+          updateData.media_urls = updatedUrls
+        }
+      }
+
+      // Update thumbnail_url
+      if (artifact.thumbnail_url === item.tempUrl) {
+        updateData.thumbnail_url = newUrl
+      }
+
+      // Update AI metadata keys (they use URLs as keys)
+      if (artifact.image_captions && artifact.image_captions[item.tempUrl]) {
+        const updated = { ...artifact.image_captions }
+        updated[newUrl] = updated[item.tempUrl]
+        delete updated[item.tempUrl]
+        updateData.image_captions = updated
+      }
+
+      if (artifact.video_summaries && artifact.video_summaries[item.tempUrl]) {
+        const updated = { ...artifact.video_summaries }
+        updated[newUrl] = updated[item.tempUrl]
+        delete updated[item.tempUrl]
+        updateData.video_summaries = updated
+      }
+
+      if (artifact.audio_transcripts && artifact.audio_transcripts[item.tempUrl]) {
+        const updated = { ...artifact.audio_transcripts }
+        updated[newUrl] = updated[item.tempUrl]
+        delete updated[item.tempUrl]
+        updateData.audio_transcripts = updated
+      }
+
+      // Apply updates if any
+      if (Object.keys(updateData).length > 0) {
+        const { error: updateErr } = await supabase
           .from("artifacts")
-          .update({ media_urls: updatedUrls })
+          .update(updateData)
           .eq("id", item.artifactId)
+
+        if (updateErr) {
+          console.log(`    Warning: Could not update artifact: ${updateErr.message}`)
+        }
       }
     }
-
-    // Update artifacts.thumbnail_url if needed
-    if (item.source === "thumbnail") {
-      await supabase
-        .from("artifacts")
-        .update({ thumbnail_url: newUrl })
-        .eq("id", item.artifactId)
-        .eq("thumbnail_url", item.tempUrl)
-    }
-
-    // Also check and update thumbnail_url even for gallery items
-    await supabase
-      .from("artifacts")
-      .update({ thumbnail_url: newUrl })
-      .eq("id", item.artifactId)
-      .eq("thumbnail_url", item.tempUrl)
 
     return { success: true, newUrl }
   } catch (error) {

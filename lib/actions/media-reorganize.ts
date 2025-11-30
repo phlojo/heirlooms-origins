@@ -7,7 +7,11 @@ import { isSupabaseStorageUrl } from "@/lib/media"
 /**
  * Phase 2: Reorganize media files after artifact creation
  * Moves Supabase Storage files from temp folder to artifact folder
- * Updates artifact media_urls with new locations
+ * Updates artifact media_urls AND user_media records with new locations
+ *
+ * IMPORTANT: This function processes BOTH:
+ * 1. Media block URLs (stored in artifacts.media_urls)
+ * 2. Gallery URLs (stored in user_media via artifact_media junction table)
  *
  * @param artifactId - The artifact ID to reorganize media for
  * @returns Success or error with details
@@ -40,21 +44,49 @@ export async function reorganizeArtifactMedia(artifactId: string) {
     return { error: "Unauthorized" }
   }
 
-  const mediaUrls = artifact.media_urls || []
-  if (mediaUrls.length === 0) {
+  // Collect media block URLs from artifacts.media_urls
+  const mediaBlockUrls = artifact.media_urls || []
+
+  // Also fetch gallery URLs from user_media via artifact_media links
+  // These are stored in user_media.public_url, linked via artifact_media table
+  const { data: galleryLinks, error: galleryError } = await supabase
+    .from("artifact_media")
+    .select("media:user_media(id, public_url)")
+    .eq("artifact_id", artifactId)
+    .eq("role", "gallery")
+
+  if (galleryError) {
+    console.error("[media-reorganize] Failed to fetch gallery links:", galleryError)
+    // Continue with media_urls only
+  }
+
+  // Extract gallery URLs from the joined query
+  const galleryUrls: string[] = (galleryLinks || [])
+    .map((link: any) => link.media?.public_url)
+    .filter((url: string | undefined): url is string => !!url)
+
+  console.log("[media-reorganize] Found URLs:", {
+    mediaBlocks: mediaBlockUrls.length,
+    gallery: galleryUrls.length,
+  })
+
+  // Combine all URLs (deduplicated) - same URL might be in both gallery and media blocks
+  const allUrls = [...new Set([...mediaBlockUrls, ...galleryUrls])]
+
+  if (allUrls.length === 0) {
     console.log("[media-reorganize] No media to reorganize")
     return { success: true, movedCount: 0 }
   }
 
-  console.log("[media-reorganize] Found", mediaUrls.length, "media URLs")
+  console.log("[media-reorganize] Processing", allUrls.length, "unique URLs")
 
-  // Move Supabase Storage files and collect new URLs
-  const updatedUrls: string[] = []
+  // Move Supabase Storage files and collect URL mappings
   const urlMapping: Map<string, string> = new Map() // old URL -> new URL
   let movedCount = 0
   const errors: string[] = []
 
-  for (const url of mediaUrls) {
+  // Process ALL unique URLs (both media blocks and gallery)
+  for (const url of allUrls) {
     if (isSupabaseStorageUrl(url)) {
       console.log("[media-reorganize] Moving Supabase file:", url)
       const result = await moveSupabaseFile(url, user.id, artifactId)
@@ -62,27 +94,25 @@ export async function reorganizeArtifactMedia(artifactId: string) {
       if (result.error || !result.publicUrl) {
         console.error("[media-reorganize] Failed to move file:", url, result.error)
         errors.push(`Failed to move ${url}: ${result.error}`)
-        updatedUrls.push(url) // Keep original URL on error
-      } else {
-        updatedUrls.push(result.publicUrl)
-        if (result.publicUrl !== url) {
-          movedCount++
-          urlMapping.set(url, result.publicUrl)
-          console.log("[media-reorganize] File moved:", url, "->", result.publicUrl)
-        }
+        // Keep original URL in mapping (no change)
+      } else if (result.publicUrl !== url) {
+        movedCount++
+        urlMapping.set(url, result.publicUrl)
+        console.log("[media-reorganize] File moved:", url, "->", result.publicUrl)
       }
-    } else {
-      // Cloudinary URL - no reorganization needed
-      updatedUrls.push(url)
     }
+    // Cloudinary URLs don't need reorganization
   }
+
+  // Build updated media_urls array (only for media blocks stored in artifacts table)
+  const updatedMediaBlockUrls = mediaBlockUrls.map((url: string) => urlMapping.get(url) || url)
 
   // Update artifact with new URLs if any files were moved
   if (movedCount > 0) {
-    console.log("[media-reorganize] Updating artifact with", movedCount, "new URLs")
+    console.log("[media-reorganize] Updating artifact with", movedCount, "moved files")
 
-    // Build update object with new media_urls
-    const updateData: Record<string, any> = { media_urls: updatedUrls }
+    // Build update object with new media_urls (media blocks only)
+    const updateData: Record<string, any> = { media_urls: updatedMediaBlockUrls }
 
     // Update AI metadata keys (image_captions, video_summaries, audio_transcripts)
     // These are JSONB objects keyed by URL, so we need to update the keys
