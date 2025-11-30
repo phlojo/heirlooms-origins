@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
-import { Home, FolderOpen, BookOpen, User } from "lucide-react"
+import { Home, LayoutGrid, BookOpen, User } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 import { AnimatedArtifactsIcon } from "./animated-artifacts-icon"
 
@@ -17,7 +17,7 @@ interface NavItem {
 const navItems: NavItem[] = [
   { href: "/", label: "Home", icon: Home },
   { href: "/artifacts", label: "Artifacts", useAnimatedIcon: true },
-  { href: "/collections", label: "Collections", icon: FolderOpen },
+  { href: "/collections", label: "Collections", icon: LayoutGrid },
   { href: "/stories", label: "Stories", icon: BookOpen },
   { href: "/profile", label: "Profile", icon: User },
 ]

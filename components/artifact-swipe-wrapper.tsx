@@ -13,9 +13,20 @@ interface ArtifactSwipeWrapperProps {
   nextUrl: string | null
   children: React.ReactNode
   disableSwipe?: boolean
+  /** Current position in collection (1-indexed) */
+  currentPosition?: number
+  /** Total count of items in collection */
+  totalCount?: number
 }
 
-export function ArtifactSwipeWrapper({ previousUrl, nextUrl, children, disableSwipe }: ArtifactSwipeWrapperProps) {
+export function ArtifactSwipeWrapper({
+  previousUrl,
+  nextUrl,
+  children,
+  disableSwipe,
+  currentPosition,
+  totalCount,
+}: ArtifactSwipeWrapperProps) {
   // showIntro = true means show the full intro widget (first time user)
   // showIntro = false means show mini widget (returning user or after first swipe)
   const [showIntro, setShowIntro] = useState(false)
@@ -67,12 +78,14 @@ export function ArtifactSwipeWrapper({ previousUrl, nextUrl, children, disableSw
             nextUrl={nextUrl}
           />
         ) : (
-          // Mini persistent widget
+          // Mini persistent widget with position indicator
           <SwipeGuidance
             onDismiss={() => {}}
             previousUrl={previousUrl}
             nextUrl={nextUrl}
             mini
+            currentPosition={currentPosition}
+            totalCount={totalCount}
           />
         )
       )}

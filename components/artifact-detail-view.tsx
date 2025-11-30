@@ -467,6 +467,18 @@ export function ArtifactDetailView({
     window.location.href = `/artifacts/${artifact.slug}`
   }
 
+  // Called by breadcrumb when navigating away with unsaved changes
+  const handleAbandonChanges = async () => {
+    // Clean up any newly uploaded media that wasn't saved
+    if (pendingUploadUrls.length > 0) {
+      console.log("[v0] ABANDON EDIT - Cleaning up", pendingUploadUrls.length, "pending uploads")
+      await cleanupPendingUploads(pendingUploadUrls)
+    }
+
+    // Disable beforeunload warning (breadcrumb will handle navigation)
+    shouldWarnOnUnloadRef.current = false
+  }
+
   const handleCaptionGenerated = (url: string, newCaption: string) => {
     if (isEditMode) {
       setEditImageCaptions((prev) => ({
@@ -511,6 +523,8 @@ export function ArtifactDetailView({
       previousUrl={isEditMode ? null : previousUrl}
       nextUrl={isEditMode ? null : nextUrl}
       disableSwipe={isImageFullscreen || isEditMode}
+      currentPosition={currentPosition ?? undefined}
+      totalCount={totalCount}
     >
       {/* Edit mode sticky nav with title input */}
       {isEditMode && (
@@ -524,14 +538,15 @@ export function ArtifactDetailView({
           collectionId={artifact.collection_id}
           collectionSlug={artifact.collection?.slug}
           collectionName={artifact.collection?.title}
-          currentPosition={currentPosition ?? undefined}
-          totalCount={totalCount}
           currentUserId={userId}
           isCurrentUserAdmin={isCurrentUserAdmin}
           contentOwnerId={artifact.user_id}
           editTitle={editTitle}
           onEditTitleChange={setEditTitle}
           userId={userId}
+          isLoggedIn={true}
+          hasUnsavedChanges={hasUnsavedChanges}
+          onAbandonChanges={handleAbandonChanges}
         />
       )}
       <div className="space-y-6 overflow-x-hidden pb-[240px]">

@@ -10,7 +10,7 @@ import { UncategorizedCollectionCard } from "@/components/uncategorized-collecti
 import { EmptyCollections } from "@/components/empty-collections"
 import { LoginModule } from "@/components/login-module"
 import { useEffect, useState, useTransition, useMemo } from "react"
-import { usePathname } from "next/navigation"
+import { usePathname, useSearchParams } from "next/navigation"
 import { getAllPublicCollectionsPaginated, getMyCollectionsPaginated } from "@/lib/actions/collections"
 import { updateViewPreference } from "@/lib/actions/profile"
 
@@ -56,9 +56,25 @@ export function CollectionsTabs({
     allCollectionsIsArray: Array.isArray(allCollections),
   })
 
-  const [activeTab, setActiveTab] = useState<string>("all")
-  const [viewType, setViewType] = useState<ViewType>(initialViewPreference)
   const pathname = usePathname()
+  const searchParams = useSearchParams()
+
+  // Priority: URL query param > sessionStorage > default "all"
+  const getInitialTab = () => {
+    const urlTab = searchParams.get("tab")
+    if (urlTab === "mine" || urlTab === "all") {
+      return urlTab
+    }
+    // Fall back to sessionStorage (client-side only)
+    if (typeof window !== "undefined") {
+      const savedTab = sessionStorage.getItem(STORAGE_KEY)
+      if (savedTab) return savedTab
+    }
+    return "all"
+  }
+
+  const [activeTab, setActiveTab] = useState<string>(getInitialTab())
+  const [viewType, setViewType] = useState<ViewType>(initialViewPreference)
 
   const [allCollectionsList, setAllCollectionsList] = useState<Collection[]>(
     Array.isArray(allCollections) ? allCollections : [],
@@ -73,12 +89,14 @@ export function CollectionsTabs({
 
   const [isPending, startTransition] = useTransition()
 
+  // Update tab when URL changes (e.g., navigation from breadcrumb)
   useEffect(() => {
-    const savedTab = sessionStorage.getItem(STORAGE_KEY)
-    if (savedTab) {
-      setActiveTab(savedTab)
+    const urlTab = searchParams.get("tab")
+    if (urlTab === "mine" || urlTab === "all") {
+      setActiveTab(urlTab)
+      sessionStorage.setItem(STORAGE_KEY, urlTab)
     }
-  }, [])
+  }, [searchParams])
 
   const handleTabChange = (value: string) => {
     startTransition(() => {

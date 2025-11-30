@@ -1,9 +1,9 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { StepForward, StepBack, Heart, Pencil } from "lucide-react"
+import { StepForward, StepBack, Heart } from "lucide-react"
 import Link from "next/link"
-import { CollectionLabel } from "@/components/collection-label"
+import { ArtifactBreadcrumb } from "@/components/artifact-breadcrumb"
 import { useState, useEffect } from "react"
 import { Badge } from "@/components/ui/badge"
 import { TranscriptionInput } from "@/components/transcription-input"
@@ -30,8 +30,6 @@ interface ArtifactStickyNavProps {
   collectionId?: string
   collectionSlug?: string
   collectionName?: string
-  currentPosition?: number
-  totalCount?: number
   currentUserId?: string
   isCurrentUserAdmin?: boolean
   contentOwnerId?: string
@@ -39,6 +37,10 @@ interface ArtifactStickyNavProps {
   editTitle?: string
   onEditTitleChange?: (value: string) => void
   userId?: string
+  // For breadcrumb navigation
+  isLoggedIn?: boolean
+  hasUnsavedChanges?: boolean
+  onAbandonChanges?: () => Promise<void>
 }
 
 export function ArtifactStickyNav({
@@ -55,14 +57,15 @@ export function ArtifactStickyNav({
   collectionId,
   collectionSlug,
   collectionName,
-  currentPosition,
-  totalCount,
   currentUserId,
   isCurrentUserAdmin = false,
   contentOwnerId,
   editTitle,
   onEditTitleChange,
   userId,
+  isLoggedIn = false,
+  hasUnsavedChanges = false,
+  onAbandonChanges,
 }: ArtifactStickyNavProps) {
   const [isFavorited, setIsFavorited] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
@@ -143,75 +146,27 @@ export function ArtifactStickyNav({
     <div className="artifact-sticky-nav sticky top-0 z-50 bg-background/90 border-b will-change-transform -mx-4 overflow-x-hidden">
       <div className="container max-w-7xl mx-auto">
         <div className="flex flex-col gap-0">
-          {/* First row: Navigation with left arrow, collection info, right arrow */}
+          {/* First row: Breadcrumb (collapses on scroll) */}
           <div
-            className={`flex items-center justify-between border-b gap-0 pb-0 px-3.5 transition-all duration-300 overflow-hidden ${
-              isScrolled ? 'max-h-0 opacity-0' : 'max-h-20 opacity-100'
+            className={`flex items-center justify-center border-b gap-0 px-3.5 transition-all duration-300 overflow-hidden ${
+              isScrolled ? 'max-h-0 opacity-0 py-0' : 'max-h-20 opacity-100 py-2'
             }`}
           >
-            {/* Left: Previous button */}
-            <Button
-              variant="ghost"
-              size="icon"
-              asChild={!!previousItem}
-              disabled={!previousItem}
-              className={`shrink-0 ${!previousItem ? "!opacity-15 pointer-events-none" : "hover:bg-accent"}`}
-            >
-              {previousItem ? (
-                <Link href={getNavUrl(previousItem.slug)} title={previousItem.title}>
-                  <StepBack className="h-6 w-6" strokeWidth={2.5} />
-                </Link>
-              ) : (
-                <span>
-                  <StepBack className="h-6 w-6" strokeWidth={2.5} />
-                </span>
-              )}
-            </Button>
-
-            {/* Center: Collection info */}
-            {collectionId && collectionName && (
-              <div className="flex items-center gap-1.5 text-xs flex-wrap justify-center flex-1">
-                {currentPosition && totalCount && (
-                  <>
-                    <span className="text-muted-foreground font-medium">
-                      {currentPosition} of {totalCount}
-                    </span>
-                  </>
-                )}
-                <span className="text-muted-foreground">in</span>
-                <CollectionLabel
-                  collectionId={collectionId}
-                  collectionSlug={collectionSlug}
-                  collectionName={collectionName}
-                  size="sm"
-                  clickable={!isEditMode}
-                />
-              </div>
-            )}
-
-            {/* Right: Next button */}
-            <Button
-              variant="ghost"
-              size="icon"
-              asChild={!!nextItem}
-              disabled={!nextItem}
-              className={`shrink-0 ${!nextItem ? "!opacity-15 pointer-events-none" : "hover:bg-accent"}`}
-            >
-              {nextItem ? (
-                <Link href={getNavUrl(nextItem.slug)} title={nextItem.title}>
-                  <StepForward className="h-6 w-6" strokeWidth={2.5} />
-                </Link>
-              ) : (
-                <span>
-                  <StepForward className="h-6 w-6" strokeWidth={2.5} />
-                </span>
-              )}
-            </Button>
+            <ArtifactBreadcrumb
+              collectionId={collectionId}
+              collectionSlug={collectionSlug}
+              collectionName={collectionName}
+              isLoggedIn={isLoggedIn}
+              isEditMode={isEditMode}
+              hasUnsavedChanges={hasUnsavedChanges}
+              onAbandonChanges={onAbandonChanges}
+            />
           </div>
 
-          {/* Second row: Title (view mode) or Title Input (edit mode) */}
-          <div className="flex items-center justify-center gap-2 pb-0 px-3.5 py-2">
+          {/* Second row: Title with nav buttons (view) or just Title Input (edit) */}
+          <div className="flex items-center justify-between gap-2 px-3.5 pt-2 pb-2">
             {isEditMode && onEditTitleChange && userId ? (
+              // Edit mode: just the title input, no nav buttons
               <div className="flex-1 min-w-0">
                 <TranscriptionInput
                   value={editTitle || ""}
@@ -225,21 +180,63 @@ export function ArtifactStickyNav({
                 />
               </div>
             ) : (
+              // View mode: prev button, title + heart, next button
               <>
-                <h1 className="text-balance font-bold tracking-tight text-xl text-center">{title}</h1>
-                {showSuperUserBadge && (
-                  <Badge variant="destructive" className="shrink-0 text-xs">
-                    Super User
-                  </Badge>
-                )}
+                {/* Left: Previous button */}
                 <Button
                   variant="ghost"
-                  size="sm"
-                  onClick={toggleFavorite}
-                  className="shrink-0 h-9 w-9 p-0"
-                  aria-label={isFavorited ? "Remove from favorites" : "Add to favorites"}
+                  size="icon"
+                  asChild={!!previousItem}
+                  disabled={!previousItem}
+                  className={`shrink-0 ${!previousItem ? "!opacity-15 pointer-events-none" : "hover:bg-accent"}`}
                 >
-                  <Heart className={`h-5 w-5 ${isFavorited ? "fill-red-500 text-red-500" : "text-muted-foreground"}`} />
+                  {previousItem ? (
+                    <Link href={getNavUrl(previousItem.slug)} title={previousItem.title}>
+                      <StepBack className="h-6 w-6" strokeWidth={2.5} />
+                    </Link>
+                  ) : (
+                    <span>
+                      <StepBack className="h-6 w-6" strokeWidth={2.5} />
+                    </span>
+                  )}
+                </Button>
+
+                {/* Center: Title and heart */}
+                <div className="flex items-center justify-center gap-2 flex-1 min-w-0">
+                  <h1 className="text-balance font-bold tracking-tight text-xl text-center truncate">{title}</h1>
+                  {showSuperUserBadge && (
+                    <Badge variant="destructive" className="shrink-0 text-xs">
+                      Super User
+                    </Badge>
+                  )}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={toggleFavorite}
+                    className="shrink-0 h-9 w-9 p-0"
+                    aria-label={isFavorited ? "Remove from favorites" : "Add to favorites"}
+                  >
+                    <Heart className={`h-5 w-5 ${isFavorited ? "fill-red-500 text-red-500" : "text-muted-foreground"}`} />
+                  </Button>
+                </div>
+
+                {/* Right: Next button */}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  asChild={!!nextItem}
+                  disabled={!nextItem}
+                  className={`shrink-0 ${!nextItem ? "!opacity-15 pointer-events-none" : "hover:bg-accent"}`}
+                >
+                  {nextItem ? (
+                    <Link href={getNavUrl(nextItem.slug)} title={nextItem.title}>
+                      <StepForward className="h-6 w-6" strokeWidth={2.5} />
+                    </Link>
+                  ) : (
+                    <span>
+                      <StepForward className="h-6 w-6" strokeWidth={2.5} />
+                    </span>
+                  )}
                 </Button>
               </>
             )}

@@ -24,7 +24,8 @@ interface AnimatedArtifactsIconProps {
  *
  * Animation:
  * - Changes icon every 4 seconds
- * - Uses true crossfade with two overlapping icons
+ * - Sequential fade: current fades out, then next fades in (no overlap)
+ * - Fixed container prevents layout shift between different icon sizes
  * - Respects prefers-reduced-motion
  *
  * Styling:
@@ -39,9 +40,9 @@ interface AnimatedArtifactsIconProps {
 export function AnimatedArtifactsIcon({ className }: AnimatedArtifactsIconProps) {
   const [artifactTypes, setArtifactTypes] = useState<ArtifactType[]>([])
   const [currentIndex, setCurrentIndex] = useState(0)
-  const [nextIndex, setNextIndex] = useState(0)
-  const [isTransitioning, setIsTransitioning] = useState(false)
-  const transitionTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  // Animation phase: 'visible' | 'fading-out' | 'fading-in'
+  const [phase, setPhase] = useState<'visible' | 'fading-out' | 'fading-in'>('visible')
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   useEffect(() => {
     async function fetchTypes() {
@@ -62,54 +63,45 @@ export function AnimatedArtifactsIcon({ className }: AnimatedArtifactsIconProps)
     }
 
     const interval = setInterval(() => {
-      // Calculate next index
-      const next = (currentIndex + 1) % artifactTypes.length
-      setNextIndex(next)
+      // Phase 1: Fade out current icon
+      setPhase('fading-out')
 
-      // Start crossfade
-      setIsTransitioning(true)
+      // Phase 2: After fade out, switch icon and fade in
+      timeoutRef.current = setTimeout(() => {
+        setCurrentIndex((prev) => (prev + 1) % artifactTypes.length)
+        setPhase('fading-in')
 
-      // After transition completes, update current index
-      transitionTimeoutRef.current = setTimeout(() => {
-        setCurrentIndex(next)
-        setIsTransitioning(false)
-      }, 500)
-    }, 4000)
+        // Phase 3: After fade in, back to visible
+        timeoutRef.current = setTimeout(() => {
+          setPhase('visible')
+        }, 400)
+      }, 400)
+    }, 1800) // 1000ms visible + 400ms fade out + 400ms fade in
 
     return () => {
       clearInterval(interval)
-      if (transitionTimeoutRef.current) {
-        clearTimeout(transitionTimeoutRef.current)
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current)
       }
     }
-  }, [artifactTypes.length, currentIndex])
+  }, [artifactTypes.length])
 
   const currentType = artifactTypes[currentIndex]
-  const nextType = artifactTypes[nextIndex]
   const CurrentIcon = currentType ? getDynamicLucideIcon(currentType.icon_name) : Package
-  const NextIcon = nextType ? getDynamicLucideIcon(nextType.icon_name) : Package
+
+  // Determine opacity based on phase
+  const opacity = phase === 'fading-out' ? 'opacity-0' : phase === 'fading-in' ? 'opacity-100' : 'opacity-100'
 
   return (
-    <div className="relative">
-      {/* Current icon - fades out during transition */}
+    <div className={cn("relative flex items-center justify-center", className)}>
       <CurrentIcon
         aria-label="Artifacts icon"
         className={cn(
-          "transition-opacity duration-500 ease-in-out",
-          isTransitioning ? "opacity-0" : "opacity-100",
+          "transition-opacity duration-400 ease-in-out",
+          opacity,
           className,
         )}
       />
-      {/* Next icon - fades in during transition, positioned absolutely on top */}
-      {isTransitioning && (
-        <NextIcon
-          aria-hidden="true"
-          className={cn(
-            "absolute inset-0 transition-opacity duration-500 ease-in-out opacity-100",
-            className,
-          )}
-        />
-      )}
     </div>
   )
 }

@@ -13,9 +13,20 @@ interface SwipeGuidanceProps {
   nextUrl: string | null
   /** Mini mode: smaller, no text, semi-transparent - always visible after intro */
   mini?: boolean
+  /** Current position in collection (1-indexed) */
+  currentPosition?: number
+  /** Total count of items in collection */
+  totalCount?: number
 }
 
-export function SwipeGuidance({ onDismiss, previousUrl, nextUrl, mini = false }: SwipeGuidanceProps) {
+export function SwipeGuidance({
+  onDismiss,
+  previousUrl,
+  nextUrl,
+  mini = false,
+  currentPosition,
+  totalCount,
+}: SwipeGuidanceProps) {
   const router = useRouter()
   const [wordIndex, setWordIndex] = useState(0)
   const [isVisible, setIsVisible] = useState(true)
@@ -48,7 +59,7 @@ export function SwipeGuidance({ onDismiss, previousUrl, nextUrl, mini = false }:
     }
   }
 
-  // Mini mode: smaller, no text, semi-transparent black with white/gray icons
+  // Mini mode: smaller, with position indicator, semi-transparent black with white/gray icons
   if (mini) {
     return (
       <div
@@ -72,6 +83,12 @@ export function SwipeGuidance({ onDismiss, previousUrl, nextUrl, mini = false }:
           >
             <StepBack className="h-3.5 w-3.5 flex-shrink-0" />
           </button>
+          {/* Position indicator */}
+          {currentPosition && totalCount && (
+            <span className="text-white/70 text-xs font-medium px-1 min-w-[3rem] text-center">
+              {currentPosition} of {totalCount}
+            </span>
+          )}
           <button
             onClick={handleNext}
             disabled={!nextUrl}
