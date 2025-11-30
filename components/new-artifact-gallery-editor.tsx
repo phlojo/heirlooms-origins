@@ -213,7 +213,7 @@ export function NewArtifactGalleryEditor({
                   <span className="sr-only">Gallery help</span>
                 </button>
               </TooltipTrigger>
-              <TooltipContent side="right" align="center">
+              <TooltipContent>
                 Media carousel displayed at the top of your artifact page. Drag to reorder.
               </TooltipContent>
             </Tooltip>

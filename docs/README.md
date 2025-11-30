@@ -21,6 +21,7 @@ docs/
 │   ├── artifact-gallery-editor.md  # Gallery drag-and-drop implementation
 │   ├── artifact-grid-layout.md     # Masonry grid system
 │   ├── artifact-types.md           # Type badges and categories
+│   ├── collection-picker.md        # Collection picker with thumbnail grid
 │   └── navigation.md               # Routing and navigation
 ├── operations/             # Runbooks for production operations
 │   ├── bug-tracker.md      # Internal bugs and fixes

@@ -16,7 +16,6 @@ import { Separator } from "@/components/ui/separator"
 import { AddMediaModal } from "@/components/add-media-modal"
 import { MediaActionModal } from "@/components/media-action-modal"
 import { DeleteArtifactModal } from "@/components/delete-artifact-modal"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { type ArtifactMediaWithDerivatives } from "@/lib/types/media"
 import { getArtifactGalleryMedia } from "@/lib/actions/media"
 import {
@@ -42,7 +41,7 @@ import {
 import { updateArtifact, deleteArtifact } from "@/lib/actions/artifacts"
 import { permanentlyDeleteMedia } from "@/lib/actions/media"
 import { cleanupPendingUploads } from "@/lib/actions/pending-uploads"
-import { getMyCollections } from "@/lib/actions/collections"
+import { CollectionPicker } from "@/components/collection-picker"
 import { useRouter } from "next/navigation"
 import { isImageUrl, isVideoUrl, isAudioUrl } from "@/lib/media"
 import { GenerateImageCaptionButton } from "@/components/artifact/GenerateImageCaptionButton"
@@ -77,11 +76,6 @@ import type { ArtifactType } from "@/lib/types/artifact-types"
 import { toast } from "sonner"
 import { useRef } from "react"
 
-interface CollectionWithArtifactCount {
-  id: string
-  title: string
-}
-
 interface ArtifactDetailViewProps {
   artifact: any
   previous: any
@@ -114,8 +108,6 @@ export function ArtifactDetailView({
 }: ArtifactDetailViewProps) {
   const [isSaving, setIsSaving] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
-  const [collections, setCollections] = useState<CollectionWithArtifactCount[]>([])
-  const [loadingCollections, setLoadingCollections] = useState(false)
   const [artifactTypes, setArtifactTypes] = useState<ArtifactType[]>([])
   const [selectedTypeId, setSelectedTypeId] = useState<string | null>(artifact.type_id || null)
   const shouldWarnOnUnloadRef = useRef(true)
@@ -184,24 +176,6 @@ export function ArtifactDetailView({
 
   useEffect(() => {
     if (isEditMode && userId) {
-      console.log("[v0] Fetching collections for userId:", userId)
-      console.log("[v0] Current artifact collection_id:", artifact.collection_id)
-      setLoadingCollections(true)
-      getMyCollections(userId)
-        .then((result) => {
-          console.log("[v0] Collections fetched:", result)
-          if (result.collections) {
-            setCollections(result.collections)
-            // If editCollectionId is not yet set or empty, set it to the artifact's current collection
-            if (!editCollectionId || editCollectionId === "") {
-              setEditCollectionId(artifact.collection_id)
-            }
-          }
-        })
-        .finally(() => {
-          setLoadingCollections(false)
-        })
-
       getArtifactTypes().then((types) => {
         setArtifactTypes(types)
       })
@@ -613,7 +587,7 @@ export function ArtifactDetailView({
               <TranscriptionInput
                 value={editDescription}
                 onChange={setEditDescription}
-                placeholder="Tell the story of this artifact..."
+                placeholder="Describe this artifact..."
                 type="textarea"
                 fieldType="description"
                 userId={userId}
@@ -636,32 +610,15 @@ export function ArtifactDetailView({
           </section>
         )}
 
-        {isEditMode && (
-          <section className="space-y-3">
-            <SectionTitle as="label" htmlFor="collection">Collection</SectionTitle>
-            <Select
-              value={editCollectionId}
-              onValueChange={setEditCollectionId}
-              disabled={isSaving || loadingCollections}
-            >
-              <SelectTrigger id="collection" className="w-full text-base md:text-sm">
-                <SelectValue placeholder="Select a collection..." />
-              </SelectTrigger>
-              <SelectContent className="text-base md:text-sm">
-                {collections.map((collection) => (
-                  <SelectItem key={collection.id} value={collection.id} className="text-base md:text-sm">
-                    {collection.title}
-                  </SelectItem>
-                ))}
-                {collections.length === 0 && !loadingCollections && (
-                  <SelectItem value="no-collections" disabled className="text-base md:text-sm">
-                    No collections found
-                  </SelectItem>
-                )}
-              </SelectContent>
-            </Select>
-            <HelpText>Move this artifact to a different collection</HelpText>
-          </section>
+        {isEditMode && userId && (
+          <CollectionPicker
+            userId={userId}
+            selectedCollectionId={editCollectionId || null}
+            onSelectCollection={(id) => setEditCollectionId(id || artifact.collection_id)}
+            required={false}
+            defaultOpen={false}
+            storageKey="collectionPicker_edit_open"
+          />
         )}
 
         {isEditMode && artifactTypes.length > 0 && (
@@ -706,7 +663,7 @@ export function ArtifactDetailView({
           {isEditMode && (
             <div className="space-y-3">
               <div className="flex items-center gap-2">
-                <SectionTitle>Content Blocks</SectionTitle>
+                <SectionTitle>Content</SectionTitle>
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -715,7 +672,7 @@ export function ArtifactDetailView({
                         <span className="sr-only">Content blocks help</span>
                       </button>
                     </TooltipTrigger>
-                    <TooltipContent side="right" align="center">
+                    <TooltipContent>
                       Additional media with captions and AI analysis. Click "Save" at the bottom to persist changes.
                     </TooltipContent>
                   </Tooltip>

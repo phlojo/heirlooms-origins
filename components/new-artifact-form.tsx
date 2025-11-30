@@ -20,11 +20,10 @@ import { GenerateImageCaptionButton } from "@/components/artifact/GenerateImageC
 import { GenerateVideoSummaryButton } from "@/components/artifact/GenerateVideoSummaryButton"
 import { ArtifactImageWithViewer } from "@/components/artifact-image-with-viewer"
 import { useRouter } from "next/navigation"
-import { CollectionSelector } from "@/components/collection-selector"
+import { CollectionPicker } from "@/components/collection-picker"
 import ArtifactTypeSelector from "@/components/artifact-type-selector"
 import { getArtifactTypes } from "@/lib/actions/artifact-types"
 import { SectionTitle } from "@/components/ui/section-title"
-import { HelpText } from "@/components/ui/help-text"
 import {
   Tooltip,
   TooltipContent,
@@ -340,29 +339,26 @@ export default function NewArtifactForm({ collectionId, userId }: NewArtifactFor
         )}
 
         {/* Title Section */}
-        <section className="space-y-3">
-          <SectionTitle>Title</SectionTitle>
-          <FormField
-            control={form.control}
-            name="title"
-            render={({ field }) => (
-              <FormItem>
-                <FormControl>
-                  <TranscriptionInput
-                    value={field.value}
-                    onChange={field.onChange}
-                    placeholder="Enter artifact title"
-                    type="input"
-                    fieldType="title"
-                    userId={userId}
-                    entityType="artifact"
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </section>
+        <FormField
+          control={form.control}
+          name="title"
+          render={({ field }) => (
+            <FormItem>
+              <FormControl>
+                <TranscriptionInput
+                  value={field.value}
+                  onChange={field.onChange}
+                  placeholder="Enter artifact title"
+                  type="input"
+                  fieldType="title"
+                  userId={userId}
+                  entityType="artifact"
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
         {/* Gallery Section */}
         <NewArtifactGalleryEditor
@@ -374,50 +370,46 @@ export default function NewArtifactForm({ collectionId, userId }: NewArtifactFor
         />
 
         {/* Description Section */}
-        <section className="space-y-3">
-          <SectionTitle>Description</SectionTitle>
-          <FormField
-            control={form.control}
-            name="description"
-            render={({ field }) => (
-              <FormItem>
-                <FormControl>
-                  <TranscriptionInput
-                    value={field.value || ""}
-                    onChange={field.onChange}
-                    placeholder="Tell the story of this artifact..."
-                    type="textarea"
-                    fieldType="description"
-                    userId={userId}
-                    entityType="artifact"
-                    rows={4}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </section>
+        <FormField
+          control={form.control}
+          name="description"
+          render={({ field }) => (
+            <FormItem>
+              <FormControl>
+                <TranscriptionInput
+                  value={field.value || ""}
+                  onChange={field.onChange}
+                  placeholder="Describe this artifact..."
+                  type="textarea"
+                  fieldType="description"
+                  userId={userId}
+                  entityType="artifact"
+                  rows={4}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
         {/* Collection Section */}
-        <section className="space-y-3">
-          <FormField
-            control={form.control}
-            name="collectionId"
-            render={({ field }) => (
-              <FormItem>
-                <CollectionSelector
-                  userId={userId}
-                  value={field.value}
-                  onChange={field.onChange}
-                  disabled={isSubmitting}
-                />
-                <HelpText>Choose which collection this artifact belongs to</HelpText>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </section>
+        <FormField
+          control={form.control}
+          name="collectionId"
+          render={({ field }) => (
+            <FormItem>
+              <CollectionPicker
+                userId={userId}
+                selectedCollectionId={field.value || null}
+                onSelectCollection={(id) => field.onChange(id || "")}
+                required={false}
+                defaultOpen={true}
+                storageKey="collectionPicker_new_open"
+              />
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
         {/* Type Section */}
         {artifactTypes.length > 0 && (
@@ -459,7 +451,7 @@ export default function NewArtifactForm({ collectionId, userId }: NewArtifactFor
         <section className="space-y-4 overflow-x-hidden">
           <div className="space-y-3">
             <div className="flex items-center gap-2">
-              <SectionTitle>Content Blocks</SectionTitle>
+              <SectionTitle>Content</SectionTitle>
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -468,7 +460,7 @@ export default function NewArtifactForm({ collectionId, userId }: NewArtifactFor
                       <span className="sr-only">Content blocks help</span>
                     </button>
                   </TooltipTrigger>
-                  <TooltipContent side="right" align="center">
+                  <TooltipContent>
                     Additional media with captions and AI analysis. Each block appears inline in your artifact story.
                   </TooltipContent>
                 </Tooltip>

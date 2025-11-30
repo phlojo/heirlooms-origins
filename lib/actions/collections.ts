@@ -538,3 +538,67 @@ export async function getMyCollections(userId: string) {
     return { collections: [], error: "Failed to fetch collections" }
   }
 }
+
+/**
+ * Get user's collections with thumbnail images for the Collection Picker
+ * Returns id, title, slug, thumbnailImages (up to 4), and itemCount
+ */
+export async function getMyCollectionsWithThumbnails(userId: string) {
+  const supabase = await createClient()
+
+  try {
+    const { data: collections, error } = await supabase
+      .from("collections")
+      .select("id, title, slug")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+
+    if (error) {
+      console.error("Error fetching user collections:", error)
+      return { collections: [], error: error.message }
+    }
+
+    // Enrich with thumbnails and item counts
+    const collectionsWithThumbnails = await Promise.all(
+      collections.map(async (collection) => {
+        const { count } = await supabase
+          .from("artifacts")
+          .select("*", { count: "exact", head: true })
+          .eq("collection_id", collection.id)
+
+        const { data: artifacts } = await supabase
+          .from("artifacts")
+          .select("media_urls, thumbnail_url")
+          .eq("collection_id", collection.id)
+          .order("created_at", { ascending: false })
+          .limit(4)
+
+        const thumbnailImages =
+          artifacts?.map((artifact) =>
+            getPrimaryVisualMediaUrl(artifact.media_urls) || artifact.thumbnail_url
+          ).filter(Boolean) || []
+
+        const isUncategorized = collection.slug.startsWith("uncategorized")
+
+        return {
+          ...collection,
+          thumbnailImages: thumbnailImages as string[],
+          itemCount: count || 0,
+          isUncategorized,
+        }
+      }),
+    )
+
+    // Sort with Uncategorized first
+    collectionsWithThumbnails.sort((a, b) => {
+      if (a.isUncategorized) return -1
+      if (b.isUncategorized) return 1
+      return 0
+    })
+
+    return { collections: collectionsWithThumbnails, error: null }
+  } catch (error) {
+    console.error("Unexpected error in getMyCollectionsWithThumbnails:", error)
+    return { collections: [], error: "Failed to fetch collections" }
+  }
+}
