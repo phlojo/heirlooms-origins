@@ -6,190 +6,242 @@ This document outlines all scheduled tasks and cron jobs configured for the Heir
 
 ## Overview
 
-Heirlooms uses Vercel Cron Jobs for scheduled tasks. All cron jobs are configured in Vercel project settings and execute serverless functions on a schedule.
+Heirlooms uses Vercel Cron Jobs for scheduled tasks. Cron configuration is defined in `vercel.json` and executes serverless functions on a schedule.
+
+**Important:** Vercel crons only run on **production deployments** and require at least the **Pro plan**.
 
 ---
 
 ## Active Cron Jobs
 
-### Media Audit Report
+### Media Cleanup (`/api/cleanup-expired-uploads`)
 
-**Endpoint:** `/api/cron/audit-media`
-**Schedule:** `0 2 * * *` (Daily at 2 AM UTC)
-**Purpose:** Generate read-only audit report of pending media uploads
+**Endpoint:** `/api/cleanup-expired-uploads`
+**Schedule:** `0 0 * * *` (Daily at midnight UTC)
+**Config:** `vercel.json`
 
-**What it does:**
-- Queries `pending_uploads` table for expired uploads
-- Checks each URL against artifacts table
-- Verifies existence in Cloudinary
-- Generates categorized report:
-  - **Safe to delete:** Expired, not in artifacts (abandoned uploads)
-  - **Dangerous:** In pending_uploads BUT used in saved artifacts (bug scenario)
-  - **Already deleted:** In database but not in Cloudinary (orphaned DB entries)
+This is the **primary cleanup cron** that handles all media housekeeping.
 
-**Important:** This is a **read-only audit**. No automatic deletion occurs. See [Media Audit Guide](../guides/media-audit.md) for manual cleanup procedures.
+#### What It Cleans
 
-**Security:**
-- Requires `CRON_SECRET` environment variable
-- Validates secret in request headers
-- Returns 401 if unauthorized
+| Phase | What | Source | Action |
+|-------|------|--------|--------|
+| 1 | Expired pending uploads | `pending_uploads` table (24hr expiry) | Delete from storage + DB |
+| 2 | Orphaned pending_uploads | DB entries for already-deleted files | Delete DB record |
+| 3 | Orphaned user_media | `user_media` with temp URLs not linked to artifacts | Delete from storage + DB |
 
-**Monitoring:**
-View reports in:
-- Vercel deployment logs (Functions → `/api/cron/audit-media`)
-- Direct API call: `https://yourdomain.com/api/cron/audit-media?secret=CRON_SECRET`
+#### Phase 1: Expired Pending Uploads
 
-**Expected Results:**
-- `dangerous` count should be 0 (if not, investigate `markUploadsAsSaved()` failures)
-- `safe_to_delete` may grow over time (normal for abandoned uploads)
-- `already_deleted` indicates orphaned DB entries (safe to clean)
+When users upload files, they're tracked in `pending_uploads` with a 24-hour expiry:
+- If artifact is saved → removed from `pending_uploads`, file stays
+- If abandoned (user closes browser) → expires after 24hr → cleaned by cron
 
-**Related Documentation:**
-- [Media Audit Setup Guide](../guides/media-audit.md)
-- [Media System Architecture](../../ARCHITECTURE.md#media-system-architecture)
+#### Phase 2: Already-Deleted Files
 
----
+Sometimes files are manually deleted but `pending_uploads` records remain. This phase removes orphaned DB entries.
 
-## Setting Up Cron Jobs in Vercel
+#### Phase 3: Orphaned Temp Media (Added 2025-11-30)
 
-### 1. Add Cron Job
+This catches files that slipped through due to a bug where `reorganizeArtifactMedia()` wasn't processing gallery URLs:
 
-1. Go to Vercel project → **Settings → Cron Jobs**
-2. Click **Create Cron Job**
-3. Configure:
-   - **Path:** `/api/cron/audit-media`
-   - **Schedule:** `0 2 * * *`
-   - **Description:** Media audit - safe read-only report
+1. File uploaded to temp folder
+2. Artifact saved → removed from `pending_uploads`
+3. **BUG:** Gallery files not moved out of temp (fixed in `media-reorganize.ts`)
+4. Artifact later deleted
+5. Result: `user_media` record with temp URL, not linked to any artifact
 
-### 2. Configure Security
+The cron now:
+1. Finds all `user_media` with temp URLs (`%/temp/%`)
+2. Checks if linked to any artifact via `artifact_media`
+3. If NOT linked → deletes storage file + `user_media` record
 
-Add environment variable in Vercel:
-\`\`\`
-CRON_SECRET=your-random-secret-string
-\`\`\`
+#### Authentication
 
-Use a strong random string (32+ characters recommended).
+- In production: Requires `x-vercel-cron` header (added automatically by Vercel)
+- In development: Allows any request for testing
 
-### 3. Test Cron Job
+#### Response Format
 
-**Manual trigger:**
-\`\`\`bash
-curl -X GET "https://yourdomain.com/api/cron/audit-media?secret=YOUR_CRON_SECRET"
-\`\`\`
-
-**Expected response:**
-\`\`\`json
+```json
 {
   "success": true,
-  "summary": {
-    "total_pending": 5,
-    "safe_to_delete": 3,
-    "dangerous": 0,
-    "already_deleted": 2
+  "audit": {
+    "totalPending": 5,
+    "expiredCount": 3
   },
-  "details": { ... }
+  "cleanup": {
+    "deletedFromStorage": 2,
+    "deletedFromDatabase": 3,
+    "deletedUserMedia": 1,
+    "orphanedTempMediaDeleted": 5,
+    "failedDeletions": 0,
+    "orphanedTempMediaFailed": 0
+  }
 }
-\`\`\`
+```
+
+#### Manual Testing
+
+```bash
+# Local development (no auth required)
+curl http://localhost:3000/api/cleanup-expired-uploads
+
+# Production (requires Vercel cron header - can't call directly)
+# Use Vercel dashboard to trigger manually or wait for scheduled run
+```
 
 ---
 
-## Future Cron Jobs
+## Inactive/Deprecated Endpoints
 
-### Planned Tasks
+### Media Audit Report (`/api/cron/audit-media`)
 
-**Automated Media Cleanup** (Not yet implemented)
-- Schedule: Daily at 3 AM UTC
-- Purpose: Automatically delete safe-to-delete media
-- Depends on: Media audit report showing 0 dangerous items for 7+ days
+**Status:** NOT configured in `vercel.json` - not running as cron
+**Purpose:** Read-only audit report (no cleanup action)
 
-**User Activity Digest** (Not yet implemented)
-- Schedule: Weekly on Mondays at 9 AM UTC
-- Purpose: Send weekly summary emails to active users
-- Includes: New artifacts, collection updates, storage usage
+This endpoint exists but is not scheduled. The cleanup endpoint above handles all necessary operations.
 
-**Database Maintenance** (Not yet implemented)
-- Schedule: Weekly on Sundays at 4 AM UTC
-- Purpose: Vacuum, analyze, and optimize database
-- Supabase may handle this automatically
+If you want audit-only reporting without cleanup, this can be added to `vercel.json`:
 
-**Analytics Aggregation** (Not yet implemented)
-- Schedule: Daily at 1 AM UTC
-- Purpose: Pre-aggregate analytics data for dashboard
-- Reduces real-time query load
+```json
+{
+  "crons": [
+    {
+      "path": "/api/cleanup-expired-uploads",
+      "schedule": "0 0 * * *"
+    },
+    {
+      "path": "/api/cron/audit-media",
+      "schedule": "0 2 * * *"
+    }
+  ]
+}
+```
+
+---
+
+## Configuration
+
+### vercel.json
+
+```json
+{
+  "buildCommand": "pnpm run build",
+  "installCommand": "pnpm install",
+  "crons": [
+    {
+      "path": "/api/cleanup-expired-uploads",
+      "schedule": "0 0 * * *"
+    }
+  ]
+}
+```
+
+### Environment Variables
+
+| Variable | Required | Purpose |
+|----------|----------|---------|
+| `NEXT_PUBLIC_SUPABASE_URL` | Yes | Supabase project URL |
+| `SUPABASE_SERVICE_ROLE_KEY` | Yes | Admin access for cleanup operations |
+| `CLOUDINARY_API_KEY` | Yes | For Cloudinary file deletion |
+| `CLOUDINARY_API_SECRET` | Yes | For Cloudinary file deletion |
+
+**Note:** The cleanup endpoint uses the **service role key** to bypass RLS, since cron jobs run without a user session.
+
+---
+
+## Monitoring
+
+### View Cron Logs in Vercel
+
+1. Go to Vercel project dashboard
+2. Click **Logs** tab
+3. Filter by function: `/api/cleanup-expired-uploads`
+4. Or filter by "Cron" to see all cron executions
+
+### Check Cron Configuration
+
+1. Go to Vercel project → **Settings**
+2. Click **Cron Jobs** in sidebar
+3. View configured jobs and execution history
+
+### Expected Results
+
+| Metric | Healthy Value | Investigate If |
+|--------|---------------|----------------|
+| `deletedFromStorage` | 0-10 | Consistently high (upload flow issue) |
+| `orphanedTempMediaDeleted` | 0 | High after fix deployed (one-time cleanup) |
+| `failedDeletions` | 0 | Any failures (storage access issue) |
+
+---
+
+## Troubleshooting
+
+### Cron Not Running
+
+1. **Check Vercel plan** - Crons require Pro plan or higher
+2. **Check deployment** - Crons only run on production domain
+3. **Check vercel.json** - Ensure cron is configured
+4. **Check logs** - Look for execution errors in Vercel Logs
+
+### No Logs Appearing
+
+1. Crons only run on production, not preview deployments
+2. Hobby plan doesn't support crons
+3. Check Vercel dashboard → Settings → Cron Jobs for status
+
+### Cleanup Not Working
+
+1. Check `SUPABASE_SERVICE_ROLE_KEY` is set in Vercel env vars
+2. Check Supabase Storage bucket policies allow service role delete
+3. Review function logs for specific error messages
+
+---
+
+## Related Documentation
+
+- [Media System Architecture](../architecture/media-system.md)
+- [Bug Tracker - Gallery Media Not Reorganized](bug-tracker.md#gallery-media-not-reorganized-from-temp-folder-fixed-november-2025)
+- [User Bug UB-251129-01](user-bugs.md#ub-251129-01-media-stuck-in-temp-folder---not-visible-to-other-users)
+
+---
+
+## Scripts
+
+### Migration Script
+
+For one-time cleanup of existing temp files (after deploying the `reorganizeArtifactMedia` fix):
+
+```bash
+# Dry run - preview what will be migrated
+pnpm tsx scripts/migrate-temp-media.ts
+
+# Actually migrate files
+pnpm tsx scripts/migrate-temp-media.ts --migrate
+```
+
+### Temp File Audit Script
+
+To see what's currently in temp folders:
+
+```bash
+pnpm tsx scripts/list-temp-files.ts
+```
 
 ---
 
 ## Cron Schedule Reference
 
-Common cron expressions:
-
 | Expression | Meaning |
 |------------|---------|
-| `0 * * * *` | Every hour at minute 0 |
+| `0 0 * * *` | Daily at midnight UTC |
 | `0 2 * * *` | Daily at 2:00 AM UTC |
 | `0 */6 * * *` | Every 6 hours |
 | `0 0 * * 0` | Weekly on Sundays at midnight |
-| `0 0 1 * *` | Monthly on the 1st at midnight |
 | `*/15 * * * *` | Every 15 minutes |
 
 **Time zone:** All Vercel cron jobs run in UTC.
 
 ---
 
-## Monitoring & Alerts
-
-### View Execution Logs
-
-1. Go to Vercel → **Deployments**
-2. Select latest deployment
-3. Click **Functions**
-4. Find `/api/cron/audit-media`
-5. View logs and invocation history
-
-### Set Up Alerts (Future)
-
-Consider setting up alerts for:
-- Cron job failures (execution errors)
-- Dangerous media count > 0 (data integrity issue)
-- Execution time > 10 seconds (performance degradation)
-- Missing scheduled runs (cron misconfiguration)
-
----
-
-## Troubleshooting
-
-### Cron Job Not Running
-
-1. Check Vercel cron configuration is active
-2. Verify schedule expression is valid
-3. Check environment variables are set
-4. View deployment logs for errors
-
-### Authentication Errors
-
-1. Verify `CRON_SECRET` is set in Vercel
-2. Ensure secret matches in API route validation
-3. Check request headers include correct secret
-
-### Timeout Errors
-
-1. Check function execution time (max 10s on Hobby plan)
-2. Optimize database queries
-3. Consider pagination for large datasets
-4. Upgrade Vercel plan if needed
-
----
-
-## Best Practices
-
-1. **Always test cron jobs manually** before deploying
-2. **Log all cron executions** with timestamps and results
-3. **Use read-only operations** when possible (safer)
-4. **Set reasonable timeouts** to prevent hanging
-5. **Monitor execution frequency** to avoid rate limits
-6. **Document all cron jobs** in this file
-7. **Version control cron logic** in `/app/api/cron/`
-
----
-
-**Last Updated:** 2025-01-23
+**Last Updated:** 2025-11-30

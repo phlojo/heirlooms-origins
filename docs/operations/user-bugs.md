@@ -23,7 +23,7 @@ User bugs use the format: `UB-YYMMDD-NN` (e.g., UB-251129-01)
 
 ## UB-251129-01: Media stuck in temp folder - not visible to other users
 
-**Status:** In Progress
+**Status:** Fixed (pending production deployment)
 **Reported:** 2025-11-29
 **Reporter:** Jason Leake
 **Priority:** Critical
@@ -123,11 +123,27 @@ Moved existing temp folder media to artifact folders and updated all database re
 ### Verification
 - [x] Fix tested locally
 - [x] RLS policy applied to dev database
-- [x] Migration script run (14 files moved)
+- [x] Migration script run (28 files moved from temp)
 - [x] Gallery now visible on dev.heirloomsapp.com
+- [x] Root cause identified: `reorganizeArtifactMedia()` not processing gallery URLs
+- [x] Fix applied to `lib/actions/media-reorganize.ts`
+- [x] Cron cleanup enhanced with Phase 3 orphaned temp cleanup
 - [ ] Code changes deployed to production
 - [ ] RLS policy applied to production database
 - [ ] User (Jason) confirmed fix
+
+### Additional Fix (2025-11-30)
+
+**Root cause was deeper than initially identified:**
+
+The original fix added `reorganizeArtifactMedia()` to `updateArtifact()`, but the function itself was flawed - it only read from `artifacts.media_urls` which doesn't contain gallery URLs.
+
+**Complete fix:**
+1. `reorganizeArtifactMedia()` now queries `artifact_media` + `user_media` for gallery URLs
+2. Cron cleanup now has Phase 3 to catch orphaned temp `user_media` not linked to artifacts
+3. Cron uses service role client (no user session in cron context)
+
+See: `docs/archive/2025-11-30-temp-media-reorganization-fix.md`
 
 ### Manual Fix for Existing Affected Artifacts
 For Jason Leake's artifacts that already have media stuck in temp:

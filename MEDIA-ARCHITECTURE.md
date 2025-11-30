@@ -1,6 +1,6 @@
 # Heirlooms Media Architecture
 
-_Last updated: 2025-01-26 – **Phase 2 Complete:** Supabase Storage originals + Cloudinary fetch derivatives + Client-side direct upload_
+_Last updated: 2025-11-30 – **Phase 2 Complete:** Supabase Storage originals + Cloudinary fetch derivatives + Client-side direct upload + Gallery URL reorganization fix_
 
 This document describes how media (images and videos) are stored, transformed, and delivered in the Heirlooms app.
 
@@ -261,13 +261,19 @@ When user creates artifact with media (`NEXT_PUBLIC_USE_SUPABASE_STORAGE=true`):
    - `reorganizeArtifactMedia(artifactId)` called automatically
 
 5. **File reorganization** (`lib/actions/media-reorganize.ts`):
-   - For each Supabase URL in `media_urls`:
+   - Processes URLs from **both** sources:
+     - `artifacts.media_urls` (media block URLs)
+     - `user_media` via `artifact_media` (gallery URLs)
+   - For each Supabase URL:
      - `moveSupabaseFile(url, userId, artifactId)` copies file
      - From: `{userId}/temp/{timestamp}-{filename}`
      - To: `{userId}/{artifactId}/{timestamp}-{filename}`
      - Deletes original from temp
    - Updates artifact `media_urls` with new organized URLs
+   - Updates `user_media` records with new URLs
    - Non-fatal: artifact still works if reorganization fails
+
+   **Important:** Gallery and media blocks store URLs differently. `reorganizeArtifactMedia()` must query both `artifact.media_urls` AND `artifact_media` + `user_media` to catch all uploaded files. (Bug fixed Nov 2025)
 
 ### 5.2 Display flow (Cloudinary Fetch)
 
@@ -332,19 +338,40 @@ When UI component displays an image:
 
 ### 5.3 Cleanup & Lifecycle
 
-**Abandoned uploads** (user uploads but doesn't save artifact):
+**Daily cron job** (`/api/cleanup-expired-uploads` - configured in `vercel.json`):
+
+Runs at midnight UTC and handles three phases:
+
+| Phase | What | Source | Action |
+|-------|------|--------|--------|
+| 1 | Expired pending uploads | `pending_uploads` table (24hr expiry) | Delete from storage + DB |
+| 2 | Orphaned pending_uploads | DB entries for already-deleted files | Delete DB record |
+| 3 | Orphaned temp media | `user_media` with temp URLs not linked to artifacts | Delete from storage + DB |
+
+**Phase 1: Expired pending uploads** (user uploads but doesn't save artifact):
 1. `pending_uploads` table tracks URL with 24hr expiration
-2. Cron job `/api/cron/audit-media` runs daily
-3. Identifies expired uploads not referenced by artifacts
-4. For Cloudinary URLs: `deleteCloudinaryMedia(publicId)`
-5. For Supabase URLs: `deleteFromSupabaseStorage(url)`
+2. Cron identifies expired uploads not referenced by artifacts
+3. For Cloudinary URLs: `deleteCloudinaryMedia(publicId)`
+4. For Supabase URLs: Delete via service role client
+
+**Phase 2: Orphaned DB entries**:
+1. `pending_uploads` records pointing to already-deleted files
+2. Cleans up DB records without storage deletion
+
+**Phase 3: Orphaned temp media** (added Nov 2025):
+1. Finds `user_media` records with temp URLs (`%/temp/%`)
+2. Checks if linked to any artifact via `artifact_media`
+3. If NOT linked → deletes storage file + `user_media` record
+4. Catches files that slipped through when `reorganizeArtifactMedia()` didn't process gallery URLs (bug fixed Nov 2025)
 
 **Artifact deletion**:
 1. Server action gets all `media_urls` from artifact
 2. For each URL:
-   - If Supabase: `deleteFromSupabaseStorage(url)`
+   - If Supabase: Delete via service role client
    - If Cloudinary: `deleteCloudinaryMedia(publicId, resourceType)`
 3. Cloudinary derivatives auto-expire from cache (no manual cleanup needed)
+
+See [docs/operations/cron-jobs.md](docs/operations/cron-jobs.md) for full documentation.
 
 ### 5.4 Backwards Compatibility
 
