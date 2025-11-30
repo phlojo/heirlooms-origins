@@ -575,7 +575,10 @@ export function ArtifactDetailView({
           />
         ) : (
           currentGalleryMedia && currentGalleryMedia.length > 0 && (
-            <ArtifactMediaGallery media={currentGalleryMedia} />
+            <ArtifactMediaGallery
+              media={currentGalleryMedia}
+              onFullscreenChange={setIsImageFullscreen}
+            />
           )
         )}
 

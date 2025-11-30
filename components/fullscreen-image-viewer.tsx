@@ -3,6 +3,7 @@
 import type React from "react"
 
 import { useEffect, useState, useRef, useCallback } from "react"
+import { createPortal } from "react-dom"
 import { X, ZoomIn, ZoomOut, Maximize } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import MediaImage from "@/components/media-image"
@@ -23,8 +24,14 @@ export function FullscreenImageViewer({ src, alt, onClose }: FullscreenImageView
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
   const [isAnimatingIn, setIsAnimatingIn] = useState(true)
   const [isAnimatingOut, setIsAnimatingOut] = useState(false)
+  const [mounted, setMounted] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
   const lastTapTime = useRef<number>(0)
+
+  // Wait for client-side mount before rendering portal
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   useEffect(() => {
     document.body.style.overflow = "hidden"
@@ -199,7 +206,10 @@ export function FullscreenImageViewer({ src, alt, onClose }: FullscreenImageView
   const isAtFit = scale <= 1.01
   const isAtMaxZoom = scale >= 5
 
-  return (
+  // Don't render anything until mounted (client-side only for portal)
+  if (!mounted) return null
+
+  const viewerContent = (
     <div
       className="fixed inset-0 z-[9999]"
       onClick={handleContainerClick}
@@ -324,4 +334,7 @@ export function FullscreenImageViewer({ src, alt, onClose }: FullscreenImageView
       </div>
     </div>
   )
+
+  // Use portal to render at document body level, escaping any stacking contexts
+  return createPortal(viewerContent, document.body)
 }

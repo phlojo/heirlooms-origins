@@ -111,6 +111,7 @@ interface ArtifactMediaGalleryProps {
   className?: string
   initialIndex?: number
   onMediaChange?: (index: number) => void
+  onFullscreenChange?: (isFullscreen: boolean) => void
 }
 
 /**
@@ -125,6 +126,7 @@ export function ArtifactMediaGallery({
   className,
   initialIndex = 0,
   onMediaChange,
+  onFullscreenChange,
 }: ArtifactMediaGalleryProps) {
   const galleryRef = useRef<HTMLDivElement>(null)
   const flickityInstance = useRef<InstanceType<FlickityType> | null>(null)
@@ -205,12 +207,14 @@ export function ArtifactMediaGallery({
   // Handle image tap to open fullscreen
   const handleImageTap = useCallback((src: string, alt: string, rect: DOMRect) => {
     setFullscreenImage({ src, alt, sourceRect: rect })
-  }, [])
+    onFullscreenChange?.(true)
+  }, [onFullscreenChange])
 
   // Close fullscreen viewer
   const handleCloseFullscreen = useCallback(() => {
     setFullscreenImage(null)
-  }, [])
+    onFullscreenChange?.(false)
+  }, [onFullscreenChange])
 
   if (media.length === 0) {
     return (
