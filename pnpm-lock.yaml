@@ -9,7 +9,7 @@ importers:
   .:
     dependencies:
       '@ai-sdk/openai':
-        specifier: latest
+        specifier: 2.0.71
         version: 2.0.71(zod@3.25.76)
       '@dnd-kit/core':
         specifier: ^6.3.1
@@ -21,127 +21,127 @@ importers:
         specifier: ^3.2.2
         version: 3.2.2(react@19.2.0)
       '@edge-runtime/vm':
-        specifier: latest
+        specifier: 5.0.0
         version: 5.0.0
       '@emotion/is-prop-valid':
-        specifier: latest
+        specifier: 1.4.0
         version: 1.4.0
       '@hookform/resolvers':
-        specifier: latest
+        specifier: 5.2.2
         version: 5.2.2(react-hook-form@7.66.1(react@19.2.0))
       '@next/eslint-plugin-next':
-        specifier: latest
+        specifier: 16.0.3
         version: 16.0.3
       '@opentelemetry/api':
-        specifier: latest
+        specifier: 1.9.0
         version: 1.9.0
       '@radix-ui/react-accordion':
-        specifier: latest
+        specifier: 1.2.12
         version: 1.2.12(@types/react-dom@19.0.0)(@types/react@19.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       '@radix-ui/react-alert-dialog':
-        specifier: latest
+        specifier: 1.1.15
         version: 1.1.15(@types/react-dom@19.0.0)(@types/react@19.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       '@radix-ui/react-aspect-ratio':
-        specifier: latest
+        specifier: 1.1.8
         version: 1.1.8(@types/react-dom@19.0.0)(@types/react@19.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       '@radix-ui/react-avatar':
-        specifier: latest
+        specifier: 1.1.11
         version: 1.1.11(@types/react-dom@19.0.0)(@types/react@19.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       '@radix-ui/react-checkbox':
-        specifier: latest
+        specifier: 1.3.3
         version: 1.3.3(@types/react-dom@19.0.0)(@types/react@19.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       '@radix-ui/react-collapsible':
-        specifier: latest
+        specifier: 1.1.12
         version: 1.1.12(@types/react-dom@19.0.0)(@types/react@19.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       '@radix-ui/react-context-menu':
-        specifier: latest
+        specifier: 2.2.16
         version: 2.2.16(@types/react-dom@19.0.0)(@types/react@19.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       '@radix-ui/react-dialog':
-        specifier: latest
+        specifier: 1.1.15
         version: 1.1.15(@types/react-dom@19.0.0)(@types/react@19.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       '@radix-ui/react-dropdown-menu':
-        specifier: latest
+        specifier: 2.1.16
         version: 2.1.16(@types/react-dom@19.0.0)(@types/react@19.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       '@radix-ui/react-hover-card':
-        specifier: latest
+        specifier: 1.1.15
         version: 1.1.15(@types/react-dom@19.0.0)(@types/react@19.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       '@radix-ui/react-label':
-        specifier: latest
+        specifier: 2.1.8
         version: 2.1.8(@types/react-dom@19.0.0)(@types/react@19.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       '@radix-ui/react-menubar':
-        specifier: latest
+        specifier: 1.1.16
         version: 1.1.16(@types/react-dom@19.0.0)(@types/react@19.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       '@radix-ui/react-navigation-menu':
-        specifier: latest
+        specifier: 1.2.14
         version: 1.2.14(@types/react-dom@19.0.0)(@types/react@19.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       '@radix-ui/react-popover':
-        specifier: latest
+        specifier: 1.1.15
         version: 1.1.15(@types/react-dom@19.0.0)(@types/react@19.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       '@radix-ui/react-progress':
-        specifier: latest
+        specifier: 1.1.8
         version: 1.1.8(@types/react-dom@19.0.0)(@types/react@19.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       '@radix-ui/react-radio-group':
-        specifier: latest
+        specifier: 1.3.8
         version: 1.3.8(@types/react-dom@19.0.0)(@types/react@19.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       '@radix-ui/react-scroll-area':
-        specifier: latest
+        specifier: 1.2.10
         version: 1.2.10(@types/react-dom@19.0.0)(@types/react@19.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       '@radix-ui/react-select':
-        specifier: latest
+        specifier: 2.2.6
         version: 2.2.6(@types/react-dom@19.0.0)(@types/react@19.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       '@radix-ui/react-separator':
-        specifier: latest
+        specifier: 1.1.8
         version: 1.1.8(@types/react-dom@19.0.0)(@types/react@19.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       '@radix-ui/react-slider':
-        specifier: latest
+        specifier: 1.3.6
         version: 1.3.6(@types/react-dom@19.0.0)(@types/react@19.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       '@radix-ui/react-slot':
-        specifier: latest
+        specifier: 1.2.4
         version: 1.2.4(@types/react@19.0.0)(react@19.2.0)
       '@radix-ui/react-switch':
-        specifier: latest
+        specifier: 1.2.6
         version: 1.2.6(@types/react-dom@19.0.0)(@types/react@19.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       '@radix-ui/react-tabs':
-        specifier: latest
+        specifier: 1.1.13
         version: 1.1.13(@types/react-dom@19.0.0)(@types/react@19.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       '@radix-ui/react-toast':
-        specifier: latest
+        specifier: 1.2.15
         version: 1.2.15(@types/react-dom@19.0.0)(@types/react@19.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       '@radix-ui/react-toggle':
-        specifier: latest
+        specifier: 1.1.10
         version: 1.1.10(@types/react-dom@19.0.0)(@types/react@19.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       '@radix-ui/react-toggle-group':
-        specifier: latest
+        specifier: 1.1.11
         version: 1.1.11(@types/react-dom@19.0.0)(@types/react@19.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       '@radix-ui/react-tooltip':
-        specifier: latest
+        specifier: 1.2.8
         version: 1.2.8(@types/react-dom@19.0.0)(@types/react@19.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       '@supabase/ssr':
-        specifier: latest
+        specifier: 0.7.0
         version: 0.7.0(@supabase/supabase-js@2.84.0)
       '@supabase/supabase-js':
-        specifier: latest
+        specifier: 2.84.0
         version: 2.84.0
       '@testing-library/dom':
         specifier: ^10.4.1
         version: 10.4.1
       '@types/debug':
-        specifier: latest
+        specifier: 4.1.12
         version: 4.1.12
       '@vercel/analytics':
-        specifier: latest
+        specifier: 1.5.0
         version: 1.5.0(next@16.0.0(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(@playwright/test@1.56.1)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react@19.2.0)
       '@vitest/browser-playwright':
-        specifier: latest
+        specifier: 4.0.13
         version: 4.0.13(playwright@1.56.1)(vite@7.2.4(@types/node@22.0.0)(jiti@2.6.1)(lightningcss@1.30.1)(tsx@4.20.6))(vitest@2.1.9)
       '@vitest/browser-preview':
-        specifier: latest
+        specifier: 4.0.13
         version: 4.0.13(vite@7.2.4(@types/node@22.0.0)(jiti@2.6.1)(lightningcss@1.30.1)(tsx@4.20.6))(vitest@2.1.9)
       '@vitest/browser-webdriverio':
-        specifier: latest
+        specifier: 4.0.13
         version: 4.0.13(vite@7.2.4(@types/node@22.0.0)(jiti@2.6.1)(lightningcss@1.30.1)(tsx@4.20.6))(vitest@2.1.9)(webdriverio@9.20.1)
       ai:
-        specifier: latest
+        specifier: 5.0.101
         version: 5.0.101(zod@3.25.76)
       autoprefixer:
         specifier: ^10.4.20
@@ -153,13 +153,13 @@ importers:
         specifier: ^2.1.1
         version: 2.1.1
       cmdk:
-        specifier: latest
+        specifier: 1.1.1
         version: 1.1.1(@types/react-dom@19.0.0)(@types/react@19.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       date-fns:
         specifier: 4.1.0
         version: 4.1.0
       embla-carousel-react:
-        specifier: latest
+        specifier: 8.6.0
         version: 8.6.0(react@19.2.0)
       flickity:
         specifier: ^3.0.0
@@ -168,13 +168,13 @@ importers:
         specifier: ^3.0.0
         version: 3.0.0(flickity@3.0.0)
       framer-motion:
-        specifier: latest
+        specifier: 12.23.24
         version: 12.23.24(@emotion/is-prop-valid@1.4.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       input-otp:
-        specifier: latest
+        specifier: 1.4.2
         version: 1.4.2(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       jsdom:
-        specifier: latest
+        specifier: 27.2.0
         version: 27.2.0
       lucide-react:
         specifier: ^0.454.0
@@ -186,34 +186,34 @@ importers:
         specifier: 16.0.0
         version: 16.0.0(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(@playwright/test@1.56.1)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       next-themes:
-        specifier: latest
+        specifier: 0.4.6
         version: 0.4.6(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       path:
-        specifier: latest
+        specifier: 0.12.7
         version: 0.12.7
       react:
         specifier: 19.2.0
         version: 19.2.0
       react-day-picker:
-        specifier: latest
+        specifier: 9.11.2
         version: 9.11.2(react@19.2.0)
       react-dom:
         specifier: 19.2.0
         version: 19.2.0(react@19.2.0)
       react-hook-form:
-        specifier: latest
+        specifier: 7.66.1
         version: 7.66.1(react@19.2.0)
       react-markdown:
-        specifier: latest
+        specifier: 10.1.0
         version: 10.1.0(@types/react@19.0.0)(react@19.2.0)
       react-resizable-panels:
-        specifier: latest
+        specifier: 3.0.6
         version: 3.0.6(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       recharts:
-        specifier: latest
+        specifier: 3.5.0
         version: 3.5.0(@types/react@19.0.0)(eslint@9.0.0)(react-dom@19.2.0(react@19.2.0))(react-is@18.3.1)(react@19.2.0)(redux@5.0.1)
       sonner:
-        specifier: latest
+        specifier: 2.0.7
         version: 2.0.7(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       tailwind-merge:
         specifier: ^2.5.5
@@ -222,10 +222,10 @@ importers:
         specifier: ^1.0.7
         version: 1.0.7(tailwindcss@4.1.9)
       vaul:
-        specifier: latest
+        specifier: 1.1.2
         version: 1.1.2(@types/react-dom@19.0.0)(@types/react@19.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       vite:
-        specifier: latest
+        specifier: 7.2.4
         version: 7.2.4(@types/node@22.0.0)(jiti@2.6.1)(lightningcss@1.30.1)(tsx@4.20.6)
       zod:
         specifier: 3.25.76
