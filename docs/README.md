@@ -31,6 +31,7 @@ docs/
 ├── planning/               # Feature design docs (in progress)
 │   └── *.md                # Proposals and implementation status
 └── archive/                # Historical documents
+    ├── 2025-12-01-phase-3-cloudinary-migration.md  # Phase 3 migration execution
     └── 2025-*.md           # Completed work, for reference only
 ```
 

@@ -9,7 +9,7 @@
  */
 
 import { createClient } from "@supabase/supabase-js"
-import crypto from "node:crypto"
+import * as crypto from "node:crypto"
 
 // Load environment variables
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
