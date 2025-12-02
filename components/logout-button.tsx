@@ -18,7 +18,7 @@ export function LogoutButton() {
   }
 
   return (
-    <Button variant="outline" size="sm" onClick={handleSignOut} disabled={isPending} className="gap-2 bg-transparent">
+    <Button onClick={handleSignOut} disabled={isPending} className="gap-2">
       <LogOut className="h-4 w-4" />
       <span>Log Out</span>
     </Button>

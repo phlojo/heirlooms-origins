@@ -2,15 +2,9 @@ export const dynamic = "force-dynamic"
 
 import { AppLayout } from "@/components/app-layout"
 import { getCurrentUser, createClient } from "@/lib/supabase/server"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { redirect } from "next/navigation"
-import { Package, ImageIcon, Calendar, Mail, User, Settings, Lock } from "lucide-react"
-import { ThemePreferenceToggle } from "@/components/theme-preference-toggle"
 import { LogoutButton } from "@/components/logout-button"
-import { PasswordForm } from "@/components/password-form"
-import { DisplayNameForm } from "@/components/display-name-form"
-import { ProfileStatLink } from "@/components/profile-stat-link"
+import { ProfileTabs } from "@/components/profile-tabs"
 import { getUserAuthProvider } from "@/lib/actions/profile"
 
 async function getUserProfile(userId: string) {
@@ -51,162 +45,55 @@ export default async function ProfilePage() {
   const stats = await getUserStats(user.id)
   const authProvider = await getUserAuthProvider()
 
-  const displayName = profile?.display_name || user.email?.split("@")[0] || "User"
-  const joinedDate = profile?.created_at
-    ? new Date(profile.created_at).toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      })
-    : "Unknown"
-
   const showPasswordUI = authProvider !== "google"
   const passwordMode: "change" | "set" = authProvider === "password" ? "change" : "set"
 
   return (
     <AppLayout user={user}>
-      <div className="space-y-8 pb-20">
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <h1 className="flex items-center gap-3 text-3xl font-bold tracking-tight">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center bg-gradient-to-br from-primary to-chart-2 text-primary-foreground shadow-sm rounded-sm">
-                <svg
-                  width="24"
-                  height="26"
-                  viewBox="0 0 80 90"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="shrink-0"
-                >
-                  <path d="M39.6001 90L52.1001 82.7L39.6001 75.5L27.1001 82.7L39.6001 90Z" fill="currentColor" />
-                  <path d="M2.0001 68.3L14.6001 75.5L27.1001 68.3L14.6001 61L2.0001 68.3Z" fill="currentColor" />
-                  <path d="M77.2002 68.3L64.6002 61L52.1002 68.3L64.6002 75.5L77.2002 68.3Z" fill="currentColor" />
-                  <path d="M39.6001 61L52.1001 53.8L39.6001 46.6L27.1001 53.8L39.6001 61Z" fill="currentColor" />
-                  <path d="M39.6001 75.5L52.1001 68.3L39.6001 61L27.1001 68.3L39.6001 75.5Z" fill="currentColor" />
-                  <path d="M37.6001 43.3L37.6001 28.9L25.1001 36.1L25.1001 50.5L37.6001 43.3Z" fill="currentColor" />
-                  <path d="M12.6001 43.3L0.0001 50.5L0 65L12.6001 57.8L12.6001 43.3Z" fill="currentColor" />
-                  <path d="M37.6001 0L25.1001 7.2L25.1001 21.6L37.6001 14.4L37.6001 0Z" fill="currentColor" />
-                  <path d="M0 21.6L0 36.1L12.6001 28.9L12.6001 14.4L0 21.6Z" fill="currentColor" />
-                  <path d="M25.1001 21.6L12.6001 28.9L12.6001 43.3L25.1001 36.1L25.1001 21.6Z" fill="currentColor" />
-                  <path d="M41.6001 43.3L54.1001 50.5L54.1001 36.1L41.6001 28.9L41.6001 43.3Z" fill="currentColor" />
-                  <path d="M79.2002 65L79.2002 50.5L66.6002 43.3L66.6002 57.8L79.2002 65Z" fill="currentColor" />
-                  <path d="M54.1001 7.2L41.6001 0L41.6001 14.4L54.1001 21.6L54.1001 7.2Z" fill="currentColor" />
-                  <path d="M79.2002 21.6L66.6002 14.4L66.6002 28.9L79.2002 36.1L79.2002 21.6Z" fill="currentColor" />
-                  <path d="M66.6001 43.3L66.6001 28.9L54.1001 21.6L54.1001 36.1L66.6001 43.3Z" fill="currentColor" />
-                </svg>
-              </div>
-              My Profile
-            </h1>
-            <p className="mt-1 text-muted-foreground">View and manage your account information</p>
-          </div>
-          <LogoutButton />
-        </div>
-
-        <div className="grid gap-6 md:grid-cols-2">
-          {/* Profile Information Card */}
-          <Card className="animate-fade-in">
-            <CardHeader>
-              <CardTitle>Profile Information</CardTitle>
-              <CardDescription>Your personal account details</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="flex items-center gap-4">
-                <Avatar className="h-16 w-16">
-                  <AvatarFallback className="text-2xl">{displayName.charAt(0).toUpperCase()}</AvatarFallback>
-                </Avatar>
-                <div>
-                  <h3 className="text-lg font-semibold">{displayName}</h3>
-                  <p className="text-sm text-muted-foreground">Member since {joinedDate}</p>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <div className="flex items-start gap-3">
-                  <User className="mt-0.5 h-5 w-5 text-muted-foreground" />
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">Display Name</p>
-                    <DisplayNameForm currentDisplayName={profile?.display_name} userId={user.id} />
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <Mail className="mt-0.5 h-5 w-5 text-muted-foreground" />
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">Email</p>
-                    <p className="text-sm text-muted-foreground">{user.email}</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <Calendar className="mt-0.5 h-5 w-5 text-muted-foreground" />
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">Joined</p>
-                    <p className="text-sm text-muted-foreground">{joinedDate}</p>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Statistics Card */}
-          <Card className="animate-fade-in">
-            <CardHeader>
-              <CardTitle>Your Heirlooms</CardTitle>
-              <CardDescription>Overview of your collections and artifacts</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <ProfileStatLink
-                href="/collections"
-                icon={<Package className="h-5 w-5 text-primary" />}
-                label="Collections"
-                count={stats.collectionsCount}
-                storageKey="heirloom-collections-tab"
-                targetTab="mine"
-              />
-
-              <ProfileStatLink
-                href="/artifacts"
-                icon={<ImageIcon className="h-5 w-5 text-primary" />}
-                label="Artifacts"
-                count={stats.artifactsCount}
-                storageKey="heirloom-artifacts-tab"
-                targetTab="mine"
-              />
-            </CardContent>
-          </Card>
-        </div>
-
-        {showPasswordUI && (
-          <Card className="animate-fade-in">
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <Lock className="h-5 w-5" />
-                <CardTitle>{passwordMode === "change" ? "Change Password" : "Set Password"}</CardTitle>
-              </div>
-              <CardDescription>
-                {passwordMode === "change"
-                  ? "Update your account password for enhanced security"
-                  : "Set a password to enable email/password login in addition to magic links"}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <PasswordForm mode={passwordMode} />
-            </CardContent>
-          </Card>
-        )}
-
-        <Card className="animate-fade-in">
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <Settings className="h-5 w-5" />
-              <CardTitle>App Preferences</CardTitle>
+      <div className="space-y-6 pb-20">
+        <div>
+          <h1 className="flex items-center gap-3 text-3xl font-bold tracking-tight">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center bg-gradient-to-br from-primary to-chart-2 text-primary-foreground shadow-sm rounded-sm">
+              <svg
+                width="24"
+                height="26"
+                viewBox="0 0 80 90"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                className="shrink-0"
+              >
+                <path d="M39.6001 90L52.1001 82.7L39.6001 75.5L27.1001 82.7L39.6001 90Z" fill="currentColor" />
+                <path d="M2.0001 68.3L14.6001 75.5L27.1001 68.3L14.6001 61L2.0001 68.3Z" fill="currentColor" />
+                <path d="M77.2002 68.3L64.6002 61L52.1002 68.3L64.6002 75.5L77.2002 68.3Z" fill="currentColor" />
+                <path d="M39.6001 61L52.1001 53.8L39.6001 46.6L27.1001 53.8L39.6001 61Z" fill="currentColor" />
+                <path d="M39.6001 75.5L52.1001 68.3L39.6001 61L27.1001 68.3L39.6001 75.5Z" fill="currentColor" />
+                <path d="M37.6001 43.3L37.6001 28.9L25.1001 36.1L25.1001 50.5L37.6001 43.3Z" fill="currentColor" />
+                <path d="M12.6001 43.3L0.0001 50.5L0 65L12.6001 57.8L12.6001 43.3Z" fill="currentColor" />
+                <path d="M37.6001 0L25.1001 7.2L25.1001 21.6L37.6001 14.4L37.6001 0Z" fill="currentColor" />
+                <path d="M0 21.6L0 36.1L12.6001 28.9L12.6001 14.4L0 21.6Z" fill="currentColor" />
+                <path d="M25.1001 21.6L12.6001 28.9L12.6001 43.3L25.1001 36.1L25.1001 21.6Z" fill="currentColor" />
+                <path d="M41.6001 43.3L54.1001 50.5L54.1001 36.1L41.6001 28.9L41.6001 43.3Z" fill="currentColor" />
+                <path d="M79.2002 65L79.2002 50.5L66.6002 43.3L66.6002 57.8L79.2002 65Z" fill="currentColor" />
+                <path d="M54.1001 7.2L41.6001 0L41.6001 14.4L54.1001 21.6L54.1001 7.2Z" fill="currentColor" />
+                <path d="M79.2002 21.6L66.6002 14.4L66.6002 28.9L79.2002 36.1L79.2002 21.6Z" fill="currentColor" />
+                <path d="M66.6001 43.3L66.6001 28.9L54.1001 21.6L54.1001 36.1L66.6001 43.3Z" fill="currentColor" />
+              </svg>
             </div>
-            <CardDescription>Customize your app experience</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ThemePreferenceToggle initialTheme={profile?.theme_preference || "light"} />
-          </CardContent>
-        </Card>
+            My Profile
+          </h1>
+          <div className="mt-1 flex items-center gap-3">
+            <p className="text-muted-foreground">View and manage your account information</p>
+            <LogoutButton />
+          </div>
+        </div>
+
+        <ProfileTabs
+          user={{ id: user.id, email: user.email }}
+          profile={profile}
+          stats={stats}
+          showPasswordUI={showPasswordUI}
+          passwordMode={passwordMode}
+        />
       </div>
     </AppLayout>
   )
