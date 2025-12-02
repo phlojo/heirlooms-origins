@@ -8,6 +8,7 @@ import { ThemeProvider } from "@/components/theme-provider"
 import { Analytics } from "@vercel/analytics/react"
 import { SupabaseProvider } from "@/lib/supabase/browser-context"
 import { ViewportHeightManager } from "@/components/viewport-height-manager"
+import { getThemeFromCookie } from "@/lib/theme-server"
 
 // Initialize fonts
 const _geist = Geist({ subsets: ["latin"], weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"] })
@@ -49,17 +50,20 @@ export const viewport: Viewport = {
   ],
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  // Get theme from cookie for server-side rendering (prevents flash)
+  const theme = await getThemeFromCookie()
+
   return (
-    <html lang="en" suppressHydrationWarning data-scroll-behavior="smooth">
+    <html lang="en" suppressHydrationWarning data-scroll-behavior="smooth" className={theme === "dark" ? "dark" : ""}>
       <body className={`font-sans antialiased overflow-x-hidden`}>
         <ViewportHeightManager />
         <SupabaseProvider>
-          <ThemeProvider>
+          <ThemeProvider serverTheme={theme}>
             {children}
             <Analytics />
           </ThemeProvider>

@@ -7,7 +7,7 @@ import { useSearchParams } from "next/navigation"
 export default function LoginPage() {
   const isMobile = useIsMobile()
   const searchParams = useSearchParams()
-  const returnTo = searchParams.get("returnTo") || "/collections"
+  const returnTo = searchParams.get("returnTo") || "/"
 
   return (
     <div className="relative flex min-h-svh w-full items-center justify-center p-6 pb-[var(--bottom-nav-height,80px)]">

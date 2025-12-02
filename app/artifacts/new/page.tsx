@@ -16,7 +16,7 @@ export default async function NewArtifactPage({
 }) {
   const user = await getCurrentUser()
   if (!user) {
-    redirect("/login")
+    redirect("/login?returnTo=/artifacts")
   }
 
   const { collectionId, returnTo } = await searchParams

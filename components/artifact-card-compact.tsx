@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { Card } from "@/components/ui/card"
 import { HeirloomsIcon } from "@/components/heirlooms-icon"
-import { getThumbnailUrl } from "@/lib/cloudinary"
+import { getSmallThumbnailUrl } from "@/lib/cloudinary"
 import MediaImage from "@/components/media-image"
 import { ArtifactTypeBadge } from "@/components/artifact-type-badge"
 
@@ -10,9 +10,9 @@ interface ArtifactCardCompactProps {
     id: string
     slug: string
     title: string
-    description?: string
-    year_acquired?: number
-    origin?: string
+    description?: string | null
+    year_acquired?: number | null
+    origin?: string | null
     media_urls?: string[]
     media_derivatives?: Record<string, any> | null
     thumbnail_url?: string | null
@@ -33,12 +33,12 @@ interface ArtifactCardCompactProps {
 }
 
 export function ArtifactCardCompact({ artifact, showAuthor = false, authorName, style }: ArtifactCardCompactProps) {
-  // PHASE 1: Pass media_derivatives to getThumbnailUrl for stored derivative usage
-  const thumbnailUrl = artifact.thumbnail_url ? getThumbnailUrl(artifact.thumbnail_url, artifact.media_derivatives) : null
+  // Use small thumbnail (120x120) for compact cards
+  const thumbnailUrl = artifact.thumbnail_url ? getSmallThumbnailUrl(artifact.thumbnail_url, artifact.media_derivatives) : null
 
   return (
     <Link href={`/artifacts/${artifact.slug}`} data-testid="artifact-link" style={style}>
-      <Card className="group overflow-hidden border p-0 transition-all hover:shadow-md rounded-md flex flex-col h-full">
+      <Card className="group overflow-hidden border p-0 transition-all hover:shadow-md rounded-md flex flex-col">
         <div className="relative aspect-square overflow-hidden bg-muted">
           {thumbnailUrl ? (
             <>

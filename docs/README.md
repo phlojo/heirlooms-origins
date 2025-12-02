@@ -22,6 +22,8 @@ docs/
 │   ├── artifact-grid-layout.md     # Masonry grid system
 │   ├── artifact-types.md           # Type badges and categories
 │   ├── collection-picker.md        # Collection picker with thumbnail grid
+│   ├── community-showcase.md       # CommunityShowcase component for public artifacts
+│   ├── homepage.md                 # Dual homepage (marketing + dashboard)
 │   └── navigation.md               # Routing and navigation
 ├── operations/             # Runbooks for production operations
 │   ├── bug-tracker.md      # Internal bugs and fixes

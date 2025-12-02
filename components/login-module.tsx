@@ -5,10 +5,36 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { signInWithPassword, signInWithMagicLink } from "@/lib/actions/auth"
 import { useSupabase } from "@/lib/supabase/browser-context"
 import { useRouter } from 'next/navigation'
+
+/**
+ * Detect if the app is running in an embedded browser/WebView
+ * Google OAuth blocks these for security reasons
+ */
+function isEmbeddedBrowser(): boolean {
+  if (typeof window === 'undefined') return false
+  const ua = navigator.userAgent || navigator.vendor || ''
+
+  // Common embedded browser indicators
+  const embeddedPatterns = [
+    /FBAN|FBAV/i,           // Facebook
+    /Instagram/i,            // Instagram
+    /Twitter/i,              // Twitter/X
+    /LinkedInApp/i,          // LinkedIn
+    /Snapchat/i,             // Snapchat
+    /Line\//i,               // Line
+    /KAKAOTALK/i,            // KakaoTalk
+    /WeChat|MicroMessenger/i, // WeChat
+    /Slack/i,                // Slack
+    /Discord/i,              // Discord
+    /Telegram/i,             // Telegram
+  ]
+
+  return embeddedPatterns.some(pattern => pattern.test(ua))
+}
 
 interface LoginModuleProps {
   /** The URL to redirect to after successful login */
@@ -32,7 +58,13 @@ export function LoginModule({
   const [password, setPassword] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
+  const [isEmbedded, setIsEmbedded] = useState(false)
   const supabase = useSupabase()
+
+  // Check for embedded browser on mount
+  useEffect(() => {
+    setIsEmbedded(isEmbeddedBrowser())
+  }, [])
 
   const handleBack = () => {
     router.back()
@@ -57,12 +89,22 @@ export function LoginModule({
       })
 
       if (error) {
-        setError(`Google sign-in failed: ${error.message}`)
+        // Check for disallowed_useragent or similar embedded browser errors
+        if (error.message?.includes('disallowed_useragent') || error.message?.includes('web_browser')) {
+          setError('Google sign-in is blocked in this browser. Please open this page in Chrome, Safari, or Firefox, or use the Magic Link option below.')
+        } else {
+          setError(`Google sign-in failed: ${error.message}`)
+        }
         setIsGoogleLoading(false)
       }
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : "An error occurred"
-      setError(`Google sign-in failed: ${errorMessage}`)
+      // Check for disallowed_useragent or similar embedded browser errors
+      if (errorMessage?.includes('disallowed_useragent') || errorMessage?.includes('web_browser')) {
+        setError('Google sign-in is blocked in this browser. Please open this page in Chrome, Safari, or Firefox, or use the Magic Link option below.')
+      } else {
+        setError(`Google sign-in failed: ${errorMessage}`)
+      }
       setIsGoogleLoading(false)
     }
   }
@@ -121,6 +163,13 @@ export function LoginModule({
         <form onSubmit={isMagicLink ? handleMagicLink : handlePasswordLogin}>
           <div className="flex flex-col gap-6">
             <CardDescription>Choose a sign-in method</CardDescription>
+
+            {isEmbedded && (
+              <div className="rounded-md bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 p-3 text-sm text-amber-800 dark:text-amber-200">
+                <p className="font-medium">Embedded browser detected</p>
+                <p className="mt-1 text-amber-700 dark:text-amber-300">Google sign-in may not work in this browser. Use Magic Link below, or open this page in Chrome/Safari/Firefox.</p>
+              </div>
+            )}
 
             <Button
               type="button"

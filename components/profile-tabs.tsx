@@ -157,7 +157,7 @@ export function ProfileTabs({ user, profile, stats, showPasswordUI, passwordMode
             <CardDescription>Customize your app experience</CardDescription>
           </CardHeader>
           <CardContent>
-            <ThemePreferenceToggle initialTheme={profile?.theme_preference || "light"} />
+            <ThemePreferenceToggle />
           </CardContent>
         </Card>
       </TabsContent>

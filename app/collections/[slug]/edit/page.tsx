@@ -11,7 +11,7 @@ export default async function EditCollectionPage({ params }: { params: Promise<{
   const { slug } = await params
 
   if (!user) {
-    redirect("/login")
+    redirect("/login?returnTo=/collections")
   }
 
   const collection = await getCollection(slug)

@@ -22,7 +22,7 @@ export default async function ArtifactDetailPage({
 
   // If edit mode is requested, require authentication
   if (isEditMode && !user) {
-    redirect("/login")
+    redirect("/login?returnTo=/artifacts")
   }
 
   const artifact = await getArtifactBySlug(slug)

@@ -12,7 +12,7 @@ export default async function NewCollectionPage() {
   const user = await getCurrentUser()
 
   if (!user) {
-    redirect("/login")
+    redirect("/login?returnTo=/collections")
   }
 
   return (

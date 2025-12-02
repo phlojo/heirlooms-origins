@@ -59,7 +59,7 @@ export async function getThemePreference() {
 
   const { data: profile } = await supabase.from("profiles").select("theme_preference").eq("id", user.id).single()
 
-  return profile?.theme_preference || "light"
+  return profile?.theme_preference || "dark"
 }
 
 /**
