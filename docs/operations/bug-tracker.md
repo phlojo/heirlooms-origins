@@ -1234,6 +1234,72 @@ pnpm tsx scripts/migrate-temp-media.ts --migrate
 
 ---
 
+## Cloudinary Fetch URL Length Limit (Fixed: December 2025)
+
+### Symptoms
+- Images with long filenames show as broken/missing
+- Cloudinary returns 400 Bad Request
+- Error header: `x-cld-error: public_id (...) is too long`
+- Primarily affects iOS device uploads with UUID-heavy filenames
+
+### Root Cause
+Cloudinary's fetch feature has a limit of ~200 characters for the public_id (which is the remote URL). iOS devices generate filenames like:
+```
+bfdd8a71-3816-4823-8d5d-f31880b57eaa_1762440659_10ABFA9D_92C4_4839_BF1A_E8B366468C08.jpg
+```
+
+Combined with the full Supabase Storage path:
+```
+https://...supabase.co/storage/v1/object/public/heirlooms-media/{userId}/{artifactId}/{timestamp}-{filename}
+```
+
+The total URL exceeds Cloudinary's limit.
+
+### Fix Applied (2 parts)
+
+**1. Prevention: Truncate filenames during upload**
+
+**File: `lib/actions/supabase-storage.ts`**
+```typescript
+// BEFORE
+const filePath = `${folder}/${timestamp}-${sanitizedName}`
+
+// AFTER
+const extension = sanitizedName.includes('.') ? sanitizedName.slice(sanitizedName.lastIndexOf('.')) : ''
+const baseName = sanitizedName.includes('.') ? sanitizedName.slice(0, sanitizedName.lastIndexOf('.')) : sanitizedName
+const truncatedBase = baseName.length > 40 ? baseName.slice(0, 40) : baseName
+const finalName = `${timestamp}-${truncatedBase}${extension}`
+const filePath = `${folder}/${finalName}`
+```
+
+**2. Fallback: Skip Cloudinary for long URLs**
+
+**File: `lib/cloudinary.ts`**
+```typescript
+function getCloudinaryFetchUrl(remoteUrl: string, transformations: string): string {
+  // ...
+
+  // Cloudinary has a limit on the public_id length (~200 chars)
+  if (remoteUrl.length > 200) {
+    console.warn('[cloudinary] URL too long for fetch, returning original:', remoteUrl.length, 'chars')
+    return remoteUrl  // Return original Supabase URL
+  }
+
+  // ... generate fetch URL
+}
+```
+
+### Impact
+- **Future uploads**: Filenames truncated to 40 chars, preventing the issue
+- **Existing long URLs**: Display original image without Cloudinary optimization (still works, just larger file size)
+- **Thumbnails**: Same fallback applies to `getThumbnailUrl`, `getSmallThumbnailUrl`, etc.
+
+### Files Modified
+- `lib/actions/supabase-storage.ts` - Filename truncation
+- `lib/cloudinary.ts` - URL length check
+
+---
+
 ## UI Terminology Update (November 2025)
 
 ### Change

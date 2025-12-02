@@ -102,6 +102,79 @@ if (isImageUrl(url) || isVideoUrl(url)) {
 <div className="flex items-start overflow-x-auto ...">
 ```
 
+## Additional Session Changes
+
+### Spacing & Layout Refinements
+
+#### Hero Section
+- Reduced top padding from `py-16 md:py-24 lg:py-32` to `py-8 md:py-12 lg:py-16`
+- Reduced carousel padding from `py-8` to `py-4`
+- Reduced "How It Works" top spacing to `pt-2 md:pt-4`
+
+#### Secondary CTAs
+- "See How It Works" changed to outline button
+- Added "or" separator and inline "Login" button
+- Buttons now on same row: `[See How It Works] or [Login]`
+
+#### Interactive Subheading
+- Added bold jump links for "collections", "artifacts", "stories"
+- `#showcase-collections` and `#showcase-artifacts` scroll targets
+- `/stories` link for stories
+
+#### How It Works Cards
+- Added background images (15% opacity) from public artifacts
+- Added bottom gradient overlay (50% opacity, black to transparent)
+
+#### Built For Section
+- Font size matched to other headings (`text-2xl md:text-3xl lg:text-4xl`)
+- 2x2 grid on mobile (`grid-cols-2`)
+- Reduced card padding (`p-3 md:p-6`)
+
+#### Final CTA
+- Font size matched to other headings
+
+### Desktop Width Constraint
+
+Added consistent `max-w-7xl` (1280px) across all pages:
+
+- **Logged-out homepage**: Per-section constraint with full-width backgrounds
+- **AppLayout**: Main content area constrained
+
+### Carousel Edge Fades
+
+Added CSS mask gradients to `ArtifactsCarousel`:
+
+```tsx
+maskImage: "linear-gradient(to right, transparent, black 2rem, black calc(100% - 2rem), transparent)"
+```
+
+Cards now fade at edges instead of being cut abruptly.
+
+### Compact Card Height
+
+- Reduced title line clamp from 5 to 2 lines (`line-clamp-2`)
+- Tighter padding (`pt-1 pb-1.5`)
+- Compact carousel padding (`pb-1` instead of `pb-4`)
+
+### Bug Fix: Cloudinary URL Length Limit
+
+**Problem**: Images with long filenames (>200 chars) fail Cloudinary fetch with "public_id is too long" error.
+
+**Root Cause**: iOS device filenames include UUIDs and metadata, combined with our path structure.
+
+**Solution** (2 parts):
+1. **Prevention**: Truncate filenames to 40 chars during upload (`lib/actions/supabase-storage.ts`)
+2. **Fallback**: Skip Cloudinary fetch for URLs >200 chars, return original Supabase URL (`lib/cloudinary.ts`)
+
+## Additional Files Modified
+
+| File | Changes |
+|------|---------|
+| `components/app-layout.tsx` | Added `max-w-7xl mx-auto` to main |
+| `components/community-showcase.tsx` | Changed to `max-w-7xl` |
+| `lib/actions/supabase-storage.ts` | Filename truncation |
+| `lib/cloudinary.ts` | URL length check fallback |
+
 ## Test Results
 
 ```

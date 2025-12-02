@@ -85,16 +85,46 @@ LoggedOutHomepage
 The hero section has two primary action buttons that redirect to login with appropriate `returnTo` parameters:
 
 ```tsx
-// Create artifact → login → /artifacts/new
-<Link href="/login?returnTo=/artifacts/new">
+// Create artifact (primary blue) → login → /artifacts
+<Link href="/login?returnTo=/artifacts">
   <Package /> Create Your First Artifact
 </Link>
 
-// Create collection → login → /collections/new
-<Link href="/login?returnTo=/collections/new">
+// Create collection (purple) → login → /collections
+<Link href="/login?returnTo=/collections">
   <LayoutGrid /> Start Your First Collection
 </Link>
 ```
+
+Below the main CTAs, there's a secondary row with "See How It Works" and "Login" buttons:
+
+```tsx
+<div className="flex items-center justify-center gap-3">
+  <Button variant="outline" onClick={scrollToHowItWorks}>
+    See How It Works <ChevronDown />
+  </Button>
+  <span>or</span>
+  <Button variant="outline" asChild>
+    <Link href="/login?returnTo=/">Login</Link>
+  </Button>
+</div>
+```
+
+### Interactive Subheading Links
+
+The subheading paragraph contains jump links to page sections:
+
+```tsx
+<p>
+  Create beautiful digital <a href="#showcase-collections">collections</a> of your
+  <a href="#showcase-artifacts">artifacts</a>, preserve their
+  <Link href="/stories">stories</Link>, and share them...
+</p>
+```
+
+- **collections** → jumps to `#showcase-collections` section
+- **artifacts** → jumps to `#showcase-artifacts` section
+- **stories** → links to `/stories` page
 
 ### How It Works Carousel
 
@@ -116,6 +146,8 @@ Features:
 - **Navigation arrows**: Overlaid on cards, fade out at first/last step
 - **Dot indicators**: Clickable, active dot is pill-shaped
 - **Slide animation**: 300ms ease-out transition
+- **Background images**: Each card has a muted background image (15% opacity) from public artifacts
+- **Bottom gradient**: Cards have a bottom-to-top gradient overlay (50% opacity) for text readability
 
 ### Data Fetching
 
@@ -254,6 +286,43 @@ CTAs properly redirect users back to their intended destination after login:
 - `min-h-[100dvh]` for full viewport height
 - `pb-20 lg:pb-0` for bottom nav spacing on mobile
 - Responsive padding: `px-4 py-16 md:py-24`
+- **Max-width constraint**: Content capped at `max-w-7xl` (1280px) per section
+- Background elements (gradients, floating images) remain full-width
+
+### Desktop Width Constraint
+
+All pages use `max-w-7xl` (1280px) for consistent desktop appearance:
+
+```tsx
+// Logged-out homepage: each section constrains its own content
+<section className="py-16">
+  <div className="max-w-7xl mx-auto px-4">
+    {/* Content */}
+  </div>
+</section>
+
+// AppLayout (logged-in pages): main content area constrained
+<main className="max-w-7xl mx-auto px-4">
+  {children}
+</main>
+```
+
+### Carousel Edge Fades
+
+The `ArtifactsCarousel` component uses CSS masks to fade cards at edges:
+
+```tsx
+<div
+  style={{
+    maskImage: "linear-gradient(to right, transparent, black 2rem, black calc(100% - 2rem), transparent)",
+    WebkitMaskImage: "linear-gradient(to right, transparent, black 2rem, black calc(100% - 2rem), transparent)",
+  }}
+>
+  {/* Cards */}
+</div>
+```
+
+This creates a smooth fade effect that works on any background color.
 
 ### Dashboard Page
 - Wrapped in AppLayout with full navigation

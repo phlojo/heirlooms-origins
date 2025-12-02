@@ -32,9 +32,15 @@ export async function uploadToSupabaseStorage(
     }
 
     // Generate unique filename with timestamp
+    // Truncate filename to avoid Cloudinary fetch URL length limits (max ~200 chars for public_id)
     const timestamp = Date.now()
     const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, "_")
-    const filePath = `${folder}/${timestamp}-${sanitizedName}`
+    const extension = sanitizedName.includes('.') ? sanitizedName.slice(sanitizedName.lastIndexOf('.')) : ''
+    const baseName = sanitizedName.includes('.') ? sanitizedName.slice(0, sanitizedName.lastIndexOf('.')) : sanitizedName
+    // Limit base name to 40 chars to keep total path reasonable
+    const truncatedBase = baseName.length > 40 ? baseName.slice(0, 40) : baseName
+    const finalName = `${timestamp}-${truncatedBase}${extension}`
+    const filePath = `${folder}/${finalName}`
 
     console.log("[supabase-storage] Uploading file:", {
       bucket: STORAGE_BUCKET,

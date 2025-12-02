@@ -329,6 +329,29 @@ The artifact grid uses **Masonry.js** for optimal item arrangement with variable
   - Reflows on window resize, image load, and content changes
 - **See**: `docs/guides/artifact-grid-layout.md` and `docs/guides/card-design-updates.md`
 
+### Desktop Width Constraint
+All pages use `max-w-7xl` (1280px) for consistent desktop appearance:
+
+```tsx
+// AppLayout (logged-in pages): main content area constrained
+<main className="max-w-7xl mx-auto px-4">
+  {children}
+</main>
+
+// Logged-out homepage: each section constrains its own content
+<section className="py-16">
+  <div className="max-w-7xl mx-auto px-4">
+    {/* Content */}
+  </div>
+</section>
+```
+
+**Key points:**
+- Content capped at 1280px, centered with `mx-auto`
+- Background elements (gradients, images) can extend full-width outside the constraint
+- Consistent padding: `px-4` on all constrained containers
+- See `docs/guides/homepage.md` for homepage-specific patterns
+
 ### Modifying Database Schema
 1. Update schema in Supabase dashboard
 2. Regenerate types: `pnpm supabase gen types typescript` (if setup)

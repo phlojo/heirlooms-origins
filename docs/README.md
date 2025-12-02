@@ -21,6 +21,7 @@ docs/
 │   ├── artifact-gallery-editor.md  # Gallery drag-and-drop implementation
 │   ├── artifact-grid-layout.md     # Masonry grid system
 │   ├── artifact-types.md           # Type badges and categories
+│   ├── card-design-updates.md      # Card component styling
 │   ├── collection-picker.md        # Collection picker with thumbnail grid
 │   ├── community-showcase.md       # CommunityShowcase component for public artifacts
 │   ├── homepage.md                 # Dual homepage (marketing + dashboard)
@@ -33,7 +34,7 @@ docs/
 ├── planning/               # Feature design docs (in progress)
 │   └── *.md                # Proposals and implementation status
 └── archive/                # Historical documents
-    ├── 2025-12-01-phase-3-cloudinary-migration.md  # Phase 3 migration execution
+    ├── 2025-12-02-homepage-ux-improvements.md  # Latest: Homepage UX improvements
     └── 2025-*.md           # Completed work, for reference only
 ```
 
