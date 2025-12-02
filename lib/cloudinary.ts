@@ -33,11 +33,10 @@ function getCloudinaryFetchUrl(remoteUrl: string, transformations: string): stri
     return remoteUrl
   }
 
-  // Cloudinary has a limit on the public_id length (~200 chars)
-  // If the URL is too long, return the original to avoid 400 errors
-  // The remote URL becomes the public_id in fetch mode
-  if (remoteUrl.length > 200) {
-    console.warn('[cloudinary] URL too long for fetch, returning original:', remoteUrl.length, 'chars')
+  // Cloudinary fetch mode can handle URLs up to ~400 chars
+  // Only return original if truly exceeding the limit
+  if (remoteUrl.length > 400) {
+    console.warn('[cloudinary] URL too long for fetch (>400 chars), returning original:', remoteUrl.length, 'chars')
     return remoteUrl
   }
 

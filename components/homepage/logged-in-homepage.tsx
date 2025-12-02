@@ -96,12 +96,12 @@ export function LoggedInHomepage({
 
   return (
     <AppLayout user={user}>
-      <div className="space-y-8 pb-20">
+      <div className="space-y-6 sm:space-y-8 pb-20">
         {/* Welcome Header */}
         <div>
           {/* Title with Logo */}
-          <div className="flex items-center gap-3 mb-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center bg-gradient-to-br from-primary to-chart-2 text-primary-foreground shadow-sm rounded-lg">
+          <div className="flex items-center gap-2 sm:gap-3 mb-3">
+            <div className="flex h-8 w-8 sm:h-10 sm:w-10 shrink-0 items-center justify-center bg-gradient-to-br from-primary to-chart-2 text-primary-foreground shadow-sm rounded">
               <svg
                 width="24"
                 height="26"
@@ -127,11 +127,11 @@ export function LoggedInHomepage({
                 <path d="M66.6001 43.3L66.6001 28.9L54.1001 21.6L54.1001 36.1L66.6001 43.3Z" fill="currentColor" />
               </svg>
             </div>
-            <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight flex-shrink min-w-0">
               Heirlooms
-              <span className="text-sm font-normal text-muted-foreground ml-2">(Beta)</span>
+              <span className="text-xs sm:text-sm font-normal text-muted-foreground ml-1 sm:ml-2">(Beta)</span>
             </h1>
-            <div className="ml-auto flex items-center gap-2 lg:hidden">
+            <div className="ml-auto flex items-center gap-1 sm:gap-2 lg:hidden flex-shrink-0">
               <Button
                 variant="ghost"
                 size="icon"
@@ -158,7 +158,7 @@ export function LoggedInHomepage({
         </div>
 
         {/* Quick Stats */}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <Link href="/artifacts">
             <Card className="hover:shadow-md transition-shadow cursor-pointer overflow-hidden relative">
               {statBackgrounds?.artifacts && (
@@ -215,14 +215,14 @@ export function LoggedInHomepage({
 
           {recentArtifacts.length > 0 ? (
             <ScrollArea className="w-full whitespace-nowrap">
-              <div className="flex gap-4 pb-4">
+              <div className="flex gap-3 sm:gap-4 pb-4">
                 {recentArtifacts.map((artifact) => (
-                  <div key={artifact.id} className="w-[160px] shrink-0">
+                  <div key={artifact.id} className="w-[140px] sm:w-[160px] shrink-0">
                     <ArtifactCard artifact={artifact} />
                   </div>
                 ))}
                 {/* Add Artifact Card */}
-                <Link href="/artifacts/new" className="w-[160px] shrink-0">
+                <Link href="/artifacts/new" className="w-[140px] sm:w-[160px] shrink-0">
                   <Card className="group overflow-hidden border-2 border-dashed border-muted-foreground/30 p-0 transition-all hover:border-primary hover:shadow-lg rounded-md flex flex-col h-full bg-transparent hover:bg-muted/30">
                     <div className="relative aspect-square overflow-hidden flex items-center justify-center">
                       <Package className="h-12 w-12 text-muted-foreground/40 group-hover:text-primary/60 transition-colors" />
@@ -276,7 +276,7 @@ export function LoggedInHomepage({
           </div>
 
           {collections.length > 0 ? (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
               {collections.slice(0, 6).map((collection) => (
                 <CollectionCard key={collection.id} collection={collection} mode="mine" />
               ))}
@@ -307,7 +307,7 @@ export function LoggedInHomepage({
         {/* Start Something New */}
         <section>
           <h2 className="text-xl font-semibold mb-4">Start Something New</h2>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             {/* Create Artifact */}
             <Link href="/artifacts/new">
               <Card className="h-full hover:shadow-lg transition-all hover:scale-[1.02] cursor-pointer group">
