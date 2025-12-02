@@ -1312,3 +1312,102 @@ Standardized terminology for media management:
 - "Add Media" button next to Media Blocks → "Add Block(s)"
 - Applied to both new artifact (`new-artifact-form.tsx`) and edit artifact (`artifact-detail-view.tsx`) pages
 
+---
+
+## Gallery-Only Artifacts Missing Thumbnails and Media Display (Fixed: December 2025)
+
+### Symptoms
+- Artifacts created with media only in gallery (not media blocks) showed:
+  - Blank/missing thumbnails in card views
+  - Empty artifact detail pages (no visible media)
+  - Files existed in Supabase Storage but `media_urls` array was empty
+- Affected artifacts: `tissot-touch`, `shinola-automatic`, and ~34 others
+
+### Root Cause
+**Separation of Gallery vs Media Blocks was too strict:**
+
+The artifact creation form keeps gallery URLs and media block URLs in separate state:
+```typescript
+const [galleryUrls, setGalleryUrls] = useState<string[]>([])
+const [mediaBlockUrls, setMediaBlockUrls] = useState<string[]>([])
+```
+
+On submit, only `mediaBlockUrls` populated the `media_urls` field sent to `createArtifact()`:
+```typescript
+const submitData = {
+  ...data,
+  media_urls: normalizedBlockUrls,  // Only media blocks!
+  gallery_urls: normalizedGalleryUrls,  // Separate
+}
+```
+
+In `createArtifact()`, thumbnail selection only looked at `validMediaUrls` (from `media_urls`):
+```typescript
+const thumbnailUrl = validatedFields.data.thumbnail_url || getPrimaryVisualMediaUrl(validMediaUrls)
+// If validMediaUrls empty (gallery-only), thumbnailUrl = null
+```
+
+Result: Gallery-only artifacts had:
+- `media_urls`: `[]` (empty)
+- `thumbnail_url`: `null`
+- Gallery links created in `artifact_media` table (but not used for thumbnails)
+
+### Fix Applied
+
+**File: `lib/actions/artifacts.ts:116-128`**
+
+Added gallery URLs as fallback source for thumbnail selection:
+
+```typescript
+// BEFORE
+const thumbnailUrl = validatedFields.data.thumbnail_url || getPrimaryVisualMediaUrl(validMediaUrls)
+
+// AFTER
+// Thumbnail selection: prefer user-selected, then media blocks, then gallery
+const galleryUrls = validatedFields.data.gallery_urls || []
+const thumbnailUrl =
+  validatedFields.data.thumbnail_url ||
+  getPrimaryVisualMediaUrl(validMediaUrls) ||
+  getPrimaryVisualMediaUrl(galleryUrls)  // Fall back to gallery!
+```
+
+### Repair Script for Existing Artifacts
+
+**File: `scripts/repair-orphaned-media.ts`**
+
+Created script to fix existing broken artifacts:
+
+```bash
+# Dry run (preview changes)
+npx tsx scripts/repair-orphaned-media.ts
+
+# Apply repairs
+npx tsx scripts/repair-orphaned-media.ts --apply
+```
+
+The script:
+1. Finds artifacts with empty `media_urls` but files in their storage folder
+2. Reconstructs `media_urls` array from actual storage files
+3. Sets `thumbnail_url` to first visual media (image > video)
+4. Creates missing `user_media` records
+5. Creates missing `artifact_media` (gallery) links
+
+**Repair Results:**
+- Repaired: 34 artifacts
+- Skipped: 1 (no files in storage)
+- Errors: 0
+
+### Prevention Guidelines
+- When adding media display features, consider BOTH gallery and media blocks as sources
+- Thumbnail should be selected from any available visual media, not just media blocks
+- Test artifact creation with:
+  - Gallery only (no media blocks)
+  - Media blocks only (no gallery)
+  - Both gallery and media blocks
+
+### Files Modified
+- `lib/actions/artifacts.ts` - Thumbnail fallback to gallery URLs
+- `scripts/repair-orphaned-media.ts` (NEW) - Repair script for existing artifacts
+
+---
+

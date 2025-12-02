@@ -113,9 +113,17 @@ export async function createArtifact(
     return { error: "Unable to create artifact. Please try again." }
   }
 
-  const thumbnailUrl = validatedFields.data.thumbnail_url || getPrimaryVisualMediaUrl(validMediaUrls)
+  // Thumbnail selection: prefer user-selected, then media blocks, then gallery
+  // Gallery-only artifacts should still get a thumbnail from their gallery media
+  const galleryUrls = validatedFields.data.gallery_urls || []
+  const thumbnailUrl =
+    validatedFields.data.thumbnail_url ||
+    getPrimaryVisualMediaUrl(validMediaUrls) ||
+    getPrimaryVisualMediaUrl(galleryUrls)
   console.log("[v0] CREATE ARTIFACT - Thumbnail selection:", {
     userSelected: !!validatedFields.data.thumbnail_url,
+    fromMediaBlocks: !validatedFields.data.thumbnail_url && validMediaUrls.length > 0,
+    fromGallery: !validatedFields.data.thumbnail_url && validMediaUrls.length === 0 && galleryUrls.length > 0,
     thumbnailUrl: thumbnailUrl || "NONE",
   })
 
@@ -203,8 +211,7 @@ export async function createArtifact(
   // Create gallery links ONLY for URLs explicitly added to the gallery
   // gallery_urls contains URLs added to gallery section, media_urls contains media block URLs
   // These are independent - don't fall back to all visual media
-  const galleryUrls = validatedFields.data.gallery_urls || []
-
+  // Note: galleryUrls was already extracted above for thumbnail selection
   if (galleryUrls.length > 0) {
     console.log("[v0] CREATE ARTIFACT - Creating gallery links for", galleryUrls.length, "media items")
     const galleryResult = await createArtifactMediaLinks(data.id, galleryUrls, user.id, "gallery")
