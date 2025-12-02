@@ -32,13 +32,9 @@ export function CollectionPicker({
   storageKey,
   onCreateNew,
 }: CollectionPickerProps) {
-  const [isOpen, setIsOpen] = useState(() => {
-    if (!storageKey || typeof window === "undefined") {
-      return defaultOpen
-    }
-    const stored = localStorage.getItem(storageKey)
-    return stored !== null ? stored === "true" : defaultOpen
-  })
+  // Initialize with defaultOpen to avoid hydration mismatch
+  const [isOpen, setIsOpen] = useState(defaultOpen)
+  const [hasHydrated, setHasHydrated] = useState(false)
 
   const [collections, setCollections] = useState<CollectionPickerItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -54,12 +50,23 @@ export function CollectionPicker({
     }
   }
 
-  // Persist open state to localStorage
+  // Sync from localStorage after hydration
   useEffect(() => {
-    if (storageKey && typeof window !== "undefined") {
+    if (storageKey) {
+      const stored = localStorage.getItem(storageKey)
+      if (stored !== null) {
+        setIsOpen(stored === "true")
+      }
+    }
+    setHasHydrated(true)
+  }, [storageKey])
+
+  // Persist open state to localStorage (only after hydration)
+  useEffect(() => {
+    if (hasHydrated && storageKey) {
       localStorage.setItem(storageKey, String(isOpen))
     }
-  }, [isOpen, storageKey])
+  }, [isOpen, storageKey, hasHydrated])
 
   // Fetch collections on mount
   useEffect(() => {

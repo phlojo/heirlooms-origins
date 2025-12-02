@@ -756,45 +756,45 @@ export function AddMediaModal({
           {!mediaSource && (
             <div className="space-y-4">
               {/* Add from Device Section */}
-              <div className="rounded-lg border bg-muted/30 p-4 space-y-3">
+              <div className="rounded-lg border bg-muted/30 p-3 sm:p-4 space-y-3">
                 <div className="flex items-center justify-center gap-2 text-sm font-semibold">
                   <MonitorSmartphone className="h-4 w-4" />
                   <span>From Device</span>
                 </div>
 
-                {/* Action buttons row - centered with flex */}
-                <div className="flex justify-center gap-2">
+                {/* Action buttons row - centered with flex, responsive sizing */}
+                <div className="flex justify-center gap-1 sm:gap-2">
                   {/* Upload Button - multi-select any media */}
                   <Button
                     variant="outline"
-                    className="h-14 w-20 bg-transparent flex flex-col items-center justify-center gap-1 px-2"
+                    className="h-12 sm:h-14 min-w-0 flex-1 max-w-[4rem] sm:max-w-20 bg-transparent flex flex-col items-center justify-center gap-0.5 sm:gap-1 px-0.5 sm:px-2"
                     onClick={handleUploadClick}
                     disabled={isUploading || isRecording}
                   >
-                    <Upload className="h-5 w-5" />
-                    <span className="text-xs">Upload</span>
+                    <Upload className="h-4 w-4 sm:h-5 sm:w-5" />
+                    <span className="text-[9px] sm:text-xs">Upload</span>
                   </Button>
 
                   {/* Photo Capture */}
                   <Button
                     variant="outline"
-                    className="h-14 w-20 bg-transparent flex flex-col items-center justify-center gap-1 px-2"
+                    className="h-12 sm:h-14 min-w-0 flex-1 max-w-[4rem] sm:max-w-20 bg-transparent flex flex-col items-center justify-center gap-0.5 sm:gap-1 px-0.5 sm:px-2"
                     onClick={handleCameraCapture}
                     disabled={isUploading || isRecording}
                   >
-                    <Camera className="h-5 w-5" />
-                    <span className="text-xs">Camera</span>
+                    <Camera className="h-4 w-4 sm:h-5 sm:w-5" />
+                    <span className="text-[9px] sm:text-xs">Camera</span>
                   </Button>
 
                   {/* Video Capture */}
                   <Button
                     variant="outline"
-                    className="h-14 w-20 bg-transparent flex flex-col items-center justify-center gap-1 px-2"
+                    className="h-12 sm:h-14 min-w-0 flex-1 max-w-[4rem] sm:max-w-20 bg-transparent flex flex-col items-center justify-center gap-0.5 sm:gap-1 px-0.5 sm:px-2"
                     onClick={handleVideoCameraCapture}
                     disabled={isUploading || isRecording}
                   >
-                    <Video className="h-5 w-5" />
-                    <span className="text-xs">Video</span>
+                    <Video className="h-4 w-4 sm:h-5 sm:w-5" />
+                    <span className="text-[9px] sm:text-xs">Video</span>
                   </Button>
 
                   {/* Audio Record - shows record button or stop button (only if audio allowed) */}
@@ -802,21 +802,21 @@ export function AddMediaModal({
                     !isRecording ? (
                       <Button
                         variant="outline"
-                        className="h-14 w-20 bg-transparent flex flex-col items-center justify-center gap-1 px-2"
+                        className="h-12 sm:h-14 min-w-0 flex-1 max-w-[4rem] sm:max-w-20 bg-transparent flex flex-col items-center justify-center gap-0.5 sm:gap-1 px-0.5 sm:px-2"
                         onClick={startRecording}
                         disabled={isUploading}
                       >
-                        <Mic className="h-5 w-5" />
-                        <span className="text-xs">Audio</span>
+                        <Mic className="h-4 w-4 sm:h-5 sm:w-5" />
+                        <span className="text-[9px] sm:text-xs">Audio</span>
                       </Button>
                     ) : (
                       <Button
                         variant="destructive"
-                        className="h-14 w-20 flex flex-col items-center justify-center gap-1 px-2"
+                        className="h-12 sm:h-14 min-w-0 flex-1 max-w-[4rem] sm:max-w-20 flex flex-col items-center justify-center gap-0.5 sm:gap-1 px-0.5 sm:px-2"
                         onClick={stopRecording}
                       >
-                        <Square className="h-5 w-5" />
-                        <span className="text-xs">Stop</span>
+                        <Square className="h-4 w-4 sm:h-5 sm:w-5" />
+                        <span className="text-[9px] sm:text-xs">Stop</span>
                       </Button>
                     )
                   )}

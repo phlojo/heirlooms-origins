@@ -227,13 +227,12 @@ export function NewArtifactGalleryEditor({
               setInitialAction(null)
               setIsPickerOpen(true)
             }}
-            size="sm"
-            className="bg-purple-600 hover:bg-purple-700 text-white"
+            variant="purple"
           >
             <FolderOpen className="h-4 w-4 mr-1.5" />
             My Media
           </Button>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-2">
             <Button
               type="button"
               onClick={() => {
@@ -241,8 +240,8 @@ export function NewArtifactGalleryEditor({
                 setInitialAction("upload")
                 setIsPickerOpen(true)
               }}
-              size="icon"
-              className="h-8 w-8 bg-purple-600 hover:bg-purple-700 text-white"
+              variant="purple"
+              className="h-9 w-9 p-0"
               title="Upload files"
             >
               <Upload className="h-4 w-4" />
@@ -254,8 +253,8 @@ export function NewArtifactGalleryEditor({
                 setInitialAction("camera")
                 setIsPickerOpen(true)
               }}
-              size="icon"
-              className="h-8 w-8 bg-purple-600 hover:bg-purple-700 text-white"
+              variant="purple"
+              className="h-9 w-9 p-0"
               title="Take photo"
             >
               <Camera className="h-4 w-4" />
@@ -267,8 +266,8 @@ export function NewArtifactGalleryEditor({
                 setInitialAction("video")
                 setIsPickerOpen(true)
               }}
-              size="icon"
-              className="h-8 w-8 bg-purple-600 hover:bg-purple-700 text-white"
+              variant="purple"
+              className="h-9 w-9 p-0"
               title="Record video"
             >
               <Video className="h-4 w-4" />
@@ -292,8 +291,8 @@ export function NewArtifactGalleryEditor({
           </div>
           <div className="text-center">
             <p className="text-base font-semibold text-purple-600 dark:text-purple-400">Add Media to Gallery</p>
-            <p className="text-xs text-muted-foreground mt-1">Photos and videos</p>
-            <p className="text-xs text-muted-foreground mt-1">Media carousel displayed at the top of your artifact page.</p>
+            <p className="text-xs text-muted-foreground mt-1">Media carousel</p>
+            <p className="text-xs text-muted-foreground">displayed at the top of your artifact.</p>
           </div>
         </button>
       ) : (

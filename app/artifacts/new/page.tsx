@@ -48,7 +48,7 @@ export default async function NewArtifactPage({
 
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Create Artifact</h1>
-          <p className="mt-1 text-muted-foreground">Add a new artifact with photos, videos, or audio</p>
+          <p className="mt-1 text-muted-foreground">Add photos, videos, audio and your story.</p>
         </div>
 
         <NewArtifactForm collectionId={effectiveCollectionId} userId={user.id} />

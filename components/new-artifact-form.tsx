@@ -9,7 +9,7 @@ import type { z } from "zod"
 import { Button } from "@/components/ui/button"
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form"
 import { useState, useEffect } from "react"
-import { ChevronDown, Save, X, BookImage, MoreVertical, HelpCircle, FolderOpen, Upload, Camera, Video, Mic, LayoutGrid } from "lucide-react"
+import { ChevronDown, Save, X, BookImage, BookOpen, MoreVertical, HelpCircle, FolderOpen, Upload, Camera, Video, Mic, LayoutGrid } from "lucide-react"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { normalizeMediaUrls, isAudioUrl, isImageUrl, isVideoUrl } from "@/lib/media"
 import { getMediumUrl } from "@/lib/cloudinary"
@@ -445,13 +445,17 @@ export default function NewArtifactForm({ collectionId, userId }: NewArtifactFor
           </Collapsible>
         </section>
 
-        <Separator />
+        <div className="-mx-4 h-1 bg-gradient-to-r from-transparent via-blue-400/50 to-transparent relative flex items-center justify-center">
+          <div className="absolute bg-background rounded-full p-1">
+            <BookOpen className="h-4 w-4 text-blue-400" />
+          </div>
+        </div>
 
         {/* Content Blocks Section */}
         <section className="space-y-4 overflow-x-hidden">
           <div className="space-y-3">
             <div className="flex items-center gap-2">
-              <SectionTitle>Content</SectionTitle>
+              <SectionTitle>Storyline</SectionTitle>
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -474,13 +478,12 @@ export default function NewArtifactForm({ collectionId, userId }: NewArtifactFor
                   setBlocksInitialAction(null)
                   setIsAddMediaOpen(true)
                 }}
-                size="sm"
-                className="bg-purple-600 hover:bg-purple-700 text-white"
+                variant="purple"
               >
                 <FolderOpen className="h-4 w-4 mr-1.5" />
                 My Media
               </Button>
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-2">
                 <Button
                   type="button"
                   onClick={() => {
@@ -488,8 +491,8 @@ export default function NewArtifactForm({ collectionId, userId }: NewArtifactFor
                     setBlocksInitialAction("upload")
                     setIsAddMediaOpen(true)
                   }}
-                  size="icon"
-                  className="h-8 w-8 bg-purple-600 hover:bg-purple-700 text-white"
+                  variant="purple"
+                  className="h-9 w-9 p-0"
                   title="Upload files"
                 >
                   <Upload className="h-4 w-4" />
@@ -501,8 +504,8 @@ export default function NewArtifactForm({ collectionId, userId }: NewArtifactFor
                     setBlocksInitialAction("camera")
                     setIsAddMediaOpen(true)
                   }}
-                  size="icon"
-                  className="h-8 w-8 bg-purple-600 hover:bg-purple-700 text-white"
+                  variant="purple"
+                  className="h-9 w-9 p-0"
                   title="Take photo"
                 >
                   <Camera className="h-4 w-4" />
@@ -514,8 +517,8 @@ export default function NewArtifactForm({ collectionId, userId }: NewArtifactFor
                     setBlocksInitialAction("video")
                     setIsAddMediaOpen(true)
                   }}
-                  size="icon"
-                  className="h-8 w-8 bg-purple-600 hover:bg-purple-700 text-white"
+                  variant="purple"
+                  className="h-9 w-9 p-0"
                   title="Record video"
                 >
                   <Video className="h-4 w-4" />
@@ -527,8 +530,8 @@ export default function NewArtifactForm({ collectionId, userId }: NewArtifactFor
                     setBlocksInitialAction("audio")
                     setIsAddMediaOpen(true)
                   }}
-                  size="icon"
-                  className="h-8 w-8 bg-purple-600 hover:bg-purple-700 text-white"
+                  variant="purple"
+                  className="h-9 w-9 p-0"
                   title="Record audio"
                 >
                   <Mic className="h-4 w-4" />
@@ -732,8 +735,8 @@ export default function NewArtifactForm({ collectionId, userId }: NewArtifactFor
               </div>
               <div className="text-center">
                 <p className="text-base font-semibold text-purple-600 dark:text-purple-400">Add Content Block</p>
-                <p className="text-xs text-muted-foreground mt-1">Photos, videos, and audio with captions</p>
-                <p className="text-xs text-muted-foreground mt-1">Each block appears inline in your artifact story.</p>
+                <p className="text-xs text-muted-foreground mt-1">Each block appears inline</p>
+                <p className="text-xs text-muted-foreground">and tells your artifact story.</p>
               </div>
             </button>
           )}
@@ -741,7 +744,7 @@ export default function NewArtifactForm({ collectionId, userId }: NewArtifactFor
       </form>
 
       {/* Sticky Save/Cancel Module */}
-      <div className="fixed bottom-[calc(120px+env(safe-area-inset-bottom))] left-0 right-0 flex justify-center pointer-events-none z-40">
+      <div className="fixed bottom-[calc(96px+env(safe-area-inset-bottom))] left-0 right-0 flex justify-center pointer-events-none z-40">
         <div className="pointer-events-auto bg-card/95 backdrop-blur-sm border rounded-3xl shadow-lg p-4 mx-4 w-auto">
           <div className="flex items-center gap-3">
             <Button

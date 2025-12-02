@@ -4,7 +4,7 @@ import type React from "react"
 
 import { useEffect, useState, useRef, useCallback } from "react"
 import { createPortal } from "react-dom"
-import { X, ZoomIn, ZoomOut, Maximize } from 'lucide-react'
+import { X, ZoomIn, ZoomOut, Maximize, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import MediaImage from "@/components/media-image"
 
@@ -14,9 +14,22 @@ interface FullscreenImageViewerProps {
   onClose: () => void
   /** Optional: source element rect for animated transition (no longer used, kept for API compatibility) */
   sourceRect?: DOMRect | null
+  /** Optional: array of all image URLs for navigation */
+  images?: string[]
+  /** Optional: current index in the images array */
+  currentIndex?: number
+  /** Optional: callback when navigating to a different image */
+  onNavigate?: (index: number) => void
 }
 
-export function FullscreenImageViewer({ src, alt, onClose }: FullscreenImageViewerProps) {
+export function FullscreenImageViewer({
+  src,
+  alt,
+  onClose,
+  images,
+  currentIndex = 0,
+  onNavigate,
+}: FullscreenImageViewerProps) {
   // Scale of 1 = "fit" (CSS handles fitting), scale > 1 = zoomed in
   const [scale, setScale] = useState(1)
   const [position, setPosition] = useState({ x: 0, y: 0 })
@@ -25,8 +38,19 @@ export function FullscreenImageViewer({ src, alt, onClose }: FullscreenImageView
   const [isAnimatingIn, setIsAnimatingIn] = useState(true)
   const [isAnimatingOut, setIsAnimatingOut] = useState(false)
   const [mounted, setMounted] = useState(false)
+  const [isImageLoading, setIsImageLoading] = useState(true)
+  const [isTransitioning, setIsTransitioning] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
   const lastTapTime = useRef<number>(0)
+
+  // Swipe tracking
+  const swipeStartX = useRef<number | null>(null)
+  const swipeStartY = useRef<number | null>(null)
+
+  // Determine if we have multiple images for navigation
+  const hasMultipleImages = images && images.length > 1
+  const totalImages = images?.length || 1
+  const displayIndex = currentIndex + 1 // 1-based for display
 
   // Wait for client-side mount before rendering portal
   useEffect(() => {
@@ -64,16 +88,57 @@ export function FullscreenImageViewer({ src, alt, onClose }: FullscreenImageView
     }, 300) // Match animation duration
   }, [onClose])
 
-  // Handle escape key
+  // Navigation handlers with fade transition
+  const handlePrevious = useCallback(() => {
+    if (!hasMultipleImages || !onNavigate || isTransitioning) return
+    const newIndex = currentIndex === 0 ? totalImages - 1 : currentIndex - 1
+    // Start fade out transition
+    setIsTransitioning(true)
+    setIsImageLoading(true)
+    // Reset zoom/position when navigating
+    setScale(1)
+    setPosition({ x: 0, y: 0 })
+    // Navigate after fade out
+    setTimeout(() => {
+      onNavigate(newIndex)
+    }, 150)
+  }, [hasMultipleImages, onNavigate, currentIndex, totalImages, isTransitioning])
+
+  const handleNext = useCallback(() => {
+    if (!hasMultipleImages || !onNavigate || isTransitioning) return
+    const newIndex = currentIndex === totalImages - 1 ? 0 : currentIndex + 1
+    // Start fade out transition
+    setIsTransitioning(true)
+    setIsImageLoading(true)
+    // Reset zoom/position when navigating
+    setScale(1)
+    setPosition({ x: 0, y: 0 })
+    // Navigate after fade out
+    setTimeout(() => {
+      onNavigate(newIndex)
+    }, 150)
+  }, [hasMultipleImages, onNavigate, currentIndex, totalImages, isTransitioning])
+
+  // Handle image load complete
+  const handleImageLoad = useCallback(() => {
+    setIsImageLoading(false)
+    setIsTransitioning(false)
+  }, [])
+
+  // Handle keyboard navigation
   useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
+    const handleKeydown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         handleClose()
+      } else if (e.key === "ArrowLeft" && hasMultipleImages) {
+        handlePrevious()
+      } else if (e.key === "ArrowRight" && hasMultipleImages) {
+        handleNext()
       }
     }
-    window.addEventListener("keydown", handleEscape)
-    return () => window.removeEventListener("keydown", handleEscape)
-  }, [handleClose])
+    window.addEventListener("keydown", handleKeydown)
+    return () => window.removeEventListener("keydown", handleKeydown)
+  }, [handleClose, handlePrevious, handleNext, hasMultipleImages])
 
   // Zoom increments: 1x (fit), 1.5x, 2x, 3x, 4x, 5x
   const zoomLevels = [1, 1.5, 2, 3, 4, 5]
@@ -147,12 +212,18 @@ export function FullscreenImageViewer({ src, alt, onClose }: FullscreenImageView
 
     lastTapTime.current = currentTime
 
-    if (e.touches.length === 1 && scale > 1) {
-      setIsDragging(true)
-      setDragStart({
-        x: e.touches[0].clientX - position.x,
-        y: e.touches[0].clientY - position.y,
-      })
+    if (e.touches.length === 1) {
+      // Track swipe start position (only used when not zoomed)
+      swipeStartX.current = e.touches[0].clientX
+      swipeStartY.current = e.touches[0].clientY
+
+      if (scale > 1) {
+        setIsDragging(true)
+        setDragStart({
+          x: e.touches[0].clientX - position.x,
+          y: e.touches[0].clientY - position.y,
+        })
+      }
     }
   }
 
@@ -165,8 +236,28 @@ export function FullscreenImageViewer({ src, alt, onClose }: FullscreenImageView
     }
   }
 
-  const handleTouchEnd = () => {
+  const handleTouchEnd = (e: React.TouchEvent) => {
     setIsDragging(false)
+
+    // Handle swipe navigation only when not zoomed in
+    if (scale <= 1.01 && swipeStartX.current !== null && swipeStartY.current !== null && hasMultipleImages) {
+      const touch = e.changedTouches[0]
+      const deltaX = touch.clientX - swipeStartX.current
+      const deltaY = touch.clientY - swipeStartY.current
+
+      // Check if horizontal swipe is significant and more horizontal than vertical
+      const minSwipeDistance = 50
+      if (Math.abs(deltaX) > minSwipeDistance && Math.abs(deltaX) > Math.abs(deltaY) * 1.5) {
+        if (deltaX > 0) {
+          handlePrevious() // Swipe right = previous
+        } else {
+          handleNext() // Swipe left = next
+        }
+      }
+    }
+
+    swipeStartX.current = null
+    swipeStartY.current = null
   }
 
   // Handle pinch zoom on touch devices
@@ -236,6 +327,46 @@ export function FullscreenImageViewer({ src, alt, onClose }: FullscreenImageView
         <X className="h-5 w-5" />
       </Button>
 
+      {/* Previous button - left side, centered on image area */}
+      {hasMultipleImages && (
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={handlePrevious}
+          className="fixed z-[10000] h-12 w-12 rounded-full bg-black/50 text-white hover:bg-black/70 hover:text-white"
+          style={{
+            top: 'calc(50% - 40px - env(safe-area-inset-bottom, 0px) / 2)',
+            left: 'calc(16px + env(safe-area-inset-left, 0px))',
+            transform: 'translateY(-50%)',
+            opacity: isAnimatingIn || isAnimatingOut ? 0 : 1,
+            transition: 'opacity 0.3s ease-out',
+          }}
+          aria-label="Previous image"
+        >
+          <ChevronLeft className="h-6 w-6" />
+        </Button>
+      )}
+
+      {/* Next button - right side, centered on image area */}
+      {hasMultipleImages && (
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={handleNext}
+          className="fixed z-[10000] h-12 w-12 rounded-full bg-black/50 text-white hover:bg-black/70 hover:text-white"
+          style={{
+            top: 'calc(50% - 40px - env(safe-area-inset-bottom, 0px) / 2)',
+            right: 'calc(16px + env(safe-area-inset-right, 0px))',
+            transform: 'translateY(-50%)',
+            opacity: isAnimatingIn || isAnimatingOut ? 0 : 1,
+            transition: 'opacity 0.3s ease-out',
+          }}
+          aria-label="Next image"
+        >
+          <ChevronRight className="h-6 w-6" />
+        </Button>
+      )}
+
       {/* Image container - fills screen except toolbar */}
       <div
         ref={containerRef}
@@ -258,11 +389,18 @@ export function FullscreenImageViewer({ src, alt, onClose }: FullscreenImageView
         onTouchEnd={handleTouchEnd}
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Loading spinner - shown while image is loading */}
+        {isImageLoading && (
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <div className="h-10 w-10 rounded-full border-2 border-white/20 border-t-white/80 animate-spin" />
+          </div>
+        )}
+
         <div
           style={{
             transform: `scale(${scale}) translate(${position.x / scale}px, ${position.y / scale}px)`,
-            opacity: isAnimatingIn ? 0 : isAnimatingOut ? 0 : 1,
-            transition: isDragging ? "none" : "transform 0.3s cubic-bezier(0.32, 0.72, 0, 1), opacity 0.3s ease-out",
+            opacity: isAnimatingIn || isAnimatingOut || isTransitioning ? 0 : 1,
+            transition: isDragging ? "none" : "transform 0.3s cubic-bezier(0.32, 0.72, 0, 1), opacity 0.15s ease-out",
             cursor: scale > 1 ? (isDragging ? "grabbing" : "grab") : "default",
             display: 'flex',
             alignItems: 'center',
@@ -275,6 +413,7 @@ export function FullscreenImageViewer({ src, alt, onClose }: FullscreenImageView
             className="max-w-none"
             objectFit="contain"
             draggable={false}
+            onLoad={handleImageLoad}
             style={{
               maxWidth: '100vw',
               maxHeight: `calc(100vh - 80px - env(safe-area-inset-bottom, 0px))`,
@@ -285,11 +424,11 @@ export function FullscreenImageViewer({ src, alt, onClose }: FullscreenImageView
         </div>
       </div>
 
-      {/* Bottom toolbar with zoom controls */}
+      {/* Bottom toolbar with zoom controls and counter */}
       <div
-        className="fixed left-0 right-0 z-[10000] flex items-center justify-center gap-2"
+        className="fixed left-0 right-0 z-[10000] flex flex-col items-center gap-2"
         style={{
-          bottom: 'calc(56px + env(safe-area-inset-bottom, 0px))',
+          bottom: 'calc(24px + env(safe-area-inset-bottom, 0px))',
           opacity: isAnimatingIn || isAnimatingOut ? 0 : 1,
           transition: 'opacity 0.3s ease-out',
         }}
@@ -331,6 +470,13 @@ export function FullscreenImageViewer({ src, alt, onClose }: FullscreenImageView
             <ZoomIn className="h-5 w-5" />
           </Button>
         </div>
+
+        {/* Image counter */}
+        {hasMultipleImages && (
+          <div className="text-sm text-white/80 font-medium">
+            {displayIndex} of {totalImages}
+          </div>
+        )}
       </div>
     </div>
   )

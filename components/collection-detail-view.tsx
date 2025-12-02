@@ -137,7 +137,7 @@ export function CollectionDetailView({
             </div>
 
             {canEdit && (
-              <Button asChild className="shrink-0 bg-purple-600 hover:bg-purple-700 text-white">
+              <Button asChild variant="purple" className="shrink-0">
                 <Link href={`/collections/${collection.slug}/edit`}>
                   <Pencil className="mr-2 h-4 w-4" />
                   Edit
