@@ -48,7 +48,7 @@ export function AppLayout({ children, user, noBottomPadding = false, noTopPaddin
         <SideNav isOpen={sidebarOpen} onClose={() => handleSidebarToggle(false)} isMobile={isMobile} />
 
         <main
-          className={`flex-1 transition-all duration-200 px-4 max-w-full ${noTopPadding ? "" : "pt-4"} ${noBottomPadding ? "pb-0" : ""}`}
+          className={`flex-1 transition-all duration-200 px-4 max-w-7xl mx-auto ${noTopPadding ? "" : "pt-4"} ${noBottomPadding ? "pb-0" : ""}`}
           style={
             !noBottomPadding && isMobile
               ? {

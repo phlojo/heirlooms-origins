@@ -84,7 +84,7 @@ const howItWorksSteps = [
   },
 ]
 
-function HowItWorksCarousel() {
+function HowItWorksCarousel({ backgroundImages }: { backgroundImages: string[] }) {
   const [activeIndex, setActiveIndex] = useState(0)
   const totalSteps = howItWorksSteps.length
 
@@ -101,16 +101,16 @@ function HowItWorksCarousel() {
   }
 
   return (
-    <section id="how-it-works" className="py-16 md:py-24 bg-muted/30">
-      <div className="max-w-5xl mx-auto px-4">
+    <section id="how-it-works" className="pt-2 pb-16 md:pt-4 md:pb-24 bg-muted/30">
+      <div className="max-w-7xl mx-auto px-4">
         <div className="text-center mb-8">
-          <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">How It Works</h2>
+          <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight mb-4">How It Works</h2>
           <p className="text-muted-foreground text-lg">Three simple steps to preserve what matters</p>
         </div>
       </div>
 
       {/* Carousel container */}
-      <div className="max-w-5xl mx-auto px-4">
+      <div className="max-w-7xl mx-auto px-4">
         {/* Cards area with navigation buttons - relative wrapper for button positioning */}
         <div className="relative">
           {/* Left arrow - overlaid on card */}
@@ -151,10 +151,22 @@ function HowItWorksCarousel() {
               className="flex transition-transform duration-300 ease-out"
               style={{ transform: `translateX(-${activeIndex * 100}%)` }}
             >
-              {howItWorksSteps.map((step) => (
+              {howItWorksSteps.map((step, index) => (
                 <div key={step.step} className="flex-shrink-0 w-full px-2 md:px-8">
-                  <Card className="mx-auto max-w-[400px]">
-                    <CardContent className="p-6 text-center space-y-4">
+                  <Card className="mx-auto max-w-[400px] overflow-hidden relative">
+                    {backgroundImages[index] && (
+                      <>
+                        <div
+                          className="absolute inset-0 bg-cover bg-center opacity-15"
+                          style={{ backgroundImage: `url(${backgroundImages[index]})` }}
+                        />
+                        <div
+                          className="absolute inset-0 opacity-50"
+                          style={{ background: "linear-gradient(to top, black, transparent)" }}
+                        />
+                      </>
+                    )}
+                    <CardContent className="p-6 text-center space-y-4 relative z-10">
                       <div className="flex justify-center">
                         <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-primary">
                           <step.icon className="h-7 w-7" />
@@ -210,24 +222,24 @@ export function LoggedOutHomepage({
     <div className="min-h-[100dvh] bg-background pb-20 lg:pb-0">
       {/* Hero Section */}
       <section className="relative overflow-hidden">
-        {/* Background gradient */}
+        {/* Background gradient - full width */}
         <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-background to-background" />
 
-        {/* Floating background images */}
+        {/* Floating background images - positioned relative to viewport */}
         <div className="absolute inset-0 overflow-hidden opacity-20">
           {backgroundImages[0] && (
-            <div className="absolute -top-20 -right-20 w-64 h-64 rounded-full overflow-hidden blur-sm">
+            <div className="absolute -top-20 right-0 w-64 h-64 rounded-full overflow-hidden blur-sm">
               <MediaImage src={backgroundImages[0]} alt="" className="w-full h-full" objectFit="cover" />
             </div>
           )}
           {backgroundImages[1] && (
-            <div className="absolute top-1/2 -left-20 w-48 h-48 rounded-full overflow-hidden blur-sm">
+            <div className="absolute top-1/2 left-0 w-48 h-48 rounded-full overflow-hidden blur-sm">
               <MediaImage src={backgroundImages[1]} alt="" className="w-full h-full" objectFit="cover" />
             </div>
           )}
         </div>
 
-        <div className="relative px-4 py-16 md:py-24 lg:py-32">
+        <div className="relative px-4 py-8 md:py-12 lg:py-16 max-w-7xl mx-auto">
           <div className="max-w-4xl mx-auto text-center space-y-6">
             {/* Logo with Brand Name */}
             <div className="flex justify-center items-center gap-3 mb-8">
@@ -269,7 +281,7 @@ export function LoggedOutHomepage({
 
           {/* Hero Carousel - Full width, compact cards, infinite loop */}
           {heroArtifacts.length > 0 && (
-            <div className="py-8">
+            <div className="py-4">
               <ArtifactsCarousel artifacts={heroArtifacts} hideEmptyState compact infinite />
             </div>
           )}
@@ -277,7 +289,7 @@ export function LoggedOutHomepage({
           <div className="max-w-4xl mx-auto text-center space-y-6">
             {/* Subheading */}
             <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
-              Create beautiful digital collections of your artifacts, preserve their stories, and share them with the people who matter most.
+              Create beautiful digital <a href="#showcase-collections" className="font-bold text-foreground hover:text-primary transition-colors">collections</a> of your <a href="#showcase-artifacts" className="font-bold text-foreground hover:text-primary transition-colors">artifacts</a>, preserve their <Link href="/stories" className="font-bold text-foreground hover:text-primary transition-colors">stories</Link>, and share them with the people who matter most.
             </p>
 
             {/* CTA Buttons */}
@@ -295,19 +307,20 @@ export function LoggedOutHomepage({
                 </Link>
               </Button>
             </div>
-            <div className="flex flex-col items-center gap-3 pt-2">
-              <Button size="lg" variant="ghost" onClick={scrollToHowItWorks} className="gap-2 text-muted-foreground">
+            <div className="flex items-center justify-center gap-3 pt-2 pb-4">
+              <Button size="sm" variant="outline" onClick={scrollToHowItWorks} className="gap-2 text-muted-foreground">
                 See How It Works
                 <ChevronDown className="h-4 w-4" />
               </Button>
+              <span className="text-muted-foreground text-sm">or</span>
               <Button
                 variant="outline"
                 size="sm"
                 asChild
-                className="rounded-full text-xs text-muted-foreground/60 border-muted-foreground/30 hover:text-muted-foreground hover:border-muted-foreground/50 hover:bg-transparent"
+                className="text-muted-foreground"
               >
                 <Link href="/login?returnTo=/">
-                  Login to continue
+                  Login
                 </Link>
               </Button>
             </div>
@@ -316,25 +329,27 @@ export function LoggedOutHomepage({
       </section>
 
       {/* How It Works Section */}
-      <HowItWorksCarousel />
+      <HowItWorksCarousel backgroundImages={backgroundImages} />
 
       {/* Community Showcase: Artifacts */}
       {showcaseArtifacts.length > 0 && (
-        <CommunityShowcase
-          artifacts={showcaseArtifacts}
-          title="Community Showcase"
-          subtitle="Artifacts"
-          showViewAll
-          viewAllHref="/artifacts"
-          maxItems={9}
-          className="bg-muted/30"
-        />
+        <div id="showcase-artifacts">
+          <CommunityShowcase
+            artifacts={showcaseArtifacts}
+            title="Community Showcase"
+            subtitle="Artifacts"
+            showViewAll
+            viewAllHref="/artifacts"
+            maxItems={9}
+            className="bg-muted/30"
+          />
+        </div>
       )}
 
       {/* Collections Preview */}
       {showcaseCollections.length > 0 && (
-        <section className="px-4 py-12 md:py-16">
-          <div className="max-w-6xl mx-auto">
+        <section id="showcase-collections" className="py-12 md:py-16">
+          <div className="max-w-7xl mx-auto px-4">
             <div className="flex items-end justify-between mb-6">
               <div className="flex items-end gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary mb-0.5">
@@ -363,17 +378,17 @@ export function LoggedOutHomepage({
       )}
 
       {/* Value Props / For Whom Section */}
-      <section className="px-4 py-16 md:py-24 bg-muted/30">
-        <div className="max-w-5xl mx-auto">
+      <section className="py-16 md:py-24 bg-muted/30">
+        <div className="max-w-7xl mx-auto px-4">
           <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">Built For</h2>
+            <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight mb-4">Built For</h2>
             <p className="text-muted-foreground text-lg">Whether you collect, create, or preserve memories</p>
           </div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
             {/* Families */}
-            <Card className="text-center p-6 hover:shadow-lg transition-shadow">
-              <CardContent className="pt-0 space-y-4">
+            <Card className="text-center p-3 md:p-6 hover:shadow-lg transition-shadow">
+              <CardContent className="pt-0 space-y-2 md:space-y-4">
                 <div className="flex justify-center">
                   <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
                     <Users className="h-6 w-6" />
@@ -387,8 +402,8 @@ export function LoggedOutHomepage({
             </Card>
 
             {/* Collectors */}
-            <Card className="text-center p-6 hover:shadow-lg transition-shadow">
-              <CardContent className="pt-0 space-y-4">
+            <Card className="text-center p-3 md:p-6 hover:shadow-lg transition-shadow">
+              <CardContent className="pt-0 space-y-2 md:space-y-4">
                 <div className="flex justify-center">
                   <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
                     <Sparkles className="h-6 w-6" />
@@ -402,8 +417,8 @@ export function LoggedOutHomepage({
             </Card>
 
             {/* Makers & Creators */}
-            <Card className="text-center p-6 hover:shadow-lg transition-shadow">
-              <CardContent className="pt-0 space-y-4">
+            <Card className="text-center p-3 md:p-6 hover:shadow-lg transition-shadow">
+              <CardContent className="pt-0 space-y-2 md:space-y-4">
                 <div className="flex justify-center">
                   <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
                     <Palette className="h-6 w-6" />
@@ -417,8 +432,8 @@ export function LoggedOutHomepage({
             </Card>
 
             {/* Story Preservers */}
-            <Card className="text-center p-6 hover:shadow-lg transition-shadow">
-              <CardContent className="pt-0 space-y-4">
+            <Card className="text-center p-3 md:p-6 hover:shadow-lg transition-shadow">
+              <CardContent className="pt-0 space-y-2 md:space-y-4">
                 <div className="flex justify-center">
                   <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
                     <Heart className="h-6 w-6" />
@@ -435,8 +450,8 @@ export function LoggedOutHomepage({
       </section>
 
       {/* Social Proof Section */}
-      <section className="px-4 py-12 md:py-16">
-        <div className="max-w-3xl mx-auto text-center">
+      <section className="py-12 md:py-16">
+        <div className="max-w-7xl mx-auto px-4 text-center">
           <p className="text-muted-foreground text-lg italic">
             Made by people who care about design, storytelling, and legacy.
           </p>
@@ -444,9 +459,9 @@ export function LoggedOutHomepage({
       </section>
 
       {/* Final CTA Section */}
-      <section className="px-4 py-16 md:py-24 bg-gradient-to-b from-background to-primary/5">
-        <div className="max-w-2xl mx-auto text-center space-y-6">
-          <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
+      <section className="py-16 md:py-24 bg-gradient-to-b from-background to-primary/5">
+        <div className="max-w-7xl mx-auto px-4 text-center space-y-6">
+          <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight">
             Ready to preserve what matters?
           </h2>
           <p className="text-muted-foreground text-lg">
@@ -462,8 +477,8 @@ export function LoggedOutHomepage({
       </section>
 
       {/* Footer */}
-      <footer className="px-4 py-8 border-t">
-        <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+      <footer className="py-8 border-t">
+        <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <div className="flex h-8 w-8 items-center justify-center bg-gradient-to-br from-primary to-chart-2 text-primary-foreground rounded-sm">
               <svg

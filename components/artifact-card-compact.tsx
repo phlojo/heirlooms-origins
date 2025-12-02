@@ -60,8 +60,8 @@ export function ArtifactCardCompact({ artifact, showAuthor = false, authorName, 
           )}
         </div>
 
-        <div className="px-1.5 pt-1.5 pb-2 flex-none">
-          <h3 className="font-medium text-xs leading-tight line-clamp-5">{artifact.title}</h3>
+        <div className="px-1.5 pt-1 pb-1.5 flex-none">
+          <h3 className="font-medium text-xs leading-tight line-clamp-2">{artifact.title}</h3>
         </div>
       </Card>
     </Link>

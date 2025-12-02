@@ -199,13 +199,15 @@ export function ArtifactsCarousel({ artifacts, canEdit, hideEmptyState, compact,
 
       <div
         ref={scrollContainerRef}
-        className={`flex items-start overflow-x-auto pb-4 scrollbar-hide ${
-          compact ? "gap-3" : "gap-6"
+        className={`flex items-start overflow-x-auto scrollbar-hide ${
+          compact ? "gap-3 pb-1" : "gap-6 pb-4"
         }`}
         style={{
           scrollbarWidth: "none",
           msOverflowStyle: "none",
           overscrollBehaviorX: "contain",
+          maskImage: "linear-gradient(to right, transparent, black 2rem, black calc(100% - 2rem), transparent)",
+          WebkitMaskImage: "linear-gradient(to right, transparent, black 2rem, black calc(100% - 2rem), transparent)",
         }}
       >
         {/* Leading spacer */}

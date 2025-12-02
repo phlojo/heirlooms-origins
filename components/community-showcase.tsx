@@ -138,7 +138,7 @@ export function CommunityShowcase({
 
   return (
     <section className={cn("py-12 md:py-16", className)}>
-      <div className="max-w-6xl mx-auto px-4">
+      <div className="max-w-7xl mx-auto px-4">
         {/* Header */}
         <div className="flex items-end justify-between mb-6">
           {/* Left side: Icon + Title + Subtitle */}
