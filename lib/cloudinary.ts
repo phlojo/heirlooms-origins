@@ -33,10 +33,10 @@ function getCloudinaryFetchUrl(remoteUrl: string, transformations: string): stri
     return remoteUrl
   }
 
-  // Cloudinary fetch mode can handle URLs up to ~400 chars
+  // Cloudinary fetch mode can handle URLs up to 255 chars (public ID limit)
   // Only return original if truly exceeding the limit
-  if (remoteUrl.length > 400) {
-    console.warn('[cloudinary] URL too long for fetch (>400 chars), returning original:', remoteUrl.length, 'chars')
+  if (remoteUrl.length > 255) {
+    console.warn('[cloudinary] URL too long for fetch (>255 chars), returning original:', remoteUrl.length, 'chars')
     return remoteUrl
   }
 
@@ -89,13 +89,13 @@ function isVideoFile(url: string): boolean {
 }
 
 /**
- * Get small thumbnail version of image or video (120x120, cropped to fill)
+ * Get small thumbnail version of image or video (220x220, cropped to fill)
  * Perfect for: media pickers, reorder cards, compact lists
  * For videos, generates a poster frame from 1 second mark
  *
  * @param url - Original media URL
  * @param mediaDerivatives - Optional map of original URLs to their derivatives
- * @returns Small thumbnail URL (120x120)
+ * @returns Small thumbnail URL (220x220)
  */
 export function getSmallThumbnailUrl(
   url: string,
@@ -108,8 +108,8 @@ export function getSmallThumbnailUrl(
   // PHASE 2: Use Cloudinary fetch for Supabase Storage URLs
   if (isSupabaseStorageUrl(url)) {
     const transformations = isVideoUrl(url)
-      ? "w_120,h_120,c_fill,q_auto,f_jpg,so_1.0,du_0"
-      : "w_120,h_120,c_fill,q_auto,f_auto"
+      ? "w_220,h_220,c_fill,q_auto,f_jpg,so_1.0,du_0"
+      : "w_220,h_220,c_fill,q_auto,f_auto"
     return getCloudinaryFetchUrl(url, transformations)
   }
 
@@ -121,8 +121,8 @@ export function getSmallThumbnailUrl(
   // Backwards compatibility: Generate dynamically (Cloudinary originals)
   if (isCloudinaryUrl(url)) {
     return isVideoFile(url)
-      ? getCloudinaryUrl(url, "w_120,h_120,c_fill,q_auto,f_jpg,so_1.0,du_0")
-      : getCloudinaryUrl(url, "w_120,h_120,c_fill,q_auto,f_auto")
+      ? getCloudinaryUrl(url, "w_220,h_220,c_fill,q_auto,f_jpg,so_1.0,du_0")
+      : getCloudinaryUrl(url, "w_220,h_220,c_fill,q_auto,f_auto")
   }
 
   // Unknown URL type, return original

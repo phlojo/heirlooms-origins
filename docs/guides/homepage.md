@@ -2,8 +2,8 @@
 
 **Location**: `app/page.tsx`
 **Components**: `components/homepage/logged-out-homepage.tsx`, `components/homepage/logged-in-homepage.tsx`
-**Last Updated**: 2025-12-02
-**Related**: See [2025-12-02-homepage-ux-improvements.md](../archive/2025-12-02-homepage-ux-improvements.md) for implementation details
+**Last Updated**: 2025-12-03
+**Related**: See [2025-12-02-homepage-ux-improvements.md](../archive/2025-12-02-homepage-ux-improvements.md) for previous implementation details
 
 ## Overview
 
@@ -174,65 +174,143 @@ async function getPublicShowcaseData() {
 
 ## Logged-In Homepage (Dashboard)
 
+**Rebuilt**: 2025-12-03 - Complete redesign from scratch
+
 ### Purpose
-Provide quick access to user's content and actions.
+Provide quick access to user's content and key actions with an at-a-glance dashboard.
 
 ### Sections
 
 | Section | Description |
 |---------|-------------|
-| **Welcome Header** | "Welcome back, {firstName}" with AppLayout navigation |
-| **Quick Stats** | Clickable artifact/collection count cards |
-| **Continue Where You Left Off** | Horizontal scroll of recently edited artifacts |
-| **Your Collections** | Grid of user's collections (up to 6) |
-| **Start Something New** | 4 action cards for common tasks |
+| **Header** | Heirlooms logo + "(Beta)" badge + Theme toggle (mobile) |
+| **Welcome Message** | "Welcome back, {username}" with clickable profile pill + logout button |
+| **Quick Stats** | 2 clickable cards showing artifact/collection counts with random background images |
+| **Continue Where You Left Off** | 3x2 grid of 5 recent artifacts + "Add Artifact" card, with "View All" link |
+| **Your Collections** | Responsive grid of 5 recent collections + "Add Collection" card, with "View All" link |
 
 ### Component Architecture
 
 ```
-LoggedInHomepage
+LoggedInHomepage (client component)
 ├── AppLayout (with full navigation)
-│   ├── Welcome Header
-│   │   ├── Logo + "Welcome back, {firstName}"
-│   │   └── Subtext
-│   ├── Quick Stats (2 cards)
-│   │   ├── Artifacts count → /artifacts
-│   │   └── Collections count → /collections
+│   ├── Header Section
+│   │   ├── HeirloomsLogoBadge (h-10 w-10)
+│   │   ├── "Heirlooms" title
+│   │   ├── "(Beta)" badge
+│   │   └── ThemeToggle (ml-auto, mobile only)
+│   │
+│   ├── Welcome Message
+│   │   ├── "Welcome back,"
+│   │   ├── Username pill (clickable → /profile)
+│   │   │   └── hover:bg-primary/15 transition
+│   │   └── Logout button (outlined, icon-only)
+│   │       └── LogOut icon, calls /api/auth/signout
+│   │
+│   ├── Quick Stats (2-column grid)
+│   │   ├── Artifacts Card (Link → /artifacts?tab=mine)
+│   │   │   ├── Random background image (10% opacity, 15% on hover)
+│   │   │   ├── AnimatedArtifactsIcon
+│   │   │   ├── Count display
+│   │   │   └── "Artifacts" label
+│   │   └── Collections Card (Link → /collections?tab=mine)
+│   │       ├── Random background image (10% opacity, 15% on hover)
+│   │       ├── LayoutGrid icon
+│   │       ├── Count display
+│   │       └── "Collections" label
+│   │
 │   ├── Continue Where You Left Off
-│   │   ├── Horizontal ScrollArea with ArtifactCards
-│   │   └── Empty state if no artifacts
-│   ├── Your Collections
-│   │   ├── CollectionCard grid (up to 6)
-│   │   └── Empty state if no collections
-│   └── Start Something New (4 action cards)
-│       ├── Create Artifact → /artifacts/new
-│       ├── Create Collection → /collections/new
-│       ├── Explore Community → /artifacts
-│       └── Write a Story → /stories
+│   │   ├── Header (flex justify-between)
+│   │   │   ├── "Continue Where You Left Off" title
+│   │   │   └── "View All" link → /artifacts?tab=mine
+│   │   └── 3-column grid
+│   │       ├── 5 recent artifacts (ArtifactCardCompact, singleLineTitle=true)
+│   │       └── Add Artifact card (dashed border)
+│   │           └── AnimatedArtifactsIcon + "Add Artifact"
+│   │
+│   └── Your Collections
+│       ├── Header (flex justify-between)
+│       │   ├── "Your Collections" title
+│       │   └── "View All" link → /collections?tab=mine
+│       └── Responsive grid (md:grid-cols-2 lg:grid-cols-3)
+│           ├── 5 recent collections (CollectionCard, mode="mine")
+│           │   └── Excludes "Uncategorized" collection
+│           └── Add Collection card (dashed border)
+│               └── LayoutGrid icon + "Add Collection"
 ```
+
+### Key Features
+
+#### Interactive Elements
+
+1. **Clickable Username Pill**
+   - Links to `/profile` page
+   - Hover effect: `bg-primary/15`
+   - Shows display name or email username
+
+2. **Logout Button**
+   - Icon-only outlined button
+   - Same height as username pill (34px)
+   - Calls `/api/auth/signout` endpoint
+   - Redirects to `/` after sign out
+
+3. **Stat Cards with Backgrounds**
+   - Random media from user's artifacts used as backgrounds
+   - Images refresh on every page load (Fisher-Yates shuffle)
+   - 10% opacity normally, 15% on hover
+   - Click navigates to respective "My" tabs
+
+4. **View All Links**
+   - Styled like logged-out homepage (muted → foreground on hover)
+   - Include ArrowRight icon
+   - Link to user's filtered views
+
+5. **Add Cards**
+   - Dashed border with hover effects
+   - Match the card type size (artifact: square, collection: 3:2 aspect)
+   - Show appropriate icons (AnimatedArtifactsIcon, LayoutGrid)
+
+#### Single-Line Titles
+
+The `ArtifactCardCompact` component accepts a `singleLineTitle` prop:
+- Default: 2 lines with `line-clamp-2`
+- Homepage: 1 line with `line-clamp-1` and truncation
+- Only applied to homepage, not elsewhere in app
 
 ### Data Fetching
 
 ```tsx
 async function getUserDashboardData(userId: string) {
+  const supabase = await createClient()
+
+  // Fetch user profile
   const { data: profile } = await supabase
     .from("profiles")
     .select("display_name, created_at")
     .eq("id", userId)
     .single()
 
+  // Fetch recent artifacts (sorted by last edited)
   const { artifacts: recentArtifacts } = await getMyArtifactsPaginated(userId, {
-    limit: 9,  // Shows 9 artifacts for better visual density
+    limit: 9,
     sortBy: "last-edited",
   })
 
+  // Fetch user collections
   const { collections } = await getMyCollectionsPaginated(userId, 6)
 
-  // Collect visual media for stat card backgrounds
+  // Get stats
+  const [artifactsCount, collectionsCount] = await Promise.all([
+    supabase.from("artifacts").select("*", { count: "exact", head: true }).eq("user_id", userId),
+    supabase.from("collections").select("*", { count: "exact", head: true }).eq("user_id", userId),
+  ])
+
+  // Collect all visual media URLs (images and videos, no audio) for random backgrounds
   const allVisualMedia: string[] = []
   recentArtifacts.forEach((artifact) => {
-    if (artifact.media_urls) {
-      artifact.media_urls.forEach((url) => {
+    const mediaUrls = artifact.media_urls as string[] | undefined
+    if (mediaUrls) {
+      mediaUrls.forEach((url) => {
         if (isImageUrl(url) || isVideoUrl(url)) {
           allVisualMedia.push(url)
         }
@@ -240,16 +318,35 @@ async function getUserDashboardData(userId: string) {
     }
   })
 
-  // Fisher-Yates shuffle for random selection
-  const shuffledMedia = allVisualMedia.sort(() => Math.random() - 0.5)
+  // Fisher-Yates shuffle and pick 2 random images for stat card backgrounds
+  const shuffledMedia = [...allVisualMedia]
+  for (let i = shuffledMedia.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[shuffledMedia[i], shuffledMedia[j]] = [shuffledMedia[j], shuffledMedia[i]]
+  }
   const statBackgrounds = {
     artifacts: shuffledMedia[0] || null,
     collections: shuffledMedia[1] || shuffledMedia[0] || null,
   }
 
-  return { profile, recentArtifacts, collections, stats, statBackgrounds }
+  return {
+    profile,
+    recentArtifacts,
+    collections,
+    stats: {
+      artifactsCount: artifactsCount.count || 0,
+      collectionsCount: collectionsCount.count || 0,
+    },
+    statBackgrounds,
+  }
 }
 ```
+
+**Key Points:**
+- Uses Fisher-Yates shuffle for true randomness
+- Backgrounds refresh on every page load (`force-dynamic`)
+- Falls back gracefully if no media available
+- Excludes audio files from backgrounds (visual media only)
 
 ## Login Redirect Flow
 
