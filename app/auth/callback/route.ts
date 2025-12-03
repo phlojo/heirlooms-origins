@@ -38,9 +38,13 @@ export async function GET(request: Request) {
       return NextResponse.redirect(`${requestUrl.origin}/login?error=${encodeURIComponent(error.message)}`)
     }
 
+    // Revalidate common paths and the specific destination
     revalidatePath("/", "layout")
     revalidatePath("/collections")
     revalidatePath("/artifacts")
+    if (next && next !== "/" && next !== "/collections" && next !== "/artifacts") {
+      revalidatePath(next)
+    }
 
     const redirectUrl = `${requestUrl.origin}${next}`
     return NextResponse.redirect(redirectUrl)
