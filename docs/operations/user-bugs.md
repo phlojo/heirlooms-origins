@@ -21,10 +21,17 @@ User bugs use the format: `UB-YYMMDD-NN` (e.g., UB-251129-01)
 
 ## Active Bugs
 
-## UB-251129-01: Media stuck in temp folder - not visible to other users
+*(No active bugs)*
 
-**Status:** Fixed (pending production deployment)
+---
+
+## Resolved Bugs
+
+### UB-251129-01: Media stuck in temp folder - not visible to other users
+
+**Status:** Verified
 **Reported:** 2025-11-29
+**Resolved:** 2025-12-03
 **Reporter:** Jason Leake
 **Priority:** Critical
 **Branch:** userbugs-112905
@@ -37,141 +44,26 @@ User bugs use the format: `UB-YYMMDD-NN` (e.g., UB-251129-01)
 - Artifact 1: https://heirloomsapp.com/artifacts/roll-aboard-1764427863997
 - Artifact 2: https://heirloomsapp.com/artifacts/my-backpack-1764425754823
 
-### Steps to Reproduce
-1. Log in as user
-2. Create new collection
-3. Create artifact within collection
-4. Upload media (photos)
-5. Save artifact
-6. Log out / view as different user
-7. Media not visible (still in temp folder with user-scoped RLS)
-
-### Expected Behavior
-- Media should be reorganized from temp folder to artifact folder on save
-- Media should be publicly accessible (for public collections)
-
-### Actual Behavior
-- Media remains in temp folder after save
-- Only artifact owner can view media (temp folder has user-scoped RLS)
-- Other users see broken/missing images
-
-### Environment
-- Production: heirloomsapp.com
-
-### Investigation Notes
-Media in Supabase temp folder structure: `temp/{userId}/{timestamp}-{filename}`
-Should be reorganized to: `{userId}/{artifactId}/{timestamp}-{filename}`
-
-`reorganizeArtifactMedia()` in `lib/actions/media-reorganize.ts` should run after artifact creation/update but appears to not be executing or failing silently.
-
 ### Root Cause
 **Two issues combined:**
 
 **Issue 1: Files stuck in temp folder**
 `updateArtifact()` in `lib/actions/artifacts.ts` was missing the call to `reorganizeArtifactMedia()`.
 
-When a user edits an existing artifact and adds new media:
-1. Files upload to temp folder: `temp/{userId}/{timestamp}-{filename}`
-2. `updateArtifact()` marks uploads as saved (removes from `pending_uploads`)
-3. **BUG**: `updateArtifact()` did NOT call `reorganizeArtifactMedia()` to move files
-4. Files remain in temp folder
-
-Meanwhile `createArtifact()` correctly called `reorganizeArtifactMedia()` after saving.
-
-**Issue 2: RLS policy on user_media table (the actual blocker)**
-Even after migrating files out of temp, gallery still didn't display for other users.
-
-The `user_media` table had RLS policies that only allowed the **owner** to read their records. When the gallery component fetched `artifact_media` joined with `user_media`, the join returned `null` for non-owners because RLS blocked access.
-
-This is why:
-- Owner viewing their own artifacts → RLS passes → works
-- Other user (or logged out) viewing → RLS blocks `user_media` join → gallery empty
-- Testing with Supabase Dashboard → service role bypasses RLS → looks fine
+**Issue 2: RLS policy on user_media table**
+RLS policies only allowed the owner to read their `user_media` records, blocking gallery display for other users.
 
 ### Fix Applied
 
-**Fix 1: Code change - `lib/actions/artifacts.ts:834-846`**
+1. **Code change** - Added `reorganizeArtifactMedia()` call to `updateArtifact()`
+2. **RLS policy** - Added SELECT policy allowing public read for media linked to artifacts
+3. **Migration script** - Moved existing temp folder media to artifact folders
 
-Added `reorganizeArtifactMedia()` call after marking uploads as saved in `updateArtifact()`:
-
-```typescript
-// Phase 2: Reorganize Supabase Storage media from temp to artifact folder
-console.log("[v0] UPDATE ARTIFACT - Reorganizing newly uploaded media files...")
-const reorganizeResult = await reorganizeArtifactMedia(validatedFields.data.id)
-```
-
-**Fix 2: RLS policy - `scripts/sql/fix-user-media-rls.sql`**
-
-Added SELECT policy on `user_media` to allow public read for linked media:
-
-```sql
-CREATE POLICY "Allow public read for media linked to artifacts"
-ON user_media
-FOR SELECT
-USING (
-  EXISTS (
-    SELECT 1 FROM artifact_media
-    WHERE artifact_media.media_id = user_media.id
-  )
-);
-```
-
-**Fix 3: Migration script - `scripts/migrate-temp-media.ts`**
-
-Moved existing temp folder media to artifact folders and updated all database references.
-
-### Verification
-- [x] Fix tested locally
-- [x] RLS policy applied to dev database
-- [x] Migration script run (28 files moved from temp)
-- [x] Gallery now visible on dev.heirloomsapp.com
-- [x] Root cause identified: `reorganizeArtifactMedia()` not processing gallery URLs
-- [x] Fix applied to `lib/actions/media-reorganize.ts`
-- [x] Cron cleanup enhanced with Phase 3 orphaned temp cleanup
-- [ ] Code changes deployed to production
-- [ ] RLS policy applied to production database
-- [ ] User (Jason) confirmed fix
-
-### Additional Fix (2025-11-30)
-
-**Root cause was deeper than initially identified:**
-
-The original fix added `reorganizeArtifactMedia()` to `updateArtifact()`, but the function itself was flawed - it only read from `artifacts.media_urls` which doesn't contain gallery URLs.
-
-**Complete fix:**
-1. `reorganizeArtifactMedia()` now queries `artifact_media` + `user_media` for gallery URLs
-2. Cron cleanup now has Phase 3 to catch orphaned temp `user_media` not linked to artifacts
-3. Cron uses service role client (no user session in cron context)
+### Resolution
+- All verification steps completed
+- User (Jason) confirmed fix working in production
 
 See: `docs/archive/2025-11-30-temp-media-reorganization-fix.md`
-
-### Manual Fix for Existing Affected Artifacts
-For Jason Leake's artifacts that already have media stuck in temp:
-
-**Option 1:** User edits artifact and clicks Save (triggers reorganization)
-
-**Option 2:** Run migration script:
-```bash
-# Dry run (preview what will be migrated)
-pnpm tsx scripts/migrate-temp-media.ts
-
-# Actually migrate files
-pnpm tsx scripts/migrate-temp-media.ts --migrate
-```
-
-The script will:
-1. Find all artifacts with media in temp folder
-2. Move files to proper artifact folder: `{userId}/{artifactId}/{filename}`
-3. Update `artifacts.media_urls`, `thumbnail_url`, and AI metadata keys
-4. Update `user_media` records with new URLs
-
----
-
----
-
-## Resolved Bugs
-
-<!-- Move fixed bugs here with resolution notes -->
 
 ---
 

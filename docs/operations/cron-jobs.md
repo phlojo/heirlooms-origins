@@ -29,6 +29,7 @@ This is the **primary cleanup cron** that handles all media housekeeping.
 | 1 | Expired pending uploads | `pending_uploads` table (24hr expiry) | Delete from storage + DB |
 | 2 | Orphaned pending_uploads | DB entries for already-deleted files | Delete DB record |
 | 3 | Orphaned user_media | `user_media` with temp URLs not linked to artifacts | Delete from storage + DB |
+| 4 | Old transcription audio | `{userId}/transcriptions/` files older than 7 days | Delete from storage |
 
 #### Phase 1: Expired Pending Uploads
 
@@ -55,6 +56,20 @@ The cron now:
 2. Checks if linked to any artifact via `artifact_media`
 3. If NOT linked → deletes storage file + `user_media` record
 
+#### Phase 4: Old Transcription Audio (Added 2025-12-03)
+
+When users dictate title/description using voice input, the audio is uploaded to `{userId}/transcriptions/` for archival purposes. These files:
+- Are NOT tracked in any database table
+- Accumulate over time with no cleanup
+
+The cron now:
+1. Lists all user folders in storage
+2. For each user, lists files in `/transcriptions/` folder
+3. Parses timestamp from filename (e.g., `title-1764716158016.webm`)
+4. Deletes files older than 7 days
+
+**Retention period:** 7 days (configurable via `TRANSCRIPTION_RETENTION_MS` constant)
+
 #### Authentication
 
 - In production: Requires `x-vercel-cron` header (added automatically by Vercel)
@@ -75,7 +90,9 @@ The cron now:
     "deletedUserMedia": 1,
     "orphanedTempMediaDeleted": 5,
     "failedDeletions": 0,
-    "orphanedTempMediaFailed": 0
+    "orphanedTempMediaFailed": 0,
+    "transcriptionsDeleted": 10,
+    "transcriptionsFailed": 0
   }
 }
 ```
@@ -172,6 +189,8 @@ If you want audit-only reporting without cleanup, this can be added to `vercel.j
 | `deletedFromStorage` | 0-10 | Consistently high (upload flow issue) |
 | `orphanedTempMediaDeleted` | 0 | High after fix deployed (one-time cleanup) |
 | `failedDeletions` | 0 | Any failures (storage access issue) |
+| `transcriptionsDeleted` | 0-20 | Very high (voice input heavily used) |
+| `transcriptionsFailed` | 0 | Any failures (storage access issue) |
 
 ---
 
@@ -244,4 +263,4 @@ pnpm tsx scripts/list-temp-files.ts
 
 ---
 
-**Last Updated:** 2025-11-30
+**Last Updated:** 2025-12-03

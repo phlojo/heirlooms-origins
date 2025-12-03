@@ -36,23 +36,23 @@ interface StorageFile {
 }
 
 /**
- * Fetch all media URLs from Supabase artifacts
+ * Fetch all media URLs from Supabase (artifacts + user_media library)
  */
-async function getAllArtifactMediaUrls(): Promise<Set<string>> {
-  console.log("📊 Fetching all artifact media URLs from Supabase...")
-
-  const { data: artifacts, error } = await supabase
-    .from("artifacts")
-    .select("media_urls, thumbnail_url")
-
-  if (error) {
-    throw new Error(`Failed to fetch artifacts: ${error.message}`)
-  }
+async function getAllReferencedMediaUrls(): Promise<Set<string>> {
+  console.log("📊 Fetching all media URLs from Supabase...")
 
   const mediaUrls = new Set<string>()
 
+  // 1. Get URLs from artifacts table (media_urls array + thumbnail_url)
+  const { data: artifacts, error: artifactsError } = await supabase
+    .from("artifacts")
+    .select("media_urls, thumbnail_url")
+
+  if (artifactsError) {
+    throw new Error(`Failed to fetch artifacts: ${artifactsError.message}`)
+  }
+
   for (const artifact of artifacts || []) {
-    // Add all media URLs
     if (artifact.media_urls && Array.isArray(artifact.media_urls)) {
       artifact.media_urls.forEach((url: string) => {
         if (url.includes("supabase")) {
@@ -60,14 +60,31 @@ async function getAllArtifactMediaUrls(): Promise<Set<string>> {
         }
       })
     }
-
-    // Add thumbnail URL
     if (artifact.thumbnail_url && artifact.thumbnail_url.includes("supabase")) {
       mediaUrls.add(artifact.thumbnail_url)
     }
   }
 
-  console.log(`✅ Found ${mediaUrls.size} Supabase Storage URLs in ${artifacts?.length || 0} artifacts`)
+  const artifactUrlCount = mediaUrls.size
+  console.log(`  - artifacts table: ${artifactUrlCount} URLs`)
+
+  // 2. Get URLs from user_media table (unified media library)
+  const { data: userMedia, error: userMediaError } = await supabase
+    .from("user_media")
+    .select("public_url")
+
+  if (userMediaError) {
+    console.warn(`  ⚠️  Failed to fetch user_media: ${userMediaError.message}`)
+  } else {
+    for (const media of userMedia || []) {
+      if (media.public_url && media.public_url.includes("supabase")) {
+        mediaUrls.add(media.public_url)
+      }
+    }
+    console.log(`  - user_media table: ${(userMedia?.length || 0)} records`)
+  }
+
+  console.log(`✅ Total: ${mediaUrls.size} unique Supabase Storage URLs referenced`)
   return mediaUrls
 }
 
@@ -143,8 +160,8 @@ async function cleanupSupabaseStorage(shouldDelete: boolean, limit?: number) {
 
   try {
     // Get all media from both sources
-    const [artifactUrls, storageFiles] = await Promise.all([
-      getAllArtifactMediaUrls(),
+    const [referencedUrls, storageFiles] = await Promise.all([
+      getAllReferencedMediaUrls(),
       getAllStorageFiles(),
     ])
 
@@ -152,7 +169,7 @@ async function cleanupSupabaseStorage(shouldDelete: boolean, limit?: number) {
 
     // Build a set of paths that are in use
     const usedPaths = new Set<string>()
-    for (const url of artifactUrls) {
+    for (const url of referencedUrls) {
       const path = extractPathFromUrl(url)
       if (path) {
         usedPaths.add(path)
@@ -161,7 +178,7 @@ async function cleanupSupabaseStorage(shouldDelete: boolean, limit?: number) {
 
     console.log(`\n📋 Analysis:`)
     console.log(`  - Storage files: ${storageFiles.length}`)
-    console.log(`  - Used in artifacts: ${usedPaths.size}`)
+    console.log(`  - Referenced in DB: ${usedPaths.size}`)
 
     // Find orphaned files
     const orphanedFiles = storageFiles.filter(

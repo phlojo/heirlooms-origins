@@ -19,6 +19,15 @@ function extractStoragePath(publicUrl: string): string | null {
   return match ? match[1] : null
 }
 
+// Transcription audio retention period (7 days)
+const TRANSCRIPTION_RETENTION_MS = 7 * 24 * 60 * 60 * 1000
+
+// Extract timestamp from transcription filename (e.g., "title-1764716158016.webm")
+function extractTimestampFromFilename(filename: string): number | null {
+  const match = filename.match(/-([\d]+)\.webm$/)
+  return match ? parseInt(match[1], 10) : null
+}
+
 /**
  * Cron endpoint to clean up expired uploads
  * Configure in vercel.json to run daily at midnight UTC (0 0 * * *)
@@ -190,7 +199,80 @@ export async function GET(request: Request) {
       console.log(`[v0] Cron: Cleaned ${orphanedTempMediaDeleted} orphaned temp user_media records`)
     }
 
-    console.log(`[v0] Cron cleanup complete: ${deletedFromStorage} from storage, ${deletedFromDatabase} from pending_uploads, ${deletedUserMedia} from user_media, ${orphanedTempMediaDeleted} orphaned temp media`)
+    // Phase 4: Clean up old transcription audio files
+    // These are uploaded to {userId}/transcriptions/ for archival but never tracked in DB
+    // Delete files older than TRANSCRIPTION_RETENTION_MS (7 days)
+    let transcriptionsDeleted = 0
+    let transcriptionsFailed = 0
+    const now = Date.now()
+
+    // List all top-level folders (user IDs)
+    const { data: userFolders, error: listError } = await supabase.storage
+      .from("heirlooms-media")
+      .list("", { limit: 1000 })
+
+    if (listError) {
+      console.error("[v0] Cron: Failed to list storage folders:", listError)
+    } else if (userFolders) {
+      // Filter to only folders (no metadata = folder)
+      const userIds = userFolders.filter(f => !f.metadata).map(f => f.name)
+
+      for (const userId of userIds) {
+        // Check if this user has a transcriptions folder
+        const { data: transcriptionFiles, error: transcriptionError } = await supabase.storage
+          .from("heirlooms-media")
+          .list(`${userId}/transcriptions`, { limit: 1000 })
+
+        if (transcriptionError) {
+          // Folder might not exist, that's fine
+          continue
+        }
+
+        if (!transcriptionFiles || transcriptionFiles.length === 0) {
+          continue
+        }
+
+        // Check each transcription file for age
+        const filesToDelete: string[] = []
+
+        for (const file of transcriptionFiles) {
+          // Skip folders
+          if (!file.metadata) continue
+
+          const timestamp = extractTimestampFromFilename(file.name)
+          if (!timestamp) {
+            // Can't parse timestamp, skip (don't delete unknown files)
+            continue
+          }
+
+          const age = now - timestamp
+          if (age > TRANSCRIPTION_RETENTION_MS) {
+            filesToDelete.push(`${userId}/transcriptions/${file.name}`)
+          }
+        }
+
+        if (filesToDelete.length > 0) {
+          console.log(`[v0] Cron: Deleting ${filesToDelete.length} old transcription files for user ${userId}`)
+
+          const { error: deleteError } = await supabase.storage
+            .from("heirlooms-media")
+            .remove(filesToDelete)
+
+          if (deleteError) {
+            console.error(`[v0] Cron: Failed to delete transcriptions for ${userId}:`, deleteError)
+            transcriptionsFailed += filesToDelete.length
+          } else {
+            transcriptionsDeleted += filesToDelete.length
+          }
+        }
+      }
+    }
+
+    if (transcriptionsDeleted > 0 || transcriptionsFailed > 0) {
+      console.log(`[v0] Cron: Transcription cleanup: ${transcriptionsDeleted} deleted, ${transcriptionsFailed} failed`)
+    }
+
+    console.log(`[v0] Cron cleanup complete: ${deletedFromStorage} from storage, ${deletedFromDatabase} from pending_uploads, ${deletedUserMedia} from user_media, ${orphanedTempMediaDeleted} orphaned temp media, ${transcriptionsDeleted} old transcriptions`)
 
     return NextResponse.json({
       success: true,
@@ -205,6 +287,8 @@ export async function GET(request: Request) {
         orphanedTempMediaDeleted,
         failedDeletions: failedDeletions.length,
         orphanedTempMediaFailed: orphanedTempMediaFailed.length,
+        transcriptionsDeleted,
+        transcriptionsFailed,
       }
     })
   } catch (error) {
