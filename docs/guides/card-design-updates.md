@@ -369,10 +369,74 @@ import { Tooltip } from '@/components/ui/tooltip'
 
 ---
 
+## Collection Card Design (December 2025)
+
+### Full-Bleed Thumbnail Pattern
+
+Collection cards use a **full-bleed thumbnail** with **overlaid text** - different from the stacked artifact card pattern.
+
+```
+┌─────────────────────┐
+│                     │
+│   Full-bleed        │  ← absolute inset-0
+│   Thumbnail Grid    │
+│                     │
+│ ┌─────────────────┐ │
+│ │ Title  [badges] │ │  ← absolute bottom-0
+│ │ Count           │ │     bg-background/70 backdrop-blur-sm
+│ └─────────────────┘ │
+└─────────────────────┘
+```
+
+### Structure
+
+```tsx
+<Card className="relative aspect-[4/3] sm:aspect-[3/2]">
+  {/* Full-bleed thumbnail */}
+  <div className="absolute inset-0 transition-transform group-hover:scale-105">
+    <CollectionThumbnailGrid images={thumbnailImages} title={title} />
+  </div>
+
+  {/* Text overlay at bottom */}
+  <div className="absolute inset-x-0 bottom-0 bg-background/70 backdrop-blur-sm p-3 sm:p-4">
+    <h3>{title}</h3>
+    <p>{itemCount} artifacts</p>
+  </div>
+</Card>
+```
+
+### Key Properties
+
+| Property | Value | Purpose |
+|----------|-------|---------|
+| Card aspect ratio | `4/3` mobile, `3/2` desktop | Fixed card proportions |
+| Thumbnail position | `absolute inset-0` | Fill entire card |
+| Overlay position | `absolute inset-x-0 bottom-0` | Anchor to bottom |
+| Overlay background | `bg-background/70` | 70% opacity |
+| Overlay blur | `backdrop-blur-sm` | Depth effect |
+
+### Why Full-Bleed?
+
+1. **iOS Safari compatibility** - Avoids `aspect-ratio` + `max-height` conflict
+2. **More thumbnail visible** - Text doesn't consume separate vertical space
+3. **Modern aesthetic** - Netflix/Pinterest card pattern
+4. **Predictable layout** - Fixed aspect ratio = consistent grid heights
+
+### Collection Card Variants
+
+| Component | Usage |
+|-----------|-------|
+| `CollectionCard` | Standard card with full-bleed pattern |
+| `CollectionCardHorizontal` | List view (1/3 thumbnail, 2/3 text) |
+| `UncategorizedCollectionCard` | Wide `aspect-[4/1]` for system collection |
+
+---
+
 ## Related Documentation
 
 - [Artifact Grid Layout](./artifact-grid-layout.md) - Masonry grid system
 - [Component Architecture](../ARCHITECTURE.md) - Card component structure
 - [Testing Guide](../TESTING.md) - Test patterns for components
 - [Tailwind CSS Docs](https://tailwindcss.com/docs) - CSS reference
+- [Collection Card Redesign](../archive/2025-12-03-collection-card-full-bleed-redesign.md) - Implementation details
 

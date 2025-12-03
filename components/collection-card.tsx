@@ -34,27 +34,27 @@ export function CollectionCard({ collection, mode }: CollectionCardProps) {
 
   return (
     <Link href={href}>
-      <Card className="group overflow-hidden border transition-all hover:shadow-lg p-0 animate-fade-in">
-        <div className="relative aspect-[3/2] sm:aspect-[4/2] overflow-hidden bg-muted max-h-[240px] sm:max-h-none">
-          <div className="h-full transition-transform group-hover:scale-105">
-            {safeThumbnailImages.length > 0 ? (
-              <CollectionThumbnailGrid images={safeThumbnailImages} title={collection.title} />
-            ) : collection.cover_image ? (
-              <MediaImage
-                src={collection.cover_image || "/placeholder.svg"}
-                alt={collection.title}
-                className="w-full h-full"
-                objectFit="cover"
-              />
-            ) : (
-              <CollectionThumbnailGrid images={[]} title={collection.title} />
-            )}
-          </div>
+      <Card className="group overflow-hidden border transition-all hover:shadow-lg p-0 animate-fade-in relative aspect-[4/3] sm:aspect-[3/2]">
+        {/* Full-bleed thumbnail */}
+        <div className="absolute inset-0 transition-transform group-hover:scale-105">
+          {safeThumbnailImages.length > 0 ? (
+            <CollectionThumbnailGrid images={safeThumbnailImages} title={collection.title} />
+          ) : collection.cover_image ? (
+            <MediaImage
+              src={collection.cover_image || "/placeholder.svg"}
+              alt={collection.title}
+              className="w-full h-full"
+              objectFit="cover"
+            />
+          ) : (
+            <CollectionThumbnailGrid images={[]} title={collection.title} />
+          )}
         </div>
 
-        <div className="p-3 sm:p-4 space-y-2 opacity-100">
+        {/* Text overlay at bottom */}
+        <div className="absolute inset-x-0 bottom-0 bg-background/70 backdrop-blur-sm p-3 sm:p-4 space-y-1.5">
           <div className="flex items-center gap-2 flex-wrap">
-            <h3 className="font-semibold leading-tight line-clamp-1 text-lg sm:text-xl md:text-2xl">{collection.title}</h3>
+            <h3 className="font-semibold leading-tight line-clamp-1 text-base sm:text-lg">{collection.title}</h3>
             {collection.is_public === false && <Badge variant="purple">Private</Badge>}
             {collection.isUnsorted && (
               <TooltipProvider delayDuration={200}>
@@ -87,11 +87,7 @@ export function CollectionCard({ collection, mode }: CollectionCardProps) {
             )}
           </div>
 
-          {collection.description && (
-            <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2 sm:line-clamp-3">{collection.description}</p>
-          )}
-
-          <div className="flex items-center justify-between mt-2 gap-2">
+          <div className="flex items-center justify-between gap-2">
             {mode === "all" && <Author userId={collection.user_id} authorName={collection.authorName || undefined} size="sm" />}
             <p className="text-sm text-muted-foreground">
               {collection.itemCount} {collection.itemCount === 1 ? "artifact" : "artifacts"}

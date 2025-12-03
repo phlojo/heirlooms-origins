@@ -24,8 +24,12 @@ export async function signInWithPassword(email: string, password: string, return
     return { error: error.message }
   }
 
+  // Determine redirect destination - ensure we have a valid path
+  const destination = returnTo && returnTo.trim() ? returnTo : "/"
+
   revalidatePath("/", "layout")
-  redirect(returnTo || "/collections")
+  revalidatePath(destination)
+  redirect(destination)
 }
 
 export async function signInWithMagicLink(email: string, returnTo?: string) {

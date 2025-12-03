@@ -209,11 +209,13 @@ export function LoggedInHomepage({
                 <CollectionCard key={collection.id} collection={collection} mode="mine" />
               ))}
             <Link href="/collections/new">
-              <Card className="group overflow-hidden border-2 border-dashed border-muted-foreground/30 p-0 transition-all hover:border-primary hover:shadow-lg rounded-md flex flex-col h-full bg-transparent hover:bg-muted/30">
-                <div className="relative aspect-[3/2] sm:aspect-[4/2] max-h-[240px] sm:max-h-none overflow-hidden flex items-center justify-center">
+              <Card className="group overflow-hidden border-2 border-dashed border-muted-foreground/30 p-0 transition-all hover:border-primary hover:shadow-lg rounded-md relative aspect-[4/3] sm:aspect-[3/2] bg-transparent hover:bg-muted/30">
+                {/* Icon centered in card */}
+                <div className="absolute inset-0 flex items-center justify-center">
                   <LayoutGrid className="h-16 w-16 text-muted-foreground/40 group-hover:text-primary/60 transition-colors" />
                 </div>
-                <div className="p-3 sm:p-4">
+                {/* Text overlay at bottom */}
+                <div className="absolute inset-x-0 bottom-0 p-3 sm:p-4">
                   <div className="flex items-center justify-center gap-1.5 text-muted-foreground group-hover:text-primary transition-colors">
                     <Plus className="h-4 w-4" />
                     <span className="font-semibold text-sm">Add Collection</span>
