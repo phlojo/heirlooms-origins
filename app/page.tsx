@@ -206,8 +206,12 @@ async function getUserDashboardData(userId: string) {
     }
   })
 
-  // Shuffle and pick 2 random images for stat card backgrounds
-  const shuffledMedia = allVisualMedia.sort(() => Math.random() - 0.5)
+  // Shuffle and pick 2 random images for stat card backgrounds (Fisher-Yates shuffle)
+  const shuffledMedia = [...allVisualMedia]
+  for (let i = shuffledMedia.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[shuffledMedia[i], shuffledMedia[j]] = [shuffledMedia[j], shuffledMedia[i]]
+  }
   const statBackgrounds = {
     artifacts: shuffledMedia[0] || null,
     collections: shuffledMedia[1] || shuffledMedia[0] || null,
